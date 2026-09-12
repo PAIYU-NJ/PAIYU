@@ -3,10 +3,12 @@
 <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>IP业务管理系统</title>
+    <title>IP业务管理系统 · 在线同步版</title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css" />
+    <!-- Supabase 客户端 -->
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <style>
-        /* ===== 基础样式（与之前一致） ===== */
+        /* ===== 基础样式 ===== */
         :root {
             --primary: #1a3a5c;
             --primary-light: #2a5a7a;
@@ -22,11 +24,7 @@
             --transition: 0.25s ease;
             --font: 'Segoe UI', system-ui, -apple-system, sans-serif;
         }
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-        }
+        * { margin: 0; padding: 0; box-sizing: border-box; }
         body {
             font-family: var(--font);
             background: var(--bg);
@@ -34,776 +32,360 @@
             padding: 24px;
             min-height: 100vh;
         }
-        .container {
-            max-width: 1440px;
-            margin: 0 auto;
-        }
-        .hidden {
-            display: none !important;
-        }
+        .container { max-width: 1440px; margin: 0 auto; }
+        .hidden { display: none !important; }
 
         /* 顶部、流程提示、按钮等 */
         .header {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            flex-wrap: wrap;
-            gap: 16px;
-            margin-bottom: 28px;
+            display: flex; justify-content: space-between; align-items: center;
+            flex-wrap: wrap; gap: 16px; margin-bottom: 28px;
         }
-        .header-left {
-            display: flex;
-            align-items: center;
-            gap: 14px;
-        }
+        .header-left { display: flex; align-items: center; gap: 14px; }
         .header-left .logo {
-            width: 44px;
-            height: 44px;
-            background: var(--primary);
-            border-radius: var(--radius-sm);
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            color: #fff;
-            font-size: 22px;
+            width: 44px; height: 44px; background: var(--primary);
+            border-radius: var(--radius-sm); display: flex; align-items: center;
+            justify-content: center; color: #fff; font-size: 22px;
         }
-        .header-left h1 {
-            font-size: 26px;
-            font-weight: 700;
-            color: var(--primary);
-        }
-        .header-left h1 span {
-            color: var(--accent);
-        }
-        .header-left .subtitle {
-            font-size: 14px;
-            color: var(--text-light);
-            margin-top: 2px;
-        }
-        .header-actions {
-            display: flex;
-            align-items: center;
-            gap: 12px;
-            flex-wrap: wrap;
-        }
-        .header-actions .btn {
-            font-size: 14px;
-            padding: 10px 20px;
-        }
+        .header-left h1 { font-size: 26px; font-weight: 700; color: var(--primary); }
+        .header-left h1 span { color: var(--accent); }
+        .header-left .subtitle { font-size: 14px; color: var(--text-light); margin-top: 2px; }
+        .header-actions { display: flex; align-items: center; gap: 12px; flex-wrap: wrap; }
+        .header-actions .btn { font-size: 14px; padding: 10px 20px; }
 
         .workflow-tip {
-            background: #eef6fc;
-            border-radius: var(--radius-sm);
-            padding: 10px 18px;
-            font-size: 14px;
-            color: var(--primary);
-            border: 1px solid #d0e2f0;
-            display: flex;
-            align-items: center;
-            gap: 10px;
-            flex-wrap: wrap;
+            background: #eef6fc; border-radius: var(--radius-sm); padding: 10px 18px;
+            font-size: 14px; color: var(--primary); border: 1px solid #d0e2f0;
+            display: flex; align-items: center; gap: 10px; flex-wrap: wrap;
             margin-bottom: 20px;
         }
-        .workflow-tip i {
-            color: var(--accent);
-        }
-        .workflow-tip .step {
-            font-weight: 600;
-        }
-        .workflow-tip .step-end {
-            color: #2d8f5e;
-        }
+        .workflow-tip i { color: var(--accent); }
+        .workflow-tip .step { font-weight: 600; }
+        .workflow-tip .step-end { color: #2d8f5e; }
 
         .btn {
-            display: inline-flex;
-            align-items: center;
-            gap: 8px;
-            padding: 10px 22px;
-            border: none;
-            border-radius: var(--radius-sm);
-            font-size: 15px;
-            font-weight: 600;
-            cursor: pointer;
+            display: inline-flex; align-items: center; gap: 8px;
+            padding: 10px 22px; border: none; border-radius: var(--radius-sm);
+            font-size: 15px; font-weight: 600; cursor: pointer;
             transition: background var(--transition), transform 0.15s, box-shadow var(--transition);
-            font-family: var(--font);
-            background: var(--border);
-            color: var(--text);
+            font-family: var(--font); background: var(--border); color: var(--text);
         }
-        .btn:hover {
-            transform: translateY(-1px);
-            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.10);
-        }
-        .btn-primary {
-            background: var(--primary);
-            color: #fff;
-        }
-        .btn-primary:hover {
-            background: var(--primary-light);
-        }
-        .btn-accent {
-            background: var(--accent);
-            color: #fff;
-        }
-        .btn-accent:hover {
-            background: #6ab0d9;
-        }
-        .btn-success {
-            background: #2d8f5e;
-            color: #fff;
-        }
-        .btn-danger {
-            background: #c0392b;
-            color: #fff;
-        }
-        .btn-danger:hover {
-            background: #a93226;
-        }
-        .btn-outline {
-            background: transparent;
-            border: 2px solid var(--border);
-            color: var(--text-light);
-        }
-        .btn-outline:hover {
-            border-color: var(--accent);
-            color: var(--accent);
-        }
-        .btn-sm {
-            padding: 6px 14px;
-            font-size: 13px;
-        }
-        .btn-xs {
-            padding: 4px 10px;
-            font-size: 12px;
-            border-radius: 6px;
-        }
+        .btn:hover { transform: translateY(-1px); box-shadow: 0 4px 12px rgba(0,0,0,0.10); }
+        .btn-primary { background: var(--primary); color: #fff; }
+        .btn-primary:hover { background: var(--primary-light); }
+        .btn-accent { background: var(--accent); color: #fff; }
+        .btn-accent:hover { background: #6ab0d9; }
+        .btn-success { background: #2d8f5e; color: #fff; }
+        .btn-danger { background: #c0392b; color: #fff; }
+        .btn-danger:hover { background: #a93226; }
+        .btn-outline { background: transparent; border: 2px solid var(--border); color: var(--text-light); }
+        .btn-outline:hover { border-color: var(--accent); color: var(--accent); }
+        .btn-sm { padding: 6px 14px; font-size: 13px; }
+        .btn-xs { padding: 4px 10px; font-size: 12px; border-radius: 6px; }
 
         .stats {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
-            gap: 16px;
-            margin-bottom: 28px;
+            display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+            gap: 16px; margin-bottom: 28px;
         }
         .stat-card {
-            background: var(--card-bg);
-            border-radius: var(--radius);
-            padding: 18px 22px;
-            box-shadow: var(--shadow);
-            display: flex;
-            align-items: center;
-            gap: 16px;
+            background: var(--card-bg); border-radius: var(--radius); padding: 18px 22px;
+            box-shadow: var(--shadow); display: flex; align-items: center; gap: 16px;
         }
         .stat-card .icon {
-            width: 44px;
-            height: 44px;
-            border-radius: 12px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-size: 20px;
-            color: #fff;
-            flex-shrink: 0;
+            width: 44px; height: 44px; border-radius: 12px; display: flex;
+            align-items: center; justify-content: center; font-size: 20px;
+            color: #fff; flex-shrink: 0;
         }
-        .stat-card .icon.blue {
-            background: var(--accent);
-        }
-        .stat-card .icon.green {
-            background: #2d8f5e;
-        }
-        .stat-card .icon.orange {
-            background: #e67e22;
-        }
-        .stat-card .icon.red {
-            background: #c0392b;
-        }
-        .stat-card .icon.purple {
-            background: #8e44ad;
-        }
-        .stat-card .icon.teal {
-            background: #1abc9c;
-        }
-        .stat-card .icon.pink {
-            background: #e84393;
-        }
-        .stat-card .info .number {
-            font-size: 28px;
-            font-weight: 700;
-            line-height: 1.2;
-            color: var(--primary);
-        }
-        .stat-card .info .label {
-            font-size: 14px;
-            color: var(--text-light);
-            font-weight: 500;
-        }
+        .stat-card .icon.blue { background: var(--accent); }
+        .stat-card .icon.green { background: #2d8f5e; }
+        .stat-card .icon.orange { background: #e67e22; }
+        .stat-card .icon.red { background: #c0392b; }
+        .stat-card .icon.purple { background: #8e44ad; }
+        .stat-card .icon.teal { background: #1abc9c; }
+        .stat-card .icon.pink { background: #e84393; }
+        .stat-card .info .number { font-size: 28px; font-weight: 700; line-height: 1.2; color: var(--primary); }
+        .stat-card .info .label { font-size: 14px; color: var(--text-light); font-weight: 500; }
 
         .toolbar {
-            display: flex;
-            flex-wrap: wrap;
-            gap: 12px;
-            align-items: center;
-            justify-content: space-between;
-            margin-bottom: 20px;
-            background: var(--card-bg);
-            padding: 14px 20px;
-            border-radius: var(--radius);
-            box-shadow: var(--shadow);
+            display: flex; flex-wrap: wrap; gap: 12px; align-items: center;
+            justify-content: space-between; margin-bottom: 20px;
+            background: var(--card-bg); padding: 14px 20px;
+            border-radius: var(--radius); box-shadow: var(--shadow);
         }
-        .toolbar-left {
-            display: flex;
-            flex-wrap: wrap;
-            gap: 12px;
-            align-items: center;
-            flex: 1;
-        }
+        .toolbar-left { display: flex; flex-wrap: wrap; gap: 12px; align-items: center; flex: 1; }
         .toolbar-left .search-box {
-            display: flex;
-            align-items: center;
-            gap: 8px;
-            background: var(--bg);
-            border-radius: var(--radius-sm);
-            padding: 0 14px;
-            border: 1px solid var(--border);
-            flex: 1;
-            min-width: 200px;
-            max-width: 360px;
+            display: flex; align-items: center; gap: 8px; background: var(--bg);
+            border-radius: var(--radius-sm); padding: 0 14px; border: 1px solid var(--border);
+            flex: 1; min-width: 200px; max-width: 360px;
         }
         .toolbar-left .search-box input {
-            border: none;
-            background: transparent;
-            padding: 10px 0;
-            font-size: 15px;
-            outline: none;
-            flex: 1;
-            font-family: var(--font);
+            border: none; background: transparent; padding: 10px 0;
+            font-size: 15px; outline: none; flex: 1; font-family: var(--font);
         }
-        .toolbar-left .filter-group {
-            display: flex;
-            gap: 6px;
-            flex-wrap: wrap;
-        }
+        .toolbar-left .filter-group { display: flex; gap: 6px; flex-wrap: wrap; }
         .toolbar-left .filter-group .filter-btn {
-            padding: 6px 14px;
-            border-radius: 20px;
-            border: 1px solid var(--border);
-            background: transparent;
-            font-size: 13px;
-            cursor: pointer;
-            font-family: var(--font);
-            color: var(--text-light);
-            font-weight: 500;
-            white-space: nowrap;
+            padding: 6px 14px; border-radius: 20px; border: 1px solid var(--border);
+            background: transparent; font-size: 13px; cursor: pointer;
+            font-family: var(--font); color: var(--text-light); font-weight: 500; white-space: nowrap;
         }
-        .toolbar-left .filter-group .filter-btn:hover {
-            border-color: var(--accent);
-            color: var(--accent);
-        }
+        .toolbar-left .filter-group .filter-btn:hover { border-color: var(--accent); color: var(--accent); }
         .toolbar-left .filter-group .filter-btn.active {
-            background: var(--primary);
-            color: #fff;
-            border-color: var(--primary);
+            background: var(--primary); color: #fff; border-color: var(--primary);
         }
-        .toolbar-left .filter-group .filter-btn.tag-filter {
-            background: #f0f0f0;
-            border-color: #ccc;
-        }
+        .toolbar-left .filter-group .filter-btn.tag-filter { background: #f0f0f0; border-color: #ccc; }
         .toolbar-left .filter-group .filter-btn.tag-filter.active {
-            background: var(--accent);
-            color: #fff;
-            border-color: var(--accent);
+            background: var(--accent); color: #fff; border-color: var(--accent);
         }
-        .toolbar-right {
-            display: flex;
-            gap: 8px;
-            flex-wrap: wrap;
-            align-items: center;
-        }
-        .toolbar-right .selected-info {
-            font-size: 14px;
-            color: var(--text-light);
-            margin-right: 8px;
-        }
-        .toolbar-right .batch-actions {
-            display: flex;
-            gap: 6px;
-            align-items: center;
-        }
+        .toolbar-right { display: flex; gap: 8px; flex-wrap: wrap; align-items: center; }
+        .toolbar-right .selected-info { font-size: 14px; color: var(--text-light); margin-right: 8px; }
+        .toolbar-right .batch-actions { display: flex; gap: 6px; align-items: center; }
         .toolbar-right .batch-actions select {
-            padding: 6px 12px;
-            border-radius: var(--radius-sm);
-            border: 1px solid var(--border);
-            font-size: 14px;
-            background: #fafbfc;
-            font-family: var(--font);
+            padding: 6px 12px; border-radius: var(--radius-sm); border: 1px solid var(--border);
+            font-size: 14px; background: #fafbfc; font-family: var(--font);
         }
 
         .table-wrap {
-            background: var(--card-bg);
-            border-radius: var(--radius);
-            box-shadow: var(--shadow);
-            overflow: hidden;
-            overflow-x: auto;
+            background: var(--card-bg); border-radius: var(--radius);
+            box-shadow: var(--shadow); overflow: hidden; overflow-x: auto;
         }
-        .table-wrap table {
-            width: 100%;
-            border-collapse: collapse;
-            font-size: 14px;
-            min-width: 1300px;
-        }
+        .table-wrap table { width: 100%; border-collapse: collapse; font-size: 14px; min-width: 1300px; }
         .table-wrap table th {
-            background: var(--bg);
-            font-weight: 600;
-            color: var(--text-light);
-            padding: 14px 16px;
-            text-align: left;
-            border-bottom: 2px solid var(--border);
-            font-size: 13px;
-            text-transform: uppercase;
-            letter-spacing: 0.3px;
-            white-space: nowrap;
-            cursor: pointer;
-            position: relative;
+            background: var(--bg); font-weight: 600; color: var(--text-light);
+            padding: 14px 16px; text-align: left; border-bottom: 2px solid var(--border);
+            font-size: 13px; text-transform: uppercase; letter-spacing: 0.3px;
+            white-space: nowrap; cursor: pointer; position: relative;
         }
-        .table-wrap table th i {
-            margin-left: 6px;
-            font-size: 12px;
-            opacity: 0.5;
-        }
-        .table-wrap table th .checkbox-col {
-            display: inline-block;
-            width: 18px;
-            text-align: center;
-        }
+        .table-wrap table th i { margin-left: 6px; font-size: 12px; opacity: 0.5; }
         .table-wrap table td {
-            padding: 14px 16px;
-            border-bottom: 1px solid var(--border);
-            vertical-align: middle;
+            padding: 14px 16px; border-bottom: 1px solid var(--border); vertical-align: middle;
         }
+        .table-wrap table tbody tr:nth-child(odd) { background-color: #ffffff; }
+        .table-wrap table tbody tr:nth-child(even) { background-color: #f8fafc; }
+        .table-wrap table tbody tr:hover { background-color: #eef2f6; }
+        .table-wrap table tbody tr.selected { background-color: rgba(59,143,194,0.12) !important; }
 
-        /* 斑马纹 */
-        .table-wrap table tbody tr:nth-child(odd) {
-            background-color: #ffffff;
-        }
-        .table-wrap table tbody tr:nth-child(even) {
-            background-color: #f8fafc;
-        }
-        .table-wrap table tbody tr:hover {
-            background-color: #eef2f6;
-        }
-        .table-wrap table tbody tr.selected {
-            background-color: rgba(59, 143, 194, 0.12) !important;
-        }
-
-        .table-wrap .case-id {
-            font-weight: 600;
-            color: var(--primary);
-            font-size: 13px;
-            white-space: nowrap;
-        }
+        .table-wrap .case-id { font-weight: 600; color: var(--primary); font-size: 13px; white-space: nowrap; }
         .status-badge {
-            display: inline-block;
-            padding: 4px 14px;
-            border-radius: 20px;
-            font-size: 12px;
-            font-weight: 600;
-            white-space: nowrap;
+            display: inline-block; padding: 4px 14px; border-radius: 20px;
+            font-size: 12px; font-weight: 600; white-space: nowrap;
         }
-        .status-badge.status-receive {
-            background: #dbeafe;
-            color: #1a56db;
-        }
-        .status-badge.status-processing {
-            background: #fef3c7;
-            color: #b45309;
-        }
-        .status-badge.status-pending-submit {
-            background: #e0e7ff;
-            color: #4338ca;
-        }
-        .status-badge.status-submitted {
-            background: #d1fae5;
-            color: #065f46;
-        }
-        .status-badge.status-payment {
-            background: #fce4ec;
-            color: #b71c1c;
-        }
-        .status-badge.status-transferred {
-            background: #e5e7eb;
-            color: #374151;
-        }
+        .status-badge.status-receive { background: #dbeafe; color: #1a56db; }
+        .status-badge.status-processing { background: #fef3c7; color: #b45309; }
+        .status-badge.status-pending-submit { background: #e0e7ff; color: #4338ca; }
+        .status-badge.status-submitted { background: #d1fae5; color: #065f46; }
+        .status-badge.status-payment { background: #fce4ec; color: #b71c1c; }
+        .status-badge.status-transferred { background: #e5e7eb; color: #374151; }
         .priority-badge {
-            display: inline-block;
-            padding: 2px 10px;
-            border-radius: 12px;
-            font-size: 12px;
-            font-weight: 600;
+            display: inline-block; padding: 2px 10px; border-radius: 12px;
+            font-size: 12px; font-weight: 600;
         }
-        .priority-high {
-            background: #fee2e2;
-            color: #991b1b;
-        }
-        .priority-medium {
-            background: #fef3c7;
-            color: #92400e;
-        }
-        .priority-low {
-            background: #e0e7ff;
-            color: #3730a3;
-        }
-        .importance-stars {
-            color: #f59e0b;
-            letter-spacing: 2px;
-        }
-        .tag-list {
-            display: flex;
-            flex-wrap: wrap;
-            gap: 4px;
-        }
+        .priority-high { background: #fee2e2; color: #991b1b; }
+        .priority-medium { background: #fef3c7; color: #92400e; }
+        .priority-low { background: #e0e7ff; color: #3730a3; }
+        .importance-stars { color: #f59e0b; letter-spacing: 2px; }
+        .tag-list { display: flex; flex-wrap: wrap; gap: 4px; }
         .tag-item {
-            background: #e5e7eb;
-            color: #374151;
-            padding: 2px 10px;
-            border-radius: 12px;
-            font-size: 11px;
-            font-weight: 500;
-            white-space: nowrap;
+            background: #e5e7eb; color: #374151; padding: 2px 10px;
+            border-radius: 12px; font-size: 11px; font-weight: 500; white-space: nowrap;
         }
-        .table-wrap .actions {
-            display: flex;
-            gap: 6px;
-            flex-wrap: wrap;
-            justify-content: center;
-        }
+        .table-wrap .actions { display: flex; gap: 6px; flex-wrap: wrap; justify-content: center; }
         .table-wrap .empty-state {
-            text-align: center;
-            padding: 60px 20px;
-            color: var(--text-light);
+            text-align: center; padding: 60px 20px; color: var(--text-light);
         }
         .table-wrap .empty-state i {
-            font-size: 48px;
-            color: var(--border);
-            margin-bottom: 16px;
-            display: block;
+            font-size: 48px; color: var(--border); margin-bottom: 16px; display: block;
         }
 
         input[type="checkbox"] {
-            width: 18px;
-            height: 18px;
-            cursor: pointer;
-            accent-color: var(--accent);
+            width: 18px; height: 18px; cursor: pointer; accent-color: var(--accent);
         }
-        .checkbox-col {
-            text-align: center;
-            width: 40px;
-        }
+        .checkbox-col { text-align: center; width: 40px; }
 
         /* 模态框样式 */
         .modal-overlay {
-            position: fixed;
-            inset: 0;
-            background: rgba(0, 0, 0, 0.40);
-            backdrop-filter: blur(4px);
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            z-index: 1000;
-            padding: 20px;
+            position: fixed; inset: 0; background: rgba(0,0,0,0.40);
+            backdrop-filter: blur(4px); display: flex; align-items: center;
+            justify-content: center; z-index: 1000; padding: 20px;
             animation: fadeIn 0.25s ease;
         }
         .modal-overlay .modal {
-            background: var(--card-bg);
-            border-radius: var(--radius);
-            max-width: 820px;
-            width: 100%;
-            max-height: 90vh;
-            overflow-y: auto;
-            padding: 32px 36px;
-            box-shadow: 0 24px 60px rgba(0, 0, 0, 0.20);
+            background: var(--card-bg); border-radius: var(--radius);
+            max-width: 820px; width: 100%; max-height: 90vh; overflow-y: auto;
+            padding: 32px 36px; box-shadow: 0 24px 60px rgba(0,0,0,0.20);
             animation: slideUp 0.3s ease;
         }
         .modal .modal-header {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            margin-bottom: 24px;
+            display: flex; justify-content: space-between; align-items: center; margin-bottom: 24px;
         }
-        .modal .modal-header h2 {
-            font-size: 22px;
-            font-weight: 700;
-            color: var(--primary);
-        }
+        .modal .modal-header h2 { font-size: 22px; font-weight: 700; color: var(--primary); }
         .modal .modal-header .close-btn {
-            width: 36px;
-            height: 36px;
-            border: none;
-            background: var(--bg);
-            border-radius: 50%;
-            font-size: 18px;
-            cursor: pointer;
+            width: 36px; height: 36px; border: none; background: var(--bg);
+            border-radius: 50%; font-size: 18px; cursor: pointer;
             transition: background var(--transition), transform 0.15s;
-            color: var(--text-light);
-            display: flex;
-            align-items: center;
-            justify-content: center;
+            color: var(--text-light); display: flex; align-items: center; justify-content: center;
         }
-        .modal .modal-header .close-btn:hover {
-            background: #e2e8f0;
-            transform: rotate(90deg);
-        }
-        .modal .form-group {
-            margin-bottom: 18px;
-        }
+        .modal .modal-header .close-btn:hover { background: #e2e8f0; transform: rotate(90deg); }
+        .modal .form-group { margin-bottom: 18px; }
         .modal .form-group label {
-            display: block;
-            font-weight: 600;
-            font-size: 14px;
-            margin-bottom: 5px;
-            color: var(--text);
+            display: block; font-weight: 600; font-size: 14px; margin-bottom: 5px; color: var(--text);
         }
-        .modal .form-group label .required {
-            color: #c0392b;
-            margin-left: 2px;
-        }
+        .modal .form-group label .required { color: #c0392b; margin-left: 2px; }
         .modal .form-group label .hint {
-            font-weight: 400;
-            color: var(--text-light);
-            font-size: 12px;
-            margin-left: 8px;
+            font-weight: 400; color: var(--text-light); font-size: 12px; margin-left: 8px;
         }
         .modal .form-group input,
         .modal .form-group select,
         .modal .form-group textarea {
-            width: 100%;
-            padding: 10px 14px;
-            border: 1px solid var(--border);
-            border-radius: var(--radius-sm);
-            font-size: 15px;
-            font-family: var(--font);
-            transition: border var(--transition), box-shadow var(--transition);
-            background: #fafbfc;
+            width: 100%; padding: 10px 14px; border: 1px solid var(--border);
+            border-radius: var(--radius-sm); font-size: 15px; font-family: var(--font);
+            transition: border var(--transition), box-shadow var(--transition); background: #fafbfc;
         }
         .modal .form-group input:focus,
         .modal .form-group select:focus,
         .modal .form-group textarea:focus {
-            outline: none;
-            border-color: var(--accent);
-            box-shadow: 0 0 0 3px rgba(59, 143, 194, 0.12);
+            outline: none; border-color: var(--accent);
+            box-shadow: 0 0 0 3px rgba(59,143,194,0.12);
         }
-        .modal .form-row {
-            display: grid;
-            grid-template-columns: 1fr 1fr;
-            gap: 16px;
-        }
+        .modal .form-row { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
         .modal .form-actions {
-            display: flex;
-            justify-content: flex-end;
-            gap: 12px;
-            margin-top: 24px;
-            padding-top: 20px;
-            border-top: 1px solid var(--border);
+            display: flex; justify-content: flex-end; gap: 12px;
+            margin-top: 24px; padding-top: 20px; border-top: 1px solid var(--border);
         }
         .batch-table {
-            width: 100%;
-            border-collapse: collapse;
-            margin-top: 10px;
+            width: 100%; border-collapse: collapse; margin-top: 10px;
         }
-        .batch-table th,
-        .batch-table td {
-            border: 1px solid var(--border);
-            padding: 8px 10px;
-            text-align: left;
-            font-size: 14px;
+        .batch-table th, .batch-table td {
+            border: 1px solid var(--border); padding: 8px 10px;
+            text-align: left; font-size: 14px;
         }
-        .batch-table th {
-            background: var(--bg);
-            font-weight: 600;
-        }
+        .batch-table th { background: var(--bg); font-weight: 600; }
         .batch-table input {
-            width: 100%;
-            border: 1px solid transparent;
-            padding: 6px 8px;
-            border-radius: 4px;
-            font-size: 14px;
-            background: transparent;
+            width: 100%; border: 1px solid transparent; padding: 6px 8px;
+            border-radius: 4px; font-size: 14px; background: transparent;
             transition: border var(--transition);
         }
-        .batch-table input:focus {
-            border-color: var(--accent);
-            background: #fff;
-            outline: none;
-        }
+        .batch-table input:focus { border-color: var(--accent); background: #fff; outline: none; }
         .batch-table .remove-row-btn {
-            color: #c0392b;
-            cursor: pointer;
-            font-size: 16px;
-            background: none;
-            border: none;
+            color: #c0392b; cursor: pointer; font-size: 16px;
+            background: none; border: none;
         }
-        .detail-grid {
-            display: grid;
-            grid-template-columns: 1fr 1fr;
-            gap: 16px 24px;
-        }
-        .detail-item {
-            display: flex;
-            flex-direction: column;
-            gap: 4px;
-        }
-        .detail-item .label {
-            font-size: 13px;
-            font-weight: 600;
-            color: var(--text-light);
-        }
-        .detail-item .value {
-            font-size: 15px;
-            color: var(--text);
-            word-break: break-word;
-        }
-        .detail-item.full-width {
-            grid-column: 1 / -1;
-        }
+        .detail-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 16px 24px; }
+        .detail-item { display: flex; flex-direction: column; gap: 4px; }
+        .detail-item .label { font-size: 13px; font-weight: 600; color: var(--text-light); }
+        .detail-item .value { font-size: 15px; color: var(--text); word-break: break-word; }
+        .detail-item.full-width { grid-column: 1 / -1; }
 
         /* Toast */
         .toast-container {
-            position: fixed;
-            top: 24px;
-            right: 24px;
-            z-index: 2000;
-            display: flex;
-            flex-direction: column;
-            gap: 10px;
-            max-width: 380px;
-            width: 100%;
+            position: fixed; top: 24px; right: 24px; z-index: 2000;
+            display: flex; flex-direction: column; gap: 10px;
+            max-width: 380px; width: 100%;
         }
         .toast {
-            background: var(--card-bg);
-            padding: 14px 20px;
-            border-radius: var(--radius-sm);
-            box-shadow: 0 8px 28px rgba(0, 0, 0, 0.13);
-            display: flex;
-            align-items: center;
-            gap: 12px;
-            animation: slideInRight 0.35s ease;
+            background: var(--card-bg); padding: 14px 20px; border-radius: var(--radius-sm);
+            box-shadow: 0 8px 28px rgba(0,0,0,0.13); display: flex; align-items: center;
+            gap: 12px; animation: slideInRight 0.35s ease;
             border-left: 4px solid var(--accent);
         }
-        .toast.success {
-            border-left-color: #2d8f5e;
-        }
-        .toast.error {
-            border-left-color: #c0392b;
-        }
-        .toast .toast-icon {
-            font-size: 20px;
-            flex-shrink: 0;
-        }
-        .toast.success .toast-icon {
-            color: #2d8f5e;
-        }
-        .toast.error .toast-icon {
-            color: #c0392b;
-        }
-        .toast .toast-msg {
-            flex: 1;
-            font-size: 14px;
-            font-weight: 500;
-        }
+        .toast.success { border-left-color: #2d8f5e; }
+        .toast.error { border-left-color: #c0392b; }
+        .toast .toast-icon { font-size: 20px; flex-shrink: 0; }
+        .toast.success .toast-icon { color: #2d8f5e; }
+        .toast.error .toast-icon { color: #c0392b; }
+        .toast .toast-msg { flex: 1; font-size: 14px; font-weight: 500; }
         .toast .toast-close {
-            background: none;
-            border: none;
-            font-size: 16px;
-            cursor: pointer;
-            color: var(--text-light);
-            padding: 0 4px;
+            background: none; border: none; font-size: 16px;
+            cursor: pointer; color: var(--text-light); padding: 0 4px;
         }
         @keyframes slideInRight {
-            from {
-                opacity: 0;
-                transform: translateX(60px);
-            }
-            to {
-                opacity: 1;
-                transform: translateX(0);
-            }
+            from { opacity: 0; transform: translateX(60px); }
+            to { opacity: 1; transform: translateX(0); }
         }
         @keyframes fadeIn {
-            from {
-                opacity: 0;
-            }
-            to {
-                opacity: 1;
-            }
+            from { opacity: 0; }
+            to { opacity: 1; }
         }
         @keyframes slideUp {
-            from {
-                opacity: 0;
-                transform: translateY(30px) scale(0.97);
-            }
-            to {
-                opacity: 1;
-                transform: translateY(0) scale(1);
-            }
+            from { opacity: 0; transform: translateY(30px) scale(0.97); }
+            to { opacity: 1; transform: translateY(0) scale(1); }
         }
 
-        @media (max-width: 820px) {
-            body {
-                padding: 16px;
-            }
-            .header-left h1 {
-                font-size: 20px;
-            }
-            .stats {
-                grid-template-columns: repeat(2, 1fr);
-            }
-            .modal .form-row {
-                grid-template-columns: 1fr;
-            }
-            .modal {
-                padding: 24px 20px !important;
-            }
-            .table-wrap table {
-                min-width: 1100px;
-            }
-            .detail-grid {
-                grid-template-columns: 1fr;
-            }
-            .toolbar-right .batch-actions select {
-                width: 120px;
-            }
+        /* 登录遮罩 */
+        .login-overlay {
+            position: fixed; inset: 0; background: rgba(26,58,92,0.85);
+            backdrop-filter: blur(6px); display: flex; align-items: center;
+            justify-content: center; z-index: 3000;
         }
-        @media (max-width: 480px) {
-            .stats {
-                grid-template-columns: 1fr 1fr;
-                gap: 10px;
-            }
-            .stat-card {
-                padding: 14px 16px;
-            }
-            .stat-card .icon {
-                width: 36px;
-                height: 36px;
-                font-size: 16px;
-            }
-            .stat-card .info .number {
-                font-size: 20px;
-            }
+        .login-card {
+            background: #fff; border-radius: var(--radius); padding: 40px 44px;
+            max-width: 420px; width: 100%; box-shadow: 0 24px 60px rgba(0,0,0,0.3);
         }
-        .text-muted {
+        .login-card h2 { color: var(--primary); margin-bottom: 8px; font-size: 24px; }
+        .login-card p { color: var(--text-light); font-size: 14px; margin-bottom: 24px; }
+        .login-card .form-group { margin-bottom: 16px; }
+        .login-card .form-group label {
+            display: block; font-weight: 600; font-size: 14px; margin-bottom: 6px;
+        }
+        .login-card .form-group input {
+            width: 100%; padding: 12px 14px; border: 1px solid var(--border);
+            border-radius: var(--radius-sm); font-size: 15px; font-family: var(--font);
+            background: #fafbfc;
+        }
+        .login-card .form-group input:focus {
+            outline: none; border-color: var(--accent);
+            box-shadow: 0 0 0 3px rgba(59,143,194,0.12);
+        }
+        .login-card .btn { width: 100%; justify-content: center; margin-top: 8px; }
+        .login-card .switch-link {
+            text-align: center; margin-top: 16px; font-size: 14px;
             color: var(--text-light);
         }
-        /* 保留用于其他可能的地方，但表格内已使用内联样式覆盖 */
-        .text-ellipsis {
-            white-space: nowrap;
-            overflow: hidden;
-            text-overflow: ellipsis;
-            max-width: 150px;
-            display: inline-block;
-            vertical-align: middle;
+        .login-card .switch-link a { color: var(--accent); cursor: pointer; text-decoration: underline; }
+
+        @media (max-width: 820px) {
+            body { padding: 16px; }
+            .header-left h1 { font-size: 20px; }
+            .stats { grid-template-columns: repeat(2, 1fr); }
+            .modal .form-row { grid-template-columns: 1fr; }
+            .modal { padding: 24px 20px !important; }
+            .table-wrap table { min-width: 1100px; }
+            .detail-grid { grid-template-columns: 1fr; }
+            .toolbar-right .batch-actions select { width: 120px; }
         }
+        @media (max-width: 480px) {
+            .stats { grid-template-columns: 1fr 1fr; gap: 10px; }
+            .stat-card { padding: 14px 16px; }
+            .stat-card .icon { width: 36px; height: 36px; font-size: 16px; }
+            .stat-card .info .number { font-size: 20px; }
+        }
+        .text-muted { color: var(--text-light); }
     </style>
 </head>
 <body>
 
-    <div class="container">
+    <!-- ===== 登录遮罩 ===== -->
+    <div class="login-overlay" id="loginOverlay">
+        <div class="login-card">
+            <h2 id="loginTitle">登录 IP 管理系统</h2>
+            <p>使用邮箱注册 / 登录，数据将同步到云端</p>
+            <div class="form-group">
+                <label>邮箱</label>
+                <input type="email" id="loginEmail" placeholder="you@example.com" />
+            </div>
+            <div class="form-group">
+                <label>密码</label>
+                <input type="password" id="loginPassword" placeholder="至少 6 位" />
+            </div>
+            <button class="btn btn-primary" id="loginBtn" onclick="doLogin()">
+                <i class="fas fa-sign-in-alt"></i> <span id="loginBtnText">登录</span>
+            </button>
+            <div class="switch-link">
+                <a onclick="toggleLoginMode()" id="switchModeLink">没有账号？去注册</a>
+            </div>
+            <div style="margin-top:12px;font-size:12px;color:#c0392b;text-align:center;" id="loginError"></div>
+        </div>
+    </div>
+
+    <div class="container" id="mainApp" style="display:none;">
 
         <!-- 顶部 -->
         <header class="header">
@@ -811,7 +393,7 @@
                 <div class="logo"><i class="fas fa-scale-balanced"></i></div>
                 <div>
                     <h1>IP<span>全业务</span>管理</h1>
-                    <div class="subtitle">本地存储 · 批量操作 · 自动编号 · 客户/联系人历史记忆</div>
+                    <div class="subtitle">云端同步 · 多设备实时 · 客户/联系人历史记忆</div>
                 </div>
             </div>
             <div class="header-actions">
@@ -828,6 +410,9 @@
                 <button class="btn btn-primary" onclick="openAddModal()">
                     <i class="fas fa-plus"></i> <span>新建案件</span>
                 </button>
+                <button class="btn btn-outline btn-sm" onclick="doLogout()" title="退出登录">
+                    <i class="fas fa-sign-out-alt"></i>
+                </button>
             </div>
         </header>
 
@@ -841,7 +426,9 @@
             <span class="step">已提交受理</span> <i class="fas fa-chevron-right"></i>
             <span class="step">协助缴费</span> <i class="fas fa-chevron-right"></i>
             <span class="step step-end">已移交专人 (结束)</span>
-            <span style="margin-left:auto;font-size:13px;color:var(--text-light);"><i class="far fa-save"></i> 客户/联系人自动记忆</span>
+            <span style="margin-left:auto;font-size:13px;color:var(--text-light);" id="syncStatus">
+                <i class="fas fa-cloud"></i> 正在连接云端...
+            </span>
         </div>
 
         <!-- 统计 -->
@@ -907,8 +494,8 @@
         </div>
 
         <div style="margin-top:24px;text-align:center;font-size:13px;color:var(--text-light);">
-            <i class="fas fa-database" style="margin-right:6px;"></i>
-            数据存储在浏览器本地 · 共 <span id="totalCountFooter">0</span> 件案件
+            <i class="fas fa-cloud" style="margin-right:6px;"></i>
+            数据已同步到云端 · 共 <span id="totalCountFooter">0</span> 件案件
         </div>
     </div>
 
@@ -921,6 +508,7 @@
             </div>
             <form id="caseForm" onsubmit="saveCase(event)">
                 <input type="hidden" id="editId" value="" />
+                <input type="hidden" id="editVersion" value="" />
                 <div class="form-row">
                     <div class="form-group">
                         <label>案件编号 <span class="required">*</span> <span class="hint">自动生成，可修改</span></label>
@@ -1040,7 +628,6 @@
             <div style="margin-bottom:16px;">
                 <p class="text-muted">填写通用信息，客户和联系人支持历史记忆。</p>
             </div>
-            <!-- 通用信息 -->
             <div class="form-row">
                 <div class="form-group">
                     <label>客户名称 <span class="required">*</span> <span class="hint">可输入或选择已有客户</span></label>
@@ -1116,8 +703,6 @@
                     <button type="button" class="btn btn-outline btn-sm" onclick="autoFillBatchNumbers()"><i class="fas fa-magic"></i> 自动填充编号</button>
                 </div>
             </div>
-
-            <!-- 案件明细表格 -->
             <div style="margin-top:12px;overflow-x:auto;">
                 <table class="batch-table" id="batchTable">
                     <thead>
@@ -1128,9 +713,7 @@
                             <th style="width:10%;">操作</th>
                         </tr>
                     </thead>
-                    <tbody id="batchTableBody">
-                        <!-- 初始一行 -->
-                    </tbody>
+                    <tbody id="batchTableBody"></tbody>
                 </table>
             </div>
             <div class="form-actions">
@@ -1147,9 +730,7 @@
                 <h2>案件详情</h2>
                 <button class="close-btn" onclick="closeDetailModal()"><i class="fas fa-times"></i></button>
             </div>
-            <div id="detailContent" class="detail-grid">
-                <!-- 由JS动态填充 -->
-            </div>
+            <div id="detailContent" class="detail-grid"></div>
             <div class="form-actions" style="border-top:none;padding-top:12px;">
                 <button type="button" class="btn btn-outline" onclick="closeDetailModal()">关闭</button>
             </div>
@@ -1159,26 +740,32 @@
     <!-- Toast -->
     <div class="toast-container" id="toastContainer"></div>
 
-
     <script>
         // ============================================================
-        //  本地存储版本 - 所有数据保存在 localStorage
+        //  Supabase 配置 —— 请替换为你自己的项目地址和 anon key
         // ============================================================
+        const SUPABASE_URL = 'https://ldjnusnalzgponneogaq.supabase.co/rest/v1/';
+        const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imxkam51c25hbHpncG9ubmVvZ2FxIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODkyMTEwNzYsImV4cCI6MjEwNDc4NzA3Nn0.FvMUk3hvrIdDz0raGh3et2eWUsLF8MIQiy6grLSOG2c';
 
-        const STORAGE_KEY = 'ip_full_business_local';
+        const sb = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+
+        // ============================================================
+        //  全局状态
+        // ============================================================
         let cases = [];
         let currentTypeFilter = 'all';
         let currentTagFilter = null;
         let currentSort = { field: 'receiveDate', asc: false };
-
-        // 用于存储当前选中的案件ID集合
         let selectedIds = new Set();
+        let isLoginMode = true;
+        let realtimeChannel = null;
+        let isOnline = navigator.onLine;
+        let pendingQueue = [];  // 离线操作队列
 
-        // 更新后的业务类型前缀映射（用于自动编号）
         const TYPE_PREFIX = {
             '专利代理': 'ZL',
-            '专利侵权与规避': 'QG', // 侵权与规避
-            '软件著作权登记': 'RJ', // 软件著作权
+            '专利侵权与规避': 'QG',
+            '软件著作权登记': 'RJ',
             '商标代理': 'SB',
             '专利检索': 'JS',
             '缴费监控': 'JF',
@@ -1196,128 +783,139 @@
         };
 
         // ============================================================
-        //  数据加载与保存
+        //  字段映射：DB(snake_case) ↔ UI(camelCase)
         // ============================================================
-        function loadData() {
-            const raw = localStorage.getItem(STORAGE_KEY);
-            if (raw) {
-                try {
-                    cases = JSON.parse(raw);
-                    cases = cases.map(c => ({
-                        ...c,
-                        caseType: c.caseType || '专利代理',
-                        priority: c.priority || '中',
-                        importance: c.importance || '3',
-                        tags: c.tags || '',
-                        submitDate: c.submitDate || '',
-                        paymentDate: c.paymentDate || '',
-                        transferDate: c.transferDate || '',
-                    }));
-                    console.log(`✅ 从本地加载了 ${cases.length} 件案件`);
-                } catch (e) {
-                    cases = [];
-                }
-            } else {
-                // 默认示例数据（调整业务类型）
-                cases = [{
-                    id: 'c1',
-                    caseNumber: 'ZL-2026-001',
-                    caseName: '5G通信核心专利',
-                    clientName: '华为技术有限公司',
-                    caseType: '专利代理',
-                    contactPerson: '张明',
-                    contactPhone: '13800001111',
-                    receiveDate: '2026-01-15',
-                    submitDate: '2026-03-01',
-                    paymentDate: '2026-03-10',
-                    transferDate: '',
-                    status: '已提交受理',
-                    priority: '高',
-                    importance: '5',
-                    tags: '5G, 标准必要专利, 紧急',
-                    notes: '已协助完成缴费',
-                    createTime: '2026-01-15T08:00:00.000Z',
-                    updateTime: '2026-03-10T10:30:00.000Z',
-                }, {
-                    id: 'c2',
-                    caseNumber: 'QG-2026-001',
-                    caseName: '折叠屏铰链侵权分析',
-                    clientName: '小米科技',
-                    caseType: '专利侵权与规避',
-                    contactPerson: '李芳',
-                    contactPhone: '13800002222',
-                    receiveDate: '2026-02-20',
-                    submitDate: '',
-                    paymentDate: '',
-                    transferDate: '',
-                    status: '处理中',
-                    priority: '高',
-                    importance: '4',
-                    tags: '折叠屏, 侵权分析',
-                    notes: '进行侵权风险评估',
-                    createTime: '2026-02-20T09:00:00.000Z',
-                    updateTime: '2026-02-28T14:20:00.000Z',
-                }, {
-                    id: 'c3',
-                    caseNumber: 'RJ-2026-001',
-                    caseName: 'AI诊断软件著作权',
-                    clientName: '腾讯医疗',
-                    caseType: '软件著作权登记',
-                    contactPerson: '赵岩',
-                    contactPhone: '13800004444',
-                    receiveDate: '2026-04-01',
-                    submitDate: '2026-04-20',
-                    paymentDate: '',
-                    transferDate: '2026-05-01',
-                    status: '已移交专人',
-                    priority: '中',
-                    importance: '4',
-                    tags: 'AI, 软件, 登记',
-                    notes: '已完成登记申请',
-                    createTime: '2026-04-01T13:00:00.000Z',
-                    updateTime: '2026-05-01T09:30:00.000Z',
-                }, {
-                    id: 'c4',
-                    caseNumber: 'SB-2026-001',
-                    caseName: '品牌商标注册',
-                    clientName: 'OPPO',
-                    caseType: '商标代理',
-                    contactPerson: '刘洋',
-                    contactPhone: '13800006666',
-                    receiveDate: '2026-01-01',
-                    submitDate: '2026-01-15',
-                    paymentDate: '2026-01-20',
-                    transferDate: '',
-                    status: '协助缴费',
-                    priority: '低',
-                    importance: '3',
-                    tags: '商标, 品牌',
-                    notes: '已提交注册申请',
-                    createTime: '2026-01-01T08:00:00.000Z',
-                    updateTime: '2026-01-20T16:00:00.000Z',
-                }, {
-                    id: 'c5',
-                    caseNumber: 'JS-2026-001',
-                    caseName: '电池管理系统专利检索',
-                    clientName: '宁德时代',
-                    caseType: '专利检索',
-                    contactPerson: '陈辉',
-                    contactPhone: '13800005555',
-                    receiveDate: '2025-12-05',
-                    submitDate: '',
-                    paymentDate: '',
-                    transferDate: '',
-                    status: '收案',
-                    priority: '高',
-                    importance: '5',
-                    tags: '检索, 电池',
-                    notes: '需进行全球专利检索',
-                    createTime: '2025-12-05T10:00:00.000Z',
-                    updateTime: '2026-02-18T17:00:00.000Z',
-                }];
-                saveData();
+        const DB_TO_UI = {
+            case_number: 'caseNumber',
+            case_name: 'caseName',
+            client_name: 'clientName',
+            case_type: 'caseType',
+            contact_person: 'contactPerson',
+            contact_phone: 'contactPhone',
+            receive_date: 'receiveDate',
+            submit_date: 'submitDate',
+            payment_date: 'paymentDate',
+            transfer_date: 'transferDate',
+            status: 'status',
+            priority: 'priority',
+            importance: 'importance',
+            tags: 'tags',
+            notes: 'notes',
+            created_at: 'createTime',
+            updated_at: 'updateTime',
+        };
+
+        function fromDB(row) {
+            const o = { id: row.id, version: row.version ?? 1 };
+            for (const [db, ui] of Object.entries(DB_TO_UI)) {
+                o[ui] = row[db] ?? '';
             }
-            // 更新客户和联系人列表
+            o.importance = String(o.importance || 3);
+            return o;
+        }
+
+        function toDB(c) {
+            const o = {};
+            for (const [db, ui] of Object.entries(DB_TO_UI)) {
+                if (ui === 'createTime' || ui === 'updateTime') continue;
+                let v = c[ui];
+                if (v === '' || v === undefined) v = null;
+                if (ui === 'importance') v = parseInt(v) || 3;
+                o[db] = v;
+            }
+            return o;
+        }
+
+        // ============================================================
+        //  登录 / 登出
+        // ============================================================
+        function toggleLoginMode() {
+            isLoginMode = !isLoginMode;
+            document.getElementById('loginTitle').textContent = isLoginMode ? '登录 IP 管理系统' : '注册新账号';
+            document.getElementById('loginBtnText').textContent = isLoginMode ? '登录' : '注册';
+            document.getElementById('switchModeLink').textContent = isLoginMode ? '没有账号？去注册' : '已有账号？去登录';
+            document.getElementById('loginError').textContent = '';
+        }
+
+        async function doLogin() {
+            const email = document.getElementById('loginEmail').value.trim();
+            const password = document.getElementById('loginPassword').value;
+            const errEl = document.getElementById('loginError');
+            errEl.textContent = '';
+            if (!email || !password) { errEl.textContent = '请填写邮箱和密码'; return; }
+
+            const btn = document.getElementById('loginBtn');
+            btn.disabled = true;
+            try {
+                let result;
+                if (isLoginMode) {
+                    result = await sb.auth.signInWithPassword({ email, password });
+                } else {
+                    result = await sb.auth.signUp({ email, password });
+                }
+                if (result.error) throw result.error;
+                if (!isLoginMode && !result.data.session) {
+                    errEl.textContent = '注册成功，请检查邮箱确认链接后再登录';
+                    isLoginMode = true;
+                    toggleLoginMode();
+                    return;
+                }
+                // 登录成功，onAuthStateChange 会触发初始化
+            } catch (e) {
+                errEl.textContent = e.message || '操作失败';
+            } finally {
+                btn.disabled = false;
+            }
+        }
+
+        async function doLogout() {
+            if (!confirm('确定退出登录吗？')) return;
+            if (realtimeChannel) { await sb.removeChannel(realtimeChannel); realtimeChannel = null; }
+            await sb.auth.signOut();
+            location.reload();
+        }
+
+        // 监听认证状态
+        sb.auth.onAuthStateChange((event, session) => {
+            if (session) {
+                document.getElementById('loginOverlay').classList.add('hidden');
+                document.getElementById('mainApp').style.display = 'block';
+                initApp();
+            } else {
+                document.getElementById('loginOverlay').classList.remove('hidden');
+                document.getElementById('mainApp').style.display = 'none';
+            }
+        });
+
+        // ============================================================
+        //  初始化应用
+        // ============================================================
+        async function initApp() {
+            await loadData();
+            subscribeRealtime();
+            setupNetworkListeners();
+            flushPendingQueue();
+        }
+
+        // ============================================================
+        //  数据加载 / 保存
+        // ============================================================
+        async function loadData() {
+            setSyncStatus('syncing', '正在加载云端数据...');
+            const { data, error } = await sb
+                .from('cases')
+                .select('*')
+                .is('deleted_at', null)
+                .order('receive_date', { ascending: false });
+
+            if (error) {
+                toast('加载失败：' + error.message, 'error');
+                setSyncStatus('error', '加载失败');
+                return;
+            }
+            cases = (data || []).map(fromDB);
+            localStorage.setItem('ip_cache', JSON.stringify(cases));
+            setSyncStatus('ok', '已同步 · ' + new Date().toLocaleTimeString());
             updateHistoryLists();
             renderStats();
             renderTable();
@@ -1325,17 +923,17 @@
             updateSelectedInfo();
         }
 
-        function saveData() {
-            localStorage.setItem(STORAGE_KEY, JSON.stringify(cases));
-            // 每次保存后更新历史列表
-            updateHistoryLists();
+        function setSyncStatus(state, text) {
+            const el = document.getElementById('syncStatus');
+            if (!el) return;
+            const icons = { ok: 'fa-cloud', syncing: 'fa-cloud-arrow-up', error: 'fa-cloud-exclamation' };
+            el.innerHTML = `<i class="fas ${icons[state] || 'fa-cloud'}"></i> ${text}`;
         }
 
         // ============================================================
         //  客户和联系人历史记忆
         // ============================================================
         function updateHistoryLists() {
-            // 提取唯一客户和联系人
             const clientSet = new Set();
             const contactSet = new Set();
             cases.forEach(c => {
@@ -1344,24 +942,17 @@
             });
             const clients = Array.from(clientSet).sort();
             const contacts = Array.from(contactSet).sort();
-
-            // 更新客户 datalist
-            const clientDatalist = document.getElementById('clientList');
-            if (clientDatalist) {
-                clientDatalist.innerHTML = clients.map(name => `<option value="${name}">`).join('');
-            }
-            // 更新联系人 datalist
-            const contactDatalist = document.getElementById('contactList');
-            if (contactDatalist) {
-                contactDatalist.innerHTML = contacts.map(name => `<option value="${name}">`).join('');
-            }
+            const cd = document.getElementById('clientList');
+            if (cd) cd.innerHTML = clients.map(n => `<option value="${n}">`).join('');
+            const ct = document.getElementById('contactList');
+            if (ct) ct.innerHTML = contacts.map(n => `<option value="${n}">`).join('');
         }
 
         // ============================================================
-        //  其他辅助函数
+        //  辅助函数
         // ============================================================
         function genId() {
-            return Date.now().toString(36) + Math.random().toString(36).slice(2, 6);
+            return crypto.randomUUID ? crypto.randomUUID() : Date.now().toString(36) + Math.random().toString(36).slice(2, 10);
         }
 
         function fmtDate(d) {
@@ -1370,9 +961,7 @@
             return `${parts[0]}年${parseInt(parts[1])}月${parseInt(parts[2])}日`;
         }
 
-        function getStatusClass(status) {
-            return STATUS_CLASS_MAP[status] || 'status-other';
-        }
+        function getStatusClass(s) { return STATUS_CLASS_MAP[s] || 'status-other'; }
 
         function getPriorityClass(p) {
             const map = { '高': 'priority-high', '中': 'priority-medium', '低': 'priority-low' };
@@ -1387,15 +976,13 @@
         function getAllTags() {
             const tagSet = new Set();
             cases.forEach(c => {
-                if (c.tags) {
-                    c.tags.split(',').map(t => t.trim()).filter(t => t).forEach(t => tagSet.add(t));
-                }
+                if (c.tags) c.tags.split(',').map(t => t.trim()).filter(t => t).forEach(t => tagSet.add(t));
             });
             return Array.from(tagSet);
         }
 
         // ============================================================
-        //  自动编号（业务类型前缀已更新）
+        //  自动编号
         // ============================================================
         function generateCaseNumber() {
             const editId = document.getElementById('editId').value;
@@ -1415,8 +1002,7 @@
                 const seq = parseInt(c.caseNumber.split('-')[2], 10);
                 if (!isNaN(seq) && seq > maxSeq) maxSeq = seq;
             });
-            const nextSeq = String(maxSeq + 1).padStart(3, '0');
-            document.getElementById('f_caseNumber').value = `${prefix}-${year}-${nextSeq}`;
+            document.getElementById('f_caseNumber').value = `${prefix}-${year}-${String(maxSeq + 1).padStart(3, '0')}`;
         }
 
         function generateBatchNumber(type, date, existingNumbers) {
@@ -1436,7 +1022,7 @@
         }
 
         // ============================================================
-        //  统计（适配新业务类型）
+        //  统计
         // ============================================================
         function renderStats() {
             const total = cases.length;
@@ -1483,7 +1069,7 @@
         }
 
         // ============================================================
-        //  表格渲染（含复选框）
+        //  表格渲染
         // ============================================================
         function getFilteredAndSorted() {
             const keyword = document.getElementById('searchInput').value.trim().toLowerCase();
@@ -1568,21 +1154,17 @@
             });
             tbody.innerHTML = html;
             updateSelectedInfo();
-            // 更新全选状态
             const allCheckboxes = document.querySelectorAll('.row-checkbox');
             const checkedAll = allCheckboxes.length > 0 && Array.from(allCheckboxes).every(cb => cb.checked);
             document.getElementById('selectAll').checked = checkedAll;
         }
 
         // ============================================================
-        //  复选框与批量操作（同前）
+        //  复选框
         // ============================================================
         function toggleRow(id) {
-            if (selectedIds.has(id)) {
-                selectedIds.delete(id);
-            } else {
-                selectedIds.add(id);
-            }
+            if (selectedIds.has(id)) selectedIds.delete(id);
+            else selectedIds.add(id);
             const tr = document.querySelector(`tr[data-id="${id}"]`);
             if (tr) {
                 tr.classList.toggle('selected', selectedIds.has(id));
@@ -1597,14 +1179,10 @@
 
         function toggleAllCheckboxes() {
             const checked = document.getElementById('selectAll').checked;
-            const allCbs = document.querySelectorAll('.row-checkbox');
-            allCbs.forEach(cb => {
+            document.querySelectorAll('.row-checkbox').forEach(cb => {
                 const id = cb.dataset.id;
-                if (checked) {
-                    selectedIds.add(id);
-                } else {
-                    selectedIds.delete(id);
-                }
+                if (checked) selectedIds.add(id);
+                else selectedIds.delete(id);
                 cb.checked = checked;
                 const tr = document.querySelector(`tr[data-id="${id}"]`);
                 if (tr) tr.classList.toggle('selected', checked);
@@ -1621,104 +1199,135 @@
         }
 
         // ============================================================
+        //  实时同步订阅
+        // ============================================================
+        function subscribeRealtime() {
+            if (realtimeChannel) sb.removeChannel(realtimeChannel);
+            realtimeChannel = sb.channel('cases-realtime')
+                .on('postgres_changes', { event: '*', schema: 'public', table: 'cases' }, payload => {
+                    const row = payload.new || payload.old;
+                    if (payload.eventType === 'DELETE') {
+                        cases = cases.filter(c => c.id !== row.id);
+                    } else if (row.deleted_at) {
+                        cases = cases.filter(c => c.id !== row.id);
+                    } else {
+                        const ui = fromDB(row);
+                        const idx = cases.findIndex(c => c.id === ui.id);
+                        if (idx > -1) cases[idx] = ui;
+                        else cases.unshift(ui);
+                    }
+                    localStorage.setItem('ip_cache', JSON.stringify(cases));
+                    updateHistoryLists();
+                    renderStats();
+                    renderTable();
+                    setSyncStatus('ok', '已同步 · ' + new Date().toLocaleTimeString());
+                })
+                .subscribe((status) => {
+                    if (status === 'SUBSCRIBED') setSyncStatus('ok', '实时同步已连接');
+                });
+        }
+
+        // ============================================================
+        //  离线队列（简易版）
+        // ============================================================
+        function setupNetworkListeners() {
+            window.addEventListener('online', () => {
+                isOnline = true;
+                toast('网络已恢复，正在同步...', 'info');
+                flushPendingQueue();
+            });
+            window.addEventListener('offline', () => {
+                isOnline = false;
+                setSyncStatus('error', '离线模式（操作将缓存）');
+                toast('网络已断开，进入离线模式', 'error');
+            });
+        }
+
+        async function flushPendingQueue() {
+            if (pendingQueue.length === 0) return;
+            toast(`正在上传 ${pendingQueue.length} 条离线操作...`, 'info');
+            const queue = [...pendingQueue];
+            pendingQueue = [];
+            for (const op of queue) {
+                try {
+                    if (op.type === 'insert') {
+                        await sb.from('cases').insert(op.payload);
+                    } else if (op.type === 'update') {
+                        await sb.from('cases').update(op.payload).eq('id', op.id);
+                    } else if (op.type === 'delete') {
+                        await sb.from('cases').update({ deleted_at: new Date().toISOString() }).eq('id', op.id);
+                    }
+                } catch (e) {
+                    console.warn('离线操作上传失败:', e);
+                }
+            }
+            await loadData();
+            toast('离线操作已同步', 'success');
+        }
+
+        // ============================================================
         //  批量操作
         // ============================================================
-        function batchDelete() {
+        async function batchDelete() {
             const selected = getSelectedCases();
-            if (selected.length === 0) {
-                toast('请先选择要删除的案件', 'error');
-                return;
-            }
-            if (!confirm(`确定要删除选中的 ${selected.length} 件案件吗？此操作不可撤销！`)) return;
-            const idsToDelete = new Set(selected.map(c => c.id));
-            cases = cases.filter(c => !idsToDelete.has(c.id));
+            if (selected.length === 0) { toast('请先选择要删除的案件', 'error'); return; }
+            if (!confirm(`确定要删除选中的 ${selected.length} 件案件吗？`)) return;
+
+            const ids = selected.map(c => c.id);
+            setSyncStatus('syncing', '正在删除...');
+            const { error } = await sb.from('cases')
+                .update({ deleted_at: new Date().toISOString() })
+                .in('id', ids);
+
+            if (error) { toast('删除失败：' + error.message, 'error'); setSyncStatus('error', '删除失败'); return; }
+
+            cases = cases.filter(c => !ids.includes(c.id));
             selectedIds.clear();
-            saveData();
             renderStats();
             renderTable();
+            setSyncStatus('ok', '已同步 · ' + new Date().toLocaleTimeString());
             toast(`成功删除 ${selected.length} 件案件 🗑️`, 'success');
         }
 
-        function batchUpdateStatus() {
+        async function batchUpdateStatus() {
             const select = document.getElementById('batchStatusSelect');
             const newStatus = select.value;
-            if (!newStatus) {
-                toast('请选择要修改的状态', 'error');
-                return;
-            }
+            if (!newStatus) { toast('请选择要修改的状态', 'error'); return; }
             const selected = getSelectedCases();
-            if (selected.length === 0) {
-                toast('请先选择要修改的案件', 'error');
-                return;
-            }
+            if (selected.length === 0) { toast('请先选择要修改的案件', 'error'); return; }
             if (!confirm(`确定将选中的 ${selected.length} 件案件状态修改为「${newStatus}」吗？`)) return;
-            const now = new Date().toISOString();
-            const ids = new Set(selected.map(c => c.id));
-            cases = cases.map(c => {
-                if (ids.has(c.id)) {
-                    return { ...c, status: newStatus, updateTime: now };
-                }
-                return c;
-            });
+
+            const ids = selected.map(c => c.id);
+            setSyncStatus('syncing', '正在更新状态...');
+            const { error } = await sb.from('cases')
+                .update({ status: newStatus, updated_at: new Date().toISOString() })
+                .in('id', ids);
+
+            if (error) { toast('更新失败：' + error.message, 'error'); setSyncStatus('error', '更新失败'); return; }
+
+            cases = cases.map(c => ids.includes(c.id) ? { ...c, status: newStatus } : c);
             selectedIds.clear();
-            saveData();
             renderStats();
             renderTable();
-            toast(`成功更新 ${selected.length} 件案件状态 ✅`, 'success');
             select.value = '';
+            setSyncStatus('ok', '已同步 · ' + new Date().toLocaleTimeString());
+            toast(`成功更新 ${selected.length} 件案件状态 ✅`, 'success');
         }
 
         function exportSelectedCSV() {
             const selected = getSelectedCases();
-            if (selected.length === 0) {
-                toast('请先选择要导出的案件', 'error');
-                return;
-            }
-            const headers = [
-                '案件编号', '案件名称', '客户名称', '业务类型',
-                '联系人', '联系方式', '收案日期', '提交受理日期',
-                '缴费日期', '移交日期', '状态', '优先级', '重要性', '标签', '备注'
-            ];
-            const rows = selected.map(c => [
-                c.caseNumber || '',
-                c.caseName || '',
-                c.clientName || '',
-                c.caseType || '',
-                c.contactPerson || '',
-                c.contactPhone || '',
-                c.receiveDate || '',
-                c.submitDate || '',
-                c.paymentDate || '',
-                c.transferDate || '',
-                c.status || '',
-                c.priority || '中',
-                c.importance || '3',
-                (c.tags || '').replace(/,/g, ';'),
-                (c.notes || '').replace(/,/g, ';'),
-            ]);
-            const csvContent = [
-                headers.join(','),
-                ...rows.map(r => r.join(','))
-            ].join('\n');
-            const blob = new Blob(['\uFEFF' + csvContent], { type: 'text/csv;charset=utf-8;' });
-            const link = document.createElement('a');
-            link.href = URL.createObjectURL(blob);
-            link.download = `IP选中案件_${new Date().toISOString().slice(0,10)}.csv`;
-            link.click();
-            URL.revokeObjectURL(link.href);
+            if (selected.length === 0) { toast('请先选择要导出的案件', 'error'); return; }
+            downloadCSV(selected, `IP选中案件_${new Date().toISOString().slice(0,10)}.csv`);
             toast(`成功导出 ${selected.length} 件案件 📥`, 'success');
         }
 
         // ============================================================
-        //  标签筛选
+        //  标签筛选 & 排序
         // ============================================================
         function renderTagFilters() {
             const container = document.getElementById('tagFilterGroup');
             const allTags = getAllTags();
-            if (allTags.length === 0) {
-                container.innerHTML = '';
-                return;
-            }
+            if (allTags.length === 0) { container.innerHTML = ''; return; }
             let html = `<button class="filter-btn tag-filter ${!currentTagFilter ? 'active' : ''}" onclick="setTagFilter(null)">全部标签</button>`;
             allTags.forEach(t => {
                 const active = currentTagFilter === t ? 'active' : '';
@@ -1727,21 +1336,11 @@
             container.innerHTML = html;
         }
 
-        function setTagFilter(tag) {
-            currentTagFilter = tag;
-            renderTable();
-        }
+        function setTagFilter(tag) { currentTagFilter = tag; renderTable(); }
 
-        // ============================================================
-        //  排序 & 类型筛选
-        // ============================================================
         function sortTable(field) {
-            if (currentSort.field === field) {
-                currentSort.asc = !currentSort.asc;
-            } else {
-                currentSort.field = field;
-                currentSort.asc = false;
-            }
+            if (currentSort.field === field) currentSort.asc = !currentSort.asc;
+            else { currentSort.field = field; currentSort.asc = false; }
             renderTable();
         }
 
@@ -1754,12 +1353,13 @@
         }
 
         // ============================================================
-        //  单个新建/编辑（客户和联系人已绑定datalist）
+        //  单个新建/编辑
         // ============================================================
         function openAddModal() {
             document.getElementById('modalTitle').textContent = '新建案件';
             document.getElementById('modalSubmitBtn').innerHTML = '<i class="fas fa-plus"></i> 新建';
             document.getElementById('editId').value = '';
+            document.getElementById('editVersion').value = '';
             document.getElementById('caseForm').reset();
             const today = new Date().toISOString().slice(0, 10);
             document.getElementById('f_receiveDate').value = today;
@@ -1778,6 +1378,7 @@
             document.getElementById('modalTitle').textContent = '编辑案件';
             document.getElementById('modalSubmitBtn').innerHTML = '<i class="fas fa-save"></i> 更新';
             document.getElementById('editId').value = id;
+            document.getElementById('editVersion').value = c.version || 1;
             document.getElementById('f_caseNumber').value = c.caseNumber || '';
             document.getElementById('f_caseName').value = c.caseName || '';
             document.getElementById('f_clientName').value = c.clientName || '';
@@ -1803,9 +1404,11 @@
             document.body.style.overflow = 'auto';
         }
 
-        function saveCase(e) {
+        async function saveCase(e) {
             e.preventDefault();
             const editId = document.getElementById('editId').value;
+            const editVersion = parseInt(document.getElementById('editVersion').value) || 1;
+
             const formData = {
                 caseNumber: document.getElementById('f_caseNumber').value.trim(),
                 caseName: document.getElementById('f_caseName').value.trim(),
@@ -1823,51 +1426,106 @@
                 tags: document.getElementById('f_tags').value.trim(),
                 notes: document.getElementById('f_notes').value.trim(),
             };
-            if (!formData.caseNumber || !formData.caseName || !formData.clientName || !formData.contactPerson || !formData
-                .receiveDate) {
+
+            if (!formData.caseNumber || !formData.caseName || !formData.clientName || !formData.contactPerson || !formData.receiveDate) {
                 toast('请填写所有必填项', 'error');
                 return;
             }
-            // 检查编号唯一性
-            const duplicate = cases.some(c => c.caseNumber === formData.caseNumber && c.id !== editId);
-            if (duplicate) {
-                toast('案件编号已存在，请修改', 'error');
+
+            const payload = toDB(formData);
+
+            // 离线模式
+            if (!isOnline) {
+                pendingQueue.push({
+                    type: editId ? 'update' : 'insert',
+                    id: editId,
+                    payload,
+                });
+                if (editId) {
+                    const idx = cases.findIndex(c => c.id === editId);
+                    if (idx > -1) cases[idx] = { ...cases[idx], ...formData };
+                } else {
+                    cases.unshift({ id: genId(), version: 1, ...formData });
+                }
+                closeModal();
+                renderStats();
+                renderTable();
+                toast('离线模式：已缓存，网络恢复后自动上传', 'info');
                 return;
             }
-            const now = new Date().toISOString();
-            if (editId) {
-                const idx = cases.findIndex(c => c.id === editId);
-                if (idx === -1) return toast('案件不存在', 'error');
-                cases[idx] = { ...cases[idx], ...formData, updateTime: now };
-                toast('案件已更新 ✅', 'success');
-            } else {
-                const newCase = {
-                    id: genId(),
-                    ...formData,
-                    createTime: now,
-                    updateTime: now,
-                };
-                cases.unshift(newCase);
-                toast('案件已创建 ✅', 'success');
+
+            setSyncStatus('syncing', '正在保存...');
+
+            try {
+                if (editId) {
+                    // 乐观锁：版本号匹配才更新
+                    const { data, error } = await sb.from('cases')
+                        .update({ ...payload, version: editVersion + 1, updated_at: new Date().toISOString() })
+                        .eq('id', editId)
+                        .eq('version', editVersion)
+                        .select();
+
+                    if (error) throw error;
+                    if (!data || data.length === 0) {
+                        toast('该案件已被其他设备修改，请刷新后重试', 'error');
+                        setSyncStatus('error', '冲突');
+                        return;
+                    }
+                    const idx = cases.findIndex(c => c.id === editId);
+                    if (idx > -1) cases[idx] = fromDB(data[0]);
+                    toast('案件已更新 ✅', 'success');
+                } else {
+                    const { data, error } = await sb.from('cases').insert(payload).select();
+                    if (error) {
+                        if (error.code === '23505') {
+                            toast('案件编号已存在，请修改', 'error');
+                        } else {
+                            toast('保存失败：' + error.message, 'error');
+                        }
+                        setSyncStatus('error', '保存失败');
+                        return;
+                    }
+                    cases.unshift(fromDB(data[0]));
+                    toast('案件已创建 ✅', 'success');
+                }
+                setSyncStatus('ok', '已同步 · ' + new Date().toLocaleTimeString());
+                closeModal();
+                renderStats();
+                renderTable();
+            } catch (err) {
+                toast('保存失败：' + err.message, 'error');
+                setSyncStatus('error', '保存失败');
             }
-            saveData();
-            closeModal();
-            renderStats();
-            renderTable();
         }
 
         // ============================================================
         //  删除单个
         // ============================================================
-        function deleteCase(id) {
+        async function deleteCase(id) {
             if (!confirm('确定要删除该案件吗？')) return;
-            const idx = cases.findIndex(c => c.id === id);
-            if (idx === -1) return toast('案件不存在', 'error');
-            cases.splice(idx, 1);
+
+            if (!isOnline) {
+                pendingQueue.push({ type: 'delete', id });
+                cases = cases.filter(c => c.id !== id);
+                if (selectedIds.has(id)) selectedIds.delete(id);
+                renderStats();
+                renderTable();
+                toast('离线模式：删除已缓存', 'info');
+                return;
+            }
+
+            setSyncStatus('syncing', '正在删除...');
+            const { error } = await sb.from('cases')
+                .update({ deleted_at: new Date().toISOString() })
+                .eq('id', id);
+
+            if (error) { toast('删除失败：' + error.message, 'error'); setSyncStatus('error', '删除失败'); return; }
+
+            cases = cases.filter(c => c.id !== id);
             if (selectedIds.has(id)) selectedIds.delete(id);
-            saveData();
             renderStats();
             renderTable();
+            setSyncStatus('ok', '已同步 · ' + new Date().toLocaleTimeString());
             toast('案件已删除 🗑️', 'info');
         }
 
@@ -1916,7 +1574,7 @@
         }
 
         // ============================================================
-        //  批量新建（客户和联系人已绑定datalist）
+        //  批量新建
         // ============================================================
         let batchRowCount = 0;
 
@@ -1933,8 +1591,7 @@
             document.getElementById('batch_tags').value = '';
             document.getElementById('batch_status').value = '收案';
             document.getElementById('batch_caseType').value = '专利代理';
-            const tbody = document.getElementById('batchTableBody');
-            tbody.innerHTML = '';
+            document.getElementById('batchTableBody').innerHTML = '';
             batchRowCount = 0;
             addBatchRow();
             updateHistoryLists();
@@ -1970,15 +1627,8 @@
         function autoFillBatchNumbers() {
             const type = document.getElementById('batch_caseType').value;
             const date = document.getElementById('batch_receiveDate').value;
-            if (!date) {
-                toast('请先选择收案日期', 'error');
-                return;
-            }
+            if (!date) { toast('请先选择收案日期', 'error'); return; }
             const inputs = document.querySelectorAll('#batchTableBody .batch-case-number');
-            const existingNumbers = [];
-            inputs.forEach(inp => {
-                if (inp.value) existingNumbers.push(inp.value);
-            });
             let generated = [];
             inputs.forEach(inp => {
                 const newNum = generateBatchNumber(type, date, generated);
@@ -1988,7 +1638,7 @@
             toast('编号已自动填充', 'info');
         }
 
-        function submitBatch() {
+        async function submitBatch() {
             const clientName = document.getElementById('batch_clientName').value.trim();
             const caseType = document.getElementById('batch_caseType').value;
             const contactPerson = document.getElementById('batch_contactPerson').value.trim();
@@ -2011,11 +1661,7 @@
                 const number = tr.querySelector('.batch-case-number').value.trim();
                 const name = tr.querySelector('.batch-case-name').value.trim();
                 const notes = tr.querySelector('.batch-case-notes').value.trim();
-                if (!name) {
-                    hasError = true;
-                    toast('每行必须填写案件名称', 'error');
-                    return;
-                }
+                if (!name) { hasError = true; toast('每行必须填写案件名称', 'error'); return; }
                 let finalNumber = number;
                 if (!finalNumber) {
                     const existing = cases.map(c => c.caseNumber).concat(details.map(d => d.caseNumber));
@@ -2033,48 +1679,47 @@
 
             const now = new Date().toISOString();
             const newCases = details.map(d => ({
-                id: genId(),
-                caseNumber: d.caseNumber,
-                caseName: d.caseName,
-                clientName: clientName,
-                caseType: caseType,
-                contactPerson: contactPerson,
-                contactPhone: contactPhone,
-                receiveDate: receiveDate,
-                submitDate: '',
-                paymentDate: '',
-                transferDate: '',
+                case_number: d.caseNumber,
+                case_name: d.caseName,
+                client_name: clientName,
+                case_type: caseType,
+                contact_person: contactPerson,
+                contact_phone: contactPhone,
+                receive_date: receiveDate,
                 status: status,
                 priority: priority,
-                importance: importance,
+                importance: parseInt(importance) || 3,
                 tags: baseTags,
                 notes: d.notes || '',
-                createTime: now,
-                updateTime: now,
             }));
 
-            cases.unshift(...newCases);
-            saveData();
+            setSyncStatus('syncing', '正在批量保存...');
+            const { data, error } = await sb.from('cases').insert(newCases).select();
+
+            if (error) {
+                toast('批量创建失败：' + error.message, 'error');
+                setSyncStatus('error', '批量失败');
+                return;
+            }
+
+            cases.unshift(...data.map(fromDB));
             closeBatchModal();
             renderStats();
             renderTable();
-            toast(`成功批量创建 ${newCases.length} 件案件 ✅`, 'success');
+            setSyncStatus('ok', '已同步 · ' + new Date().toLocaleTimeString());
+            toast(`成功批量创建 ${data.length} 件案件 ✅`, 'success');
         }
 
         // ============================================================
-        //  导出/导入（全部）
+        //  导出/导入
         // ============================================================
-        function exportCSV() {
-            if (cases.length === 0) {
-                toast('没有案件可导出', 'error');
-                return;
-            }
+        function downloadCSV(list, filename) {
             const headers = [
                 '案件编号', '案件名称', '客户名称', '业务类型',
                 '联系人', '联系方式', '收案日期', '提交受理日期',
                 '缴费日期', '移交日期', '状态', '优先级', '重要性', '标签', '备注'
             ];
-            const rows = cases.map(c => [
+            const rows = list.map(c => [
                 c.caseNumber || '',
                 c.caseName || '',
                 c.clientName || '',
@@ -2091,86 +1736,80 @@
                 (c.tags || '').replace(/,/g, ';'),
                 (c.notes || '').replace(/,/g, ';'),
             ]);
-            const csvContent = [
-                headers.join(','),
-                ...rows.map(r => r.join(','))
-            ].join('\n');
+            const csvContent = [headers.join(','), ...rows.map(r => r.join(','))].join('\n');
             const blob = new Blob(['\uFEFF' + csvContent], { type: 'text/csv;charset=utf-8;' });
             const link = document.createElement('a');
             link.href = URL.createObjectURL(blob);
-            link.download = `IP全业务案件_${new Date().toISOString().slice(0,10)}.csv`;
+            link.download = filename;
             link.click();
             URL.revokeObjectURL(link.href);
+        }
+
+        function exportCSV() {
+            if (cases.length === 0) { toast('没有案件可导出', 'error'); return; }
+            downloadCSV(cases, `IP全业务案件_${new Date().toISOString().slice(0,10)}.csv`);
             toast('导出全部成功 📥', 'success');
         }
 
-        function importCSV(event) {
+        async function importCSV(event) {
             const file = event.target.files[0];
             if (!file) return;
             const reader = new FileReader();
-            reader.onload = function(e) {
+            reader.onload = async function(e) {
                 try {
                     const text = e.target.result;
                     const lines = text.split('\n').filter(line => line.trim());
-                    if (lines.length < 2) {
-                        toast('CSV 格式无效', 'error');
-                        return;
-                    }
-                    const headerLine = lines[0];
-                    const headers = headerLine.split(',').map(h => h.trim());
+                    if (lines.length < 2) { toast('CSV 格式无效', 'error'); return; }
+
+                    const headers = lines[0].split(',').map(h => h.trim());
                     const expected = ['案件编号', '案件名称', '客户名称', '业务类型', '联系人', '联系方式', '收案日期', '提交受理日期',
-                        '缴费日期', '移交日期', '状态', '优先级', '重要性', '标签', '备注'
-                    ];
+                        '缴费日期', '移交日期', '状态', '优先级', '重要性', '标签', '备注'];
                     const idxMap = {};
                     expected.forEach((h, i) => {
                         const idx = headers.findIndex(x => x.includes(h));
                         idxMap[h] = idx !== -1 ? idx : i;
                     });
 
-                    let added = 0;
-                    const now = new Date().toISOString();
+                    const validStatus = ['收案', '处理中', '待提交', '已提交受理', '协助缴费', '已移交专人'];
+                    const typeMap = { '专利规避': '专利侵权与规避', '专利侵权分析': '专利侵权与规避', '专利布局': '其他' };
+
+                    const toInsert = [];
                     for (let i = 1; i < lines.length; i++) {
                         const cols = lines[i].split(',').map(s => s.trim());
                         const get = (key) => cols[idxMap[key]] || '';
-                        const c = {
-                            id: genId(),
-                            caseNumber: get('案件编号') || `IMP-${String(i).padStart(4,'0')}`,
-                            caseName: get('案件名称') || '未命名',
-                            clientName: get('客户名称') || '未知客户',
-                            caseType: get('业务类型') || '专利代理',
-                            contactPerson: get('联系人') || '',
-                            contactPhone: get('联系方式') || '',
-                            receiveDate: get('收案日期') || '',
-                            submitDate: get('提交受理日期') || '',
-                            paymentDate: get('缴费日期') || '',
-                            transferDate: get('移交日期') || '',
-                            status: get('状态') || '收案',
+                        let caseType = get('业务类型') || '专利代理';
+                        if (typeMap[caseType]) caseType = typeMap[caseType];
+                        let status = get('状态') || '收案';
+                        if (!validStatus.includes(status)) status = '收案';
+                        const num = get('案件编号') || `IMP-${String(i).padStart(4,'0')}`;
+                        if (cases.some(ex => ex.caseNumber === num)) continue;
+                        toInsert.push({
+                            case_number: num,
+                            case_name: get('案件名称') || '未命名',
+                            client_name: get('客户名称') || '未知客户',
+                            case_type: caseType,
+                            contact_person: get('联系人') || '',
+                            contact_phone: get('联系方式') || '',
+                            receive_date: get('收案日期') || null,
+                            submit_date: get('提交受理日期') || null,
+                            payment_date: get('缴费日期') || null,
+                            transfer_date: get('移交日期') || null,
+                            status: status,
                             priority: get('优先级') || '中',
-                            importance: get('重要性') || '3',
+                            importance: parseInt(get('重要性')) || 3,
                             tags: get('标签') || '',
                             notes: get('备注') || '',
-                            createTime: now,
-                            updateTime: now,
-                        };
-                        if (cases.some(ex => ex.caseNumber === c.caseNumber)) {
-                            continue;
-                        }
-                        const validStatus = ['收案', '处理中', '待提交', '已提交受理', '协助缴费', '已移交专人'];
-                        if (!validStatus.includes(c.status)) c.status = '收案';
-                        // 兼容旧业务类型映射
-                        const typeMap = {
-                            '专利规避': '专利侵权与规避',
-                            '专利侵权分析': '专利侵权与规避',
-                            '专利布局': '其他' // 旧数据映射为其他
-                        };
-                        if (typeMap[c.caseType]) c.caseType = typeMap[c.caseType];
-                        cases.push(c);
-                        added++;
+                        });
                     }
-                    saveData();
+
+                    if (toInsert.length === 0) { toast('没有新数据可导入', 'info'); return; }
+
+                    const { data, error } = await sb.from('cases').insert(toInsert).select();
+                    if (error) { toast('导入失败：' + error.message, 'error'); return; }
+                    cases.unshift(...data.map(fromDB));
                     renderStats();
                     renderTable();
-                    toast(`导入成功 ✅ 新增 ${added} 件案件`, 'success');
+                    toast(`导入成功 ✅ 新增 ${data.length} 件案件`, 'success');
                 } catch (err) {
                     toast('导入失败：' + err.message, 'error');
                 }
@@ -2184,11 +1823,7 @@
         // ============================================================
         function toast(message, type = 'info') {
             const container = document.getElementById('toastContainer');
-            const icons = {
-                success: 'fa-check-circle',
-                error: 'fa-exclamation-circle',
-                info: 'fa-info-circle',
-            };
+            const icons = { success: 'fa-check-circle', error: 'fa-exclamation-circle', info: 'fa-info-circle' };
             const icon = icons[type] || icons.info;
             const toastEl = document.createElement('div');
             toastEl.className = `toast ${type}`;
@@ -2198,9 +1833,7 @@
                 <button class="toast-close" onclick="this.parentElement.remove()"><i class="fas fa-times"></i></button>
             `;
             container.appendChild(toastEl);
-            setTimeout(() => {
-                if (toastEl.parentElement) toastEl.remove();
-            }, 3500);
+            setTimeout(() => { if (toastEl.parentElement) toastEl.remove(); }, 3500);
         }
 
         // ============================================================
@@ -2212,10 +1845,7 @@
                 if (!document.getElementById('batchModalOverlay').classList.contains('hidden')) closeBatchModal();
                 if (!document.getElementById('detailModalOverlay').classList.contains('hidden')) closeDetailModal();
             }
-            if ((e.ctrlKey || e.metaKey) && e.key === 'n') {
-                e.preventDefault();
-                openAddModal();
-            }
+            if ((e.ctrlKey || e.metaKey) && e.key === 'n') { e.preventDefault(); openAddModal(); }
             if ((e.ctrlKey || e.metaKey) && e.key === 'a') {
                 if (document.activeElement && document.activeElement.tagName === 'INPUT') return;
                 e.preventDefault();
@@ -2225,14 +1855,20 @@
         });
 
         // ============================================================
-        //  启动
+        //  启动：检查登录状态
         // ============================================================
-        loadData();
-        console.log('🚀 IP全业务管理系统 (本地版) 已启动');
-        console.log('💾 数据存储在 localStorage');
-        console.log('✨ 客户和联系人自动记忆已启用');
-        console.log('📐 列宽已优化：专利名称加宽，客户名称缩短');
-        console.log('📌 业务类型已更新: 专利代理, 专利侵权与规避, 软件著作权登记, 商标代理, 专利检索, 缴费监控');
+        (async function boot() {
+            const { data: { session } } = await sb.auth.getSession();
+            if (session) {
+                document.getElementById('loginOverlay').classList.add('hidden');
+                document.getElementById('mainApp').style.display = 'block';
+                initApp();
+            } else {
+                document.getElementById('loginOverlay').classList.remove('hidden');
+                document.getElementById('mainApp').style.display = 'none';
+            }
+            console.log('🚀 IP全业务管理系统 (在线同步版) 已启动');
+        })();
     </script>
 </body>
 </html>
