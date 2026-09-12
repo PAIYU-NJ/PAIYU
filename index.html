@@ -1475,15 +1475,24 @@
                     if (idx > -1) cases[idx] = fromDB(data[0]);
                     toast('案件已更新 ✅', 'success');
                 } else {
-                    const { data, error } = await sb.from('cases').insert(payload).select();
-                    if (error) {
-                        if (error.code === '23505') {
-                            toast('案件编号已存在，请修改', 'error');
-                        } else {
-                            toast('保存失败：' + error.message, 'error');
-                        }
-                        setSyncStatus('error', '保存失败');
-                        return;
+                    const { data: { user } } = await sb.auth.getUser();
+    if (!user) {
+        toast('请先登录', 'error');
+        return;
+    }
+    const payloadWithUser = { ...payload, user_id: user.id };
+    const { data, error } = await sb.from('cases').insert(payloadWithUser).select();
+    if (error) {
+        if (error.code === '23505') {
+            toast('案件编号已存在，请修改', 'error');
+        } else {
+            toast('保存失败：' + error.message, 'error');
+        }
+        setSyncStatus('error', '保存失败');
+        return;
+    }
+    cases.unshift(fromDB(data[0]));
+    toast('案件已创建 ✅', 'success');
                     }
                     cases.unshift(fromDB(data[0]));
                     toast('案件已创建 ✅', 'success');
@@ -1694,7 +1703,13 @@
             }));
 
             setSyncStatus('syncing', '正在批量保存...');
-            const { data, error } = await sb.from('cases').insert(newCases).select();
+            const { data: { user } } = await sb.auth.getUser();
+if (!user) {
+    toast('请先登录', 'error');
+    return;
+}
+const newCasesWithUser = newCases.map(c => ({ ...c, user_id: user.id }));
+const { data, error } = await sb.from('cases').insert(newCasesWithUser).select();
 
             if (error) {
                 toast('批量创建失败：' + error.message, 'error');
@@ -1804,7 +1819,13 @@
 
                     if (toInsert.length === 0) { toast('没有新数据可导入', 'info'); return; }
 
-                    const { data, error } = await sb.from('cases').insert(toInsert).select();
+                    const { data: { user } } = await sb.auth.getUser();
+if (!user) {
+    toast('请先登录', 'error');
+    return;
+}
+const toInsertWithUser = toInsert.map(c => ({ ...c, user_id: user.id }));
+const { data, error } = await sb.from('cases').insert(toInsertWithUser).select();
                     if (error) { toast('导入失败：' + error.message, 'error'); return; }
                     cases.unshift(...data.map(fromDB));
                     renderStats();
