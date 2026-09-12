@@ -1404,7 +1404,7 @@
             document.body.style.overflow = 'auto';
         }
 
-        async function saveCase(e) {
+                async function saveCase(e) {
             e.preventDefault();
             const editId = document.getElementById('editId').value;
             const editVersion = parseInt(document.getElementById('editVersion').value) || 1;
@@ -1426,6 +1426,81 @@
                 tags: document.getElementById('f_tags').value.trim(),
                 notes: document.getElementById('f_notes').value.trim(),
             };
+
+            if (!formData.caseNumber || !formData.caseName || !formData.clientName || !formData.contactPerson || !formData.receiveDate) {
+                toast('请填写所有必填项', 'error');
+                return;
+            }
+
+            const payload = toDB(formData);
+
+            if (!isOnline) {
+                pendingQueue.push({
+                    type: editId ? 'update' : 'insert',
+                    id: editId,
+                    payload,
+                });
+                if (editId) {
+                    const idx = cases.findIndex(c => c.id === editId);
+                    if (idx > -1) cases[idx] = { ...cases[idx], ...formData };
+                } else {
+                    cases.unshift({ id: genId(), version: 1, ...formData });
+                }
+                closeModal();
+                renderStats();
+                renderTable();
+                toast('离线模式：已缓存，网络恢复后自动上传', 'info');
+                return;
+            }
+
+            setSyncStatus('syncing', '正在保存...');
+
+            try {
+                if (editId) {
+                    const { data, error } = await sb.from('cases')
+                        .update({ ...payload, version: editVersion + 1, updated_at: new Date().toISOString() })
+                        .eq('id', editId)
+                        .eq('version', editVersion)
+                        .select();
+
+                    if (error) throw error;
+                    if (!data || data.length === 0) {
+                        toast('该案件已被其他设备修改，请刷新后重试', 'error');
+                        setSyncStatus('error', '冲突');
+                        return;
+                    }
+                    const idx = cases.findIndex(c => c.id === editId);
+                    if (idx > -1) cases[idx] = fromDB(data[0]);
+                    toast('案件已更新 ✅', 'success');
+                } else {
+                    const { data: { user } } = await sb.auth.getUser();
+                    if (!user) {
+                        toast('请先登录', 'error');
+                        return;
+                    }
+                    const payloadWithUser = { ...payload, user_id: user.id };
+                    const { data, error } = await sb.from('cases').insert(payloadWithUser).select();
+                    if (error) {
+                        if (error.code === '23505') {
+                            toast('案件编号已存在，请修改', 'error');
+                        } else {
+                            toast('保存失败：' + error.message, 'error');
+                        }
+                        setSyncStatus('error', '保存失败');
+                        return;
+                    }
+                    cases.unshift(fromDB(data[0]));
+                    toast('案件已创建 ✅', 'success');
+                }
+                setSyncStatus('ok', '已同步 · ' + new Date().toLocaleTimeString());
+                closeModal();
+                renderStats();
+                renderTable();
+            } catch (err) {
+                toast('保存失败：' + err.message, 'error');
+                setSyncStatus('error', '保存失败');
+            }
+        };
 
             if (!formData.caseNumber || !formData.caseName || !formData.clientName || !formData.contactPerson || !formData.receiveDate) {
                 toast('请填写所有必填项', 'error');
@@ -1709,6 +1784,12 @@ if (!user) {
     return;
 }
 const newCasesWithUser = newCases.map(c => ({ ...c, user_id: user.id }));
+const { data: { user } } = await sb.auth.getUser();
+if (!user) {
+    toast('请先登录', 'error');
+    return;
+}
+const newCasesWithUser = newCases.map(c => ({ ...c, user_id: user.id }));
 const { data, error } = await sb.from('cases').insert(newCasesWithUser).select();
 
             if (error) {
@@ -1820,6 +1901,12 @@ const { data, error } = await sb.from('cases').insert(newCasesWithUser).select()
                     if (toInsert.length === 0) { toast('没有新数据可导入', 'info'); return; }
 
                     const { data: { user } } = await sb.auth.getUser();
+if (!user) {
+    toast('请先登录', 'error');
+    return;
+}
+const toInsertWithUser = toInsert.map(c => ({ ...c, user_id: user.id }));
+const { data: { user } } = await sb.auth.getUser();
 if (!user) {
     toast('请先登录', 'error');
     return;
