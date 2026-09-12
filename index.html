@@ -49,6 +49,8 @@ body{font-family:var(--font);background:var(--bg);color:var(--text);padding:24px
 .toolbar-left .filter-group .filter-btn{padding:6px 14px;border-radius:20px;border:1px solid var(--border);background:transparent;font-size:13px;cursor:pointer;font-family:var(--font);color:var(--text-light);font-weight:500;white-space:nowrap}
 .toolbar-left .filter-group .filter-btn:hover{border-color:var(--accent);color:var(--accent)}
 .toolbar-left .filter-group .filter-btn.active{background:var(--primary);color:#fff;border-color:var(--primary)}
+.toolbar-left .filter-group .filter-btn.tag-filter{background:#f0f0f0;border-color:#ccc}
+.toolbar-left .filter-group .filter-btn.tag-filter.active{background:var(--accent);color:#fff;border-color:var(--accent)}
 .toolbar-right{display:flex;gap:8px;flex-wrap:wrap;align-items:center}
 .toolbar-right .selected-info{font-size:14px;color:var(--text-light);margin-right:8px}
 .toolbar-right .batch-actions{display:flex;gap:6px;align-items:center}
@@ -96,6 +98,12 @@ input[type=checkbox]{width:18px;height:18px;cursor:pointer;accent-color:var(--ac
 .modal .form-group input:focus,.modal .form-group select:focus,.modal .form-group textarea:focus{outline:none;border-color:var(--accent);box-shadow:0 0 0 3px rgba(59,143,194,.12)}
 .modal .form-row{display:grid;grid-template-columns:1fr 1fr;gap:16px}
 .modal .form-actions{display:flex;justify-content:flex-end;gap:12px;margin-top:24px;padding-top:20px;border-top:1px solid var(--border)}
+.batch-table{width:100%;border-collapse:collapse;margin-top:10px}
+.batch-table th,.batch-table td{border:1px solid var(--border);padding:8px 10px;text-align:left;font-size:14px}
+.batch-table th{background:var(--bg);font-weight:600}
+.batch-table input{width:100%;border:1px solid transparent;padding:6px 8px;border-radius:4px;font-size:14px;background:transparent;font-family:var(--font)}
+.batch-table input:focus{border-color:var(--accent);background:#fff;outline:none}
+.batch-table .remove-row-btn{color:#c0392b;cursor:pointer;font-size:16px;background:none;border:none}
 .detail-grid{display:grid;grid-template-columns:1fr 1fr;gap:16px 24px}
 .detail-item{display:flex;flex-direction:column;gap:4px}
 .detail-item .label{font-size:13px;font-weight:600;color:var(--text-light)}
@@ -119,6 +127,11 @@ input[type=checkbox]{width:18px;height:18px;cursor:pointer;accent-color:var(--ac
 .login-card .form-group input:focus{outline:none;border-color:var(--accent);box-shadow:0 0 0 3px rgba(59,143,194,.12)}
 .login-card .btn{width:100%;justify-content:center;margin-top:8px}
 .text-muted{color:var(--text-light)}
+@media (max-width:820px){
+  .modal .form-row{grid-template-columns:1fr}
+  .modal{padding:24px 20px!important}
+  .detail-grid{grid-template-columns:1fr}
+}
 </style>
 </head>
 <body>
@@ -148,13 +161,14 @@ input[type=checkbox]{width:18px;height:18px;cursor:pointer;accent-color:var(--ac
       <div class="logo"><i class="fas fa-scale-balanced"></i></div>
       <div>
         <h1>IP<span>全业务</span>管理</h1>
-        <div class="subtitle">云端同步 · 数据隔离 · 客户/联系人记忆</div>
+        <div class="subtitle">云端同步 · 数据隔离 · 批量新建 · 客户/联系人记忆</div>
       </div>
     </div>
     <div class="header-actions">
       <button class="btn btn-outline btn-sm" onclick="exportCSV()"><i class="fas fa-file-export"></i> 导出</button>
       <button class="btn btn-outline btn-sm" onclick="document.getElementById('importInput').click()"><i class="fas fa-file-import"></i> 导入</button>
       <input type="file" id="importInput" accept=".csv" style="display:none;" onchange="importCSV(event)" />
+      <button class="btn btn-success btn-sm" onclick="openBatchModal()"><i class="fas fa-layer-group"></i> 批量新建</button>
       <button class="btn btn-primary" onclick="openAddModal()"><i class="fas fa-plus"></i> 新建案件</button>
       <button class="btn btn-outline btn-sm" onclick="doLogout()" title="退出"><i class="fas fa-sign-out-alt"></i></button>
     </div>
@@ -189,6 +203,7 @@ input[type=checkbox]{width:18px;height:18px;cursor:pointer;accent-color:var(--ac
         <button class="filter-btn" data-type="专利检索" onclick="setTypeFilter('专利检索')">检索</button>
         <button class="filter-btn" data-type="缴费监控" onclick="setTypeFilter('缴费监控')">缴费监控</button>
       </div>
+      <div class="filter-group" id="tagFilterGroup"></div>
     </div>
     <div class="toolbar-right">
       <span class="selected-info" id="selectedInfo">已选 0 件</span>
@@ -234,6 +249,7 @@ input[type=checkbox]{width:18px;height:18px;cursor:pointer;accent-color:var(--ac
   </div>
 </div>
 
+<!-- ===== 新建/编辑模态框 ===== -->
 <div class="modal-overlay hidden" id="modalOverlay" onclick="if(event.target===this) closeModal()">
   <div class="modal">
     <div class="modal-header">
@@ -327,6 +343,104 @@ input[type=checkbox]{width:18px;height:18px;cursor:pointer;accent-color:var(--ac
   </div>
 </div>
 
+<!-- ===== 批量新建模态框 ===== -->
+<div class="modal-overlay hidden" id="batchModalOverlay" onclick="if(event.target===this) closeBatchModal()">
+  <div class="modal" style="max-width:900px;">
+    <div class="modal-header">
+      <h2>批量新建案件</h2>
+      <button class="close-btn" onclick="closeBatchModal()"><i class="fas fa-times"></i></button>
+    </div>
+    <div style="margin-bottom:16px;">
+      <p class="text-muted">填写通用信息，下方逐行填写案件明细；编号留空会自动生成，也可一键填充。</p>
+    </div>
+
+    <div class="form-row">
+      <div class="form-group">
+        <label>客户名称 <span class="required">*</span> <span class="hint">可输入或选择已有</span></label>
+        <input type="text" id="batch_clientName" list="clientList" required autocomplete="off" />
+      </div>
+      <div class="form-group">
+        <label>业务类型 <span class="required">*</span></label>
+        <select id="batch_caseType">
+          <option value="专利代理">专利代理</option>
+          <option value="专利侵权与规避">专利侵权与规避</option>
+          <option value="软件著作权登记">软件著作权登记</option>
+          <option value="商标代理">商标代理</option>
+          <option value="专利检索">专利检索</option>
+          <option value="缴费监控">缴费监控</option>
+          <option value="其他">其他</option>
+        </select>
+      </div>
+    </div>
+    <div class="form-row">
+      <div class="form-group">
+        <label>联系人 <span class="required">*</span> <span class="hint">可输入或选择已有</span></label>
+        <input type="text" id="batch_contactPerson" list="contactList" required autocomplete="off" />
+      </div>
+      <div class="form-group">
+        <label>联系方式</label>
+        <input type="text" id="batch_contactPhone" />
+      </div>
+    </div>
+    <div class="form-row">
+      <div class="form-group">
+        <label>收案日期 <span class="required">*</span></label>
+        <input type="date" id="batch_receiveDate" required />
+      </div>
+      <div class="form-group">
+        <label>优先级</label>
+        <select id="batch_priority">
+          <option value="高">高</option><option value="中" selected>中</option><option value="低">低</option>
+        </select>
+      </div>
+    </div>
+    <div class="form-row">
+      <div class="form-group">
+        <label>重要性 (1-5星)</label>
+        <select id="batch_importance">
+          <option value="1">★</option><option value="2">★★</option><option value="3" selected>★★★</option><option value="4">★★★★</option><option value="5">★★★★★</option>
+        </select>
+      </div>
+      <div class="form-group">
+        <label>通用标签 (逗号分隔)</label>
+        <input type="text" id="batch_tags" placeholder="如：批量, 重要" />
+      </div>
+    </div>
+    <div class="form-row">
+      <div class="form-group">
+        <label>状态 <span class="required">*</span></label>
+        <select id="batch_status">
+          <option value="收案">收案</option><option value="处理中">处理中</option><option value="待提交">待提交</option><option value="已提交受理">已提交受理</option><option value="协助缴费">协助缴费</option><option value="已移交专人">已移交专人</option>
+        </select>
+      </div>
+      <div class="form-group" style="display:flex;align-items:flex-end;gap:12px;">
+        <button type="button" class="btn btn-accent btn-sm" onclick="addBatchRow()"><i class="fas fa-plus"></i> 添加行</button>
+        <button type="button" class="btn btn-outline btn-sm" onclick="autoFillBatchNumbers()"><i class="fas fa-magic"></i> 自动填充编号</button>
+      </div>
+    </div>
+
+    <div style="margin-top:12px;overflow-x:auto;">
+      <table class="batch-table" id="batchTable">
+        <thead>
+          <tr>
+            <th style="width:25%;">案件编号 <span class="required">*</span></th>
+            <th style="width:45%;">案件名称 <span class="required">*</span></th>
+            <th style="width:20%;">备注</th>
+            <th style="width:10%;">操作</th>
+          </tr>
+        </thead>
+        <tbody id="batchTableBody"></tbody>
+      </table>
+    </div>
+
+    <div class="form-actions">
+      <button type="button" class="btn btn-outline" onclick="closeBatchModal()">取消</button>
+      <button type="button" class="btn btn-primary" id="batchSubmitBtn" onclick="submitBatch()"><i class="fas fa-save"></i> 批量提交</button>
+    </div>
+  </div>
+</div>
+
+<!-- ===== 查看详情模态框 ===== -->
 <div class="modal-overlay hidden" id="detailModalOverlay" onclick="if(event.target===this) closeDetailModal()">
   <div class="modal" style="max-width:720px;">
     <div class="modal-header">
@@ -354,6 +468,7 @@ const sb = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
 let cases = [];
 let currentTypeFilter = 'all';
+let currentTagFilter = null;
 let currentSort = { field: 'receiveDate', asc: false };
 let selectedIds = new Set();
 let realtimeChannel = null;
@@ -471,18 +586,24 @@ function generateCaseNumber(){
   const type = document.getElementById('f_caseType').value;
   const date = document.getElementById('f_receiveDate').value;
   if (!type || !date) return;
+  document.getElementById('f_caseNumber').value = generateBatchNumber(type, date, []);
+}
+
+// 供单件与批量共用的编号生成器
+function generateBatchNumber(type, date, extraNumbers){
   const prefix = TYPE_PREFIX[type] || 'QT';
-  const year = date.substring(0,4);
+  const year = (date || '').substring(0,4);
   let maxSeq = 0;
-  cases.forEach(c => {
-    if (!c.caseNumber) return;
-    const p = c.caseNumber.split('-');
+  const all = cases.map(c => c.caseNumber).concat(extraNumbers || []);
+  all.forEach(num => {
+    if (!num) return;
+    const p = String(num).split('-');
     if (p.length===3 && p[0]===prefix && p[1]===year){
       const s = parseInt(p[2],10);
       if (!isNaN(s) && s>maxSeq) maxSeq = s;
     }
   });
-  document.getElementById('f_caseNumber').value = `${prefix}-${year}-${String(maxSeq+1).padStart(3,'0')}`;
+  return `${prefix}-${year}-${String(maxSeq+1).padStart(3,'0')}`;
 }
 
 function renderStats(){
@@ -514,10 +635,40 @@ function renderStats(){
   document.getElementById('totalCountFooter').textContent = total;
 }
 
+// ---------- 标签 ----------
+function getAllTags(){
+  const set = new Set();
+  cases.forEach(c => {
+    (c.tags || '').split(',').map(t=>t.trim()).filter(t=>t).forEach(t=>set.add(t));
+  });
+  return [...set].sort();
+}
+
+function renderTagFilters(){
+  const container = document.getElementById('tagFilterGroup');
+  if (!container) return;
+  const all = getAllTags();
+  if (!all.length){ container.innerHTML = ''; return; }
+  let html = `<button class="filter-btn tag-filter ${!currentTagFilter?'active':''}" onclick="setTagFilter(null)">全部标签</button>`;
+  all.forEach(t => {
+    html += `<button class="filter-btn tag-filter ${currentTagFilter===t?'active':''}" onclick="setTagFilter('${t.replace(/'/g,"\\'")}')">${t}</button>`;
+  });
+  container.innerHTML = html;
+}
+
+function setTagFilter(tag){
+  currentTagFilter = tag;
+  renderTable();
+}
+
 function getFiltered(){
   const kw = document.getElementById('searchInput').value.trim().toLowerCase();
   let list = cases.filter(c => {
     if (currentTypeFilter !== 'all' && c.caseType !== currentTypeFilter) return false;
+    if (currentTagFilter){
+      const tags = (c.tags||'').split(',').map(t=>t.trim());
+      if (!tags.includes(currentTagFilter)) return false;
+    }
     if (kw){
       const s = `${c.caseNumber} ${c.caseName} ${c.clientName} ${c.contactPerson} ${c.notes||''}`.toLowerCase();
       if (!s.includes(kw)) return false;
@@ -537,11 +688,12 @@ function getFiltered(){
 }
 
 function renderTable(){
+  renderTagFilters();
   const list = getFiltered();
   const tbody = document.getElementById('tableBody');
   document.getElementById('resultCount').textContent = `共 ${list.length} 件`;
   if (list.length === 0){
-    tbody.innerHTML = `<tr><td colspan="10"><div class="empty-state"><i class="fas fa-gavel"></i><h3>暂无案件</h3><p>点击「新建案件」开始</p></div></td></tr>`;
+    tbody.innerHTML = `<tr><td colspan="10"><div class="empty-state"><i class="fas fa-gavel"></i><h3>暂无案件</h3><p>点击「新建案件」或「批量新建」开始</p></div></td></tr>`;
     return;
   }
   let html = '';
@@ -742,7 +894,8 @@ async function saveCase(e){
       cases.unshift(fromDB(data[0]));
       toast('已创建','success');
     }
-    closeModal(); renderStats(); renderTable();
+    closeModal();
+    updateHistoryLists(); renderStats(); renderTable();
   } catch(err){
     toast('保存失败：'+err.message,'error');
   }
@@ -779,6 +932,146 @@ function viewDetail(id){
 }
 function closeDetailModal(){ document.getElementById('detailModalOverlay').classList.add('hidden'); }
 
+// ============================================================
+//  批量新建
+// ============================================================
+let batchRowCount = 0;
+
+function openBatchModal(){
+  document.getElementById('batchModalOverlay').classList.remove('hidden');
+  document.getElementById('batch_receiveDate').value = new Date().toISOString().slice(0,10);
+  document.getElementById('batch_clientName').value = '';
+  document.getElementById('batch_contactPerson').value = '';
+  document.getElementById('batch_contactPhone').value = '';
+  document.getElementById('batch_priority').value = '中';
+  document.getElementById('batch_importance').value = '3';
+  document.getElementById('batch_tags').value = '';
+  document.getElementById('batch_status').value = '收案';
+  document.getElementById('batch_caseType').value = '专利代理';
+  const tbody = document.getElementById('batchTableBody');
+  tbody.innerHTML = '';
+  batchRowCount = 0;
+  addBatchRow();
+  updateHistoryLists();
+}
+
+function closeBatchModal(){
+  document.getElementById('batchModalOverlay').classList.add('hidden');
+}
+
+function addBatchRow(){
+  const tbody = document.getElementById('batchTableBody');
+  const tr = document.createElement('tr');
+  tr.dataset.index = batchRowCount++;
+  tr.innerHTML = `
+    <td><input type="text" class="batch-case-number" placeholder="自动生成" /></td>
+    <td><input type="text" class="batch-case-name" placeholder="案件名称" /></td>
+    <td><input type="text" class="batch-case-notes" placeholder="备注" /></td>
+    <td style="text-align:center;"><button type="button" class="remove-row-btn" onclick="removeBatchRow(this)"><i class="fas fa-minus-circle"></i></button></td>
+  `;
+  tbody.appendChild(tr);
+}
+
+function removeBatchRow(btn){
+  const tbody = document.getElementById('batchTableBody');
+  if (tbody.children.length <= 1){
+    toast('至少保留一行','error');
+    return;
+  }
+  btn.closest('tr').remove();
+}
+
+function autoFillBatchNumbers(){
+  const type = document.getElementById('batch_caseType').value;
+  const date = document.getElementById('batch_receiveDate').value;
+  if (!date) return toast('请先选择收案日期','error');
+  const inputs = document.querySelectorAll('#batchTableBody .batch-case-number');
+  const generated = [];
+  inputs.forEach(inp => {
+    const num = generateBatchNumber(type, date, generated);
+    inp.value = num;
+    generated.push(num);
+  });
+  toast('编号已自动填充','info');
+}
+
+async function submitBatch(){
+  const clientName = document.getElementById('batch_clientName').value.trim();
+  const caseType = document.getElementById('batch_caseType').value;
+  const contactPerson = document.getElementById('batch_contactPerson').value.trim();
+  const contactPhone = document.getElementById('batch_contactPhone').value.trim();
+  const receiveDate = document.getElementById('batch_receiveDate').value;
+  const priority = document.getElementById('batch_priority').value;
+  const importance = document.getElementById('batch_importance').value;
+  const baseTags = document.getElementById('batch_tags').value.trim();
+  const status = document.getElementById('batch_status').value;
+
+  if (!clientName || !contactPerson || !receiveDate){
+    return toast('请填写完整的通用信息（客户、联系人、收案日期）','error');
+  }
+
+  const rows = document.querySelectorAll('#batchTableBody tr');
+  const details = [];
+  for (const tr of rows){
+    const name = tr.querySelector('.batch-case-name').value.trim();
+    let number = tr.querySelector('.batch-case-number').value.trim();
+    const notes = tr.querySelector('.batch-case-notes').value.trim();
+    if (!name) return toast('每行必须填写案件名称','error');
+    if (!number) number = generateBatchNumber(caseType, receiveDate, details.map(d => d.caseNumber));
+    if (cases.some(c => c.caseNumber === number) || details.some(d => d.caseNumber === number)){
+      return toast(`编号 ${number} 已存在，请修改`,'error');
+    }
+    details.push({ caseNumber: number, caseName: name, notes });
+  }
+  if (!details.length) return toast('请至少添加一行','error');
+
+  const { data: { user } } = await sb.auth.getUser();
+  if (!user) return toast('请先登录','error');
+
+  const payload = details.map(d => ({
+    user_id: user.id,
+    case_number: d.caseNumber,
+    case_name: d.caseName,
+    client_name: clientName,
+    case_type: caseType,
+    contact_person: contactPerson,
+    contact_phone: contactPhone || null,
+    receive_date: receiveDate,
+    submit_date: null,
+    payment_date: null,
+    transfer_date: null,
+    status: status,
+    priority: priority,
+    importance: parseInt(importance) || 3,
+    tags: baseTags || null,
+    notes: d.notes || null
+  }));
+
+  const btn = document.getElementById('batchSubmitBtn');
+  btn.disabled = true;
+  btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> 提交中...';
+
+  try {
+    const { data, error } = await sb.from('cases').insert(payload).select();
+    if (error){
+      if (error.code === '23505') return toast('存在重复的案件编号，请检查后重试','error');
+      throw error;
+    }
+    cases.unshift(...data.map(fromDB));
+    closeBatchModal();
+    updateHistoryLists(); renderStats(); renderTable();
+    toast(`成功批量创建 ${data.length} 件案件 ✅`,'success');
+  } catch(err){
+    toast('批量创建失败：'+err.message,'error');
+  } finally {
+    btn.disabled = false;
+    btn.innerHTML = '<i class="fas fa-save"></i> 批量提交';
+  }
+}
+
+// ============================================================
+//  导出 / 导入
+// ============================================================
 function downloadCSV(list, filename){
   const headers = ['案件编号','案件名称','客户名称','业务类型','联系人','联系方式','收案日期','提交受理日期','缴费日期','移交日期','状态','优先级','重要性','标签','备注'];
   const rows = list.map(c => [c.caseNumber||'',c.caseName||'',c.clientName||'',c.caseType||'',c.contactPerson||'',c.contactPhone||'',c.receiveDate||'',c.submitDate||'',c.paymentDate||'',c.transferDate||'',c.status||'',c.priority||'中',c.importance||'3',(c.tags||'').replace(/,/g,';'),(c.notes||'').replace(/,/g,';')]);
@@ -842,7 +1135,7 @@ async function importCSV(event){
       const { data, error } = await sb.from('cases').insert(toInsert).select();
       if (error) return toast('导入失败：'+error.message,'error');
       cases.unshift(...data.map(fromDB));
-      renderStats(); renderTable();
+      updateHistoryLists(); renderStats(); renderTable();
       toast(`导入 ${data.length} 件`,'success');
     } catch(err){ toast('导入失败：'+err.message,'error'); }
     event.target.value = '';
@@ -859,6 +1152,15 @@ function toast(msg, type='info'){
   c.appendChild(el);
   setTimeout(() => { if (el.parentElement) el.remove(); }, 3500);
 }
+
+// 快捷键
+document.addEventListener('keydown', e => {
+  if (e.key === 'Escape'){
+    if (!document.getElementById('modalOverlay').classList.contains('hidden')) closeModal();
+    if (!document.getElementById('batchModalOverlay').classList.contains('hidden')) closeBatchModal();
+    if (!document.getElementById('detailModalOverlay').classList.contains('hidden')) closeDetailModal();
+  }
+});
 
 (async function boot(){
   const { data: { session } } = await sb.auth.getSession();
