@@ -3,12 +3,10 @@
 <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>IP业务管理系统 · 在线同步版</title>
+    <title>IP业务管理系统</title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css" />
-    <!-- Supabase 客户端 -->
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <style>
-        /* ===== 基础样式 ===== */
         :root {
             --primary: #1a3a5c;
             --primary-light: #2a5a7a;
@@ -35,7 +33,6 @@
         .container { max-width: 1440px; margin: 0 auto; }
         .hidden { display: none !important; }
 
-        /* 顶部、流程提示、按钮等 */
         .header {
             display: flex; justify-content: space-between; align-items: center;
             flex-wrap: wrap; gap: 16px; margin-bottom: 28px;
@@ -200,7 +197,6 @@
         }
         .checkbox-col { text-align: center; width: 40px; }
 
-        /* 模态框样式 */
         .modal-overlay {
             position: fixed; inset: 0; background: rgba(0,0,0,0.40);
             backdrop-filter: blur(4px); display: flex; align-items: center;
@@ -274,7 +270,6 @@
         .detail-item .value { font-size: 15px; color: var(--text); word-break: break-word; }
         .detail-item.full-width { grid-column: 1 / -1; }
 
-        /* Toast */
         .toast-container {
             position: fixed; top: 24px; right: 24px; z-index: 2000;
             display: flex; flex-direction: column; gap: 10px;
@@ -309,7 +304,6 @@
             to { opacity: 1; transform: translateY(0) scale(1); }
         }
 
-        /* 登录遮罩 */
         .login-overlay {
             position: fixed; inset: 0; background: rgba(26,58,92,0.85);
             backdrop-filter: blur(6px); display: flex; align-items: center;
@@ -362,11 +356,10 @@
 </head>
 <body>
 
-    <!-- ===== 登录遮罩 ===== -->
     <div class="login-overlay" id="loginOverlay">
         <div class="login-card">
             <h2 id="loginTitle">登录 IP 管理系统</h2>
-            <p>使用邮箱注册 / 登录，数据将同步到云端</p>
+            <p>使用邮箱登录，数据将同步到云端</p>
             <div class="form-group">
                 <label>邮箱</label>
                 <input type="email" id="loginEmail" placeholder="you@example.com" />
@@ -379,7 +372,7 @@
                 <i class="fas fa-sign-in-alt"></i> <span id="loginBtnText">登录</span>
             </button>
             <div class="switch-link">
-                <a onclick="toggleLoginMode()" id="switchModeLink">没有账号？去注册</a>
+                <span style="font-size:13px;color:#888;">如需账号请联系管理员</span>
             </div>
             <div style="margin-top:12px;font-size:12px;color:#c0392b;text-align:center;" id="loginError"></div>
         </div>
@@ -387,7 +380,6 @@
 
     <div class="container" id="mainApp" style="display:none;">
 
-        <!-- 顶部 -->
         <header class="header">
             <div class="header-left">
                 <div class="logo"><i class="fas fa-scale-balanced"></i></div>
@@ -416,7 +408,6 @@
             </div>
         </header>
 
-        <!-- 流程提示 -->
         <div class="workflow-tip">
             <i class="fas fa-arrow-right"></i>
             <span>前期管理流程：</span>
@@ -431,10 +422,8 @@
             </span>
         </div>
 
-        <!-- 统计 -->
         <section class="stats" id="statsContainer"></section>
 
-        <!-- 工具栏 -->
         <div class="toolbar">
             <div class="toolbar-left">
                 <div class="search-box">
@@ -472,7 +461,6 @@
             </div>
         </div>
 
-        <!-- 表格 -->
         <div class="table-wrap">
             <table>
                 <thead>
@@ -499,7 +487,6 @@
         </div>
     </div>
 
-    <!-- ===== 新建/编辑模态框 ===== -->
     <div class="modal-overlay hidden" id="modalOverlay" onclick="if(event.target===this) closeModal()">
         <div class="modal">
             <div class="modal-header">
@@ -618,7 +605,6 @@
         </div>
     </div>
 
-    <!-- ===== 批量新建模态框 ===== -->
     <div class="modal-overlay hidden" id="batchModalOverlay" onclick="if(event.target===this) closeBatchModal()">
         <div class="modal" style="max-width: 900px;">
             <div class="modal-header">
@@ -723,7 +709,6 @@
         </div>
     </div>
 
-    <!-- ===== 查看详情模态框 ===== -->
     <div class="modal-overlay hidden" id="detailModalOverlay" onclick="if(event.target===this) closeDetailModal()">
         <div class="modal" style="max-width: 720px;">
             <div class="modal-header">
@@ -737,30 +722,25 @@
         </div>
     </div>
 
-    <!-- Toast -->
     <div class="toast-container" id="toastContainer"></div>
 
     <script>
         // ============================================================
-        //  Supabase 配置 —— 请替换为你自己的项目地址和 anon key
+        //  请替换为你自己的 Supabase 项目地址和 anon key
         // ============================================================
         const SUPABASE_URL = 'https://ldjnusnalzgponneogaq.supabase.co';
         const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imxkam51c25hbHpncG9ubmVvZ2FxIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODkyMTEwNzYsImV4cCI6MjEwNDc4NzA3Nn0.FvMUk3hvrIdDz0raGh3et2eWUsLF8MIQiy6grLSOG2c';
 
         const sb = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
-        // ============================================================
-        //  全局状态
-        // ============================================================
         let cases = [];
         let currentTypeFilter = 'all';
         let currentTagFilter = null;
         let currentSort = { field: 'receiveDate', asc: false };
         let selectedIds = new Set();
-        let isLoginMode = true;
         let realtimeChannel = null;
         let isOnline = navigator.onLine;
-        let pendingQueue = [];  // 离线操作队列
+        let pendingQueue = [];
 
         const TYPE_PREFIX = {
             '专利代理': 'ZL',
@@ -782,9 +762,6 @@
             '其他': 'status-other',
         };
 
-        // ============================================================
-        //  字段映射：DB(snake_case) ↔ UI(camelCase)
-        // ============================================================
         const DB_TO_UI = {
             case_number: 'caseNumber',
             case_name: 'caseName',
@@ -826,17 +803,6 @@
             return o;
         }
 
-        // ============================================================
-        //  登录 / 登出
-        // ============================================================
-        function toggleLoginMode() {
-            isLoginMode = !isLoginMode;
-            document.getElementById('loginTitle').textContent = isLoginMode ? '登录 IP 管理系统' : '注册新账号';
-            document.getElementById('loginBtnText').textContent = isLoginMode ? '登录' : '注册';
-            document.getElementById('switchModeLink').textContent = isLoginMode ? '没有账号？去注册' : '已有账号？去登录';
-            document.getElementById('loginError').textContent = '';
-        }
-
         async function doLogin() {
             const email = document.getElementById('loginEmail').value.trim();
             const password = document.getElementById('loginPassword').value;
@@ -847,22 +813,10 @@
             const btn = document.getElementById('loginBtn');
             btn.disabled = true;
             try {
-                let result;
-                if (isLoginMode) {
-                    result = await sb.auth.signInWithPassword({ email, password });
-                } else {
-                    result = await sb.auth.signUp({ email, password });
-                }
+                const result = await sb.auth.signInWithPassword({ email, password });
                 if (result.error) throw result.error;
-                if (!isLoginMode && !result.data.session) {
-                    errEl.textContent = '注册成功，请检查邮箱确认链接后再登录';
-                    isLoginMode = true;
-                    toggleLoginMode();
-                    return;
-                }
-                // 登录成功，onAuthStateChange 会触发初始化
             } catch (e) {
-                errEl.textContent = e.message || '操作失败';
+                errEl.textContent = e.message || '登录失败';
             } finally {
                 btn.disabled = false;
             }
@@ -875,7 +829,6 @@
             location.reload();
         }
 
-        // 监听认证状态
         sb.auth.onAuthStateChange((event, session) => {
             if (session) {
                 document.getElementById('loginOverlay').classList.add('hidden');
@@ -887,9 +840,6 @@
             }
         });
 
-        // ============================================================
-        //  初始化应用
-        // ============================================================
         async function initApp() {
             await loadData();
             subscribeRealtime();
@@ -897,9 +847,6 @@
             flushPendingQueue();
         }
 
-        // ============================================================
-        //  数据加载 / 保存
-        // ============================================================
         async function loadData() {
             setSyncStatus('syncing', '正在加载云端数据...');
             const { data, error } = await sb
@@ -930,9 +877,6 @@
             el.innerHTML = `<i class="fas ${icons[state] || 'fa-cloud'}"></i> ${text}`;
         }
 
-        // ============================================================
-        //  客户和联系人历史记忆
-        // ============================================================
         function updateHistoryLists() {
             const clientSet = new Set();
             const contactSet = new Set();
@@ -948,9 +892,6 @@
             if (ct) ct.innerHTML = contacts.map(n => `<option value="${n}">`).join('');
         }
 
-        // ============================================================
-        //  辅助函数
-        // ============================================================
         function genId() {
             return crypto.randomUUID ? crypto.randomUUID() : Date.now().toString(36) + Math.random().toString(36).slice(2, 10);
         }
@@ -981,9 +922,6 @@
             return Array.from(tagSet);
         }
 
-        // ============================================================
-        //  自动编号
-        // ============================================================
         function generateCaseNumber() {
             const editId = document.getElementById('editId').value;
             if (editId) return;
@@ -1021,9 +959,6 @@
             return `${prefix}-${year}-${String(maxSeq + 1).padStart(3, '0')}`;
         }
 
-        // ============================================================
-        //  统计
-        // ============================================================
         function renderStats() {
             const total = cases.length;
             const byType = {};
@@ -1068,9 +1003,6 @@
             document.getElementById('totalCountFooter').textContent = total;
         }
 
-        // ============================================================
-        //  表格渲染
-        // ============================================================
         function getFilteredAndSorted() {
             const keyword = document.getElementById('searchInput').value.trim().toLowerCase();
             let filtered = cases.filter(c => {
@@ -1159,9 +1091,6 @@
             document.getElementById('selectAll').checked = checkedAll;
         }
 
-        // ============================================================
-        //  复选框
-        // ============================================================
         function toggleRow(id) {
             if (selectedIds.has(id)) selectedIds.delete(id);
             else selectedIds.add(id);
@@ -1198,9 +1127,6 @@
             return cases.filter(c => selectedIds.has(c.id));
         }
 
-        // ============================================================
-        //  实时同步订阅
-        // ============================================================
         function subscribeRealtime() {
             if (realtimeChannel) sb.removeChannel(realtimeChannel);
             realtimeChannel = sb.channel('cases-realtime')
@@ -1227,9 +1153,6 @@
                 });
         }
 
-        // ============================================================
-        //  离线队列（简易版）
-        // ============================================================
         function setupNetworkListeners() {
             window.addEventListener('online', () => {
                 isOnline = true;
@@ -1265,9 +1188,6 @@
             toast('离线操作已同步', 'success');
         }
 
-        // ============================================================
-        //  批量操作
-        // ============================================================
         async function batchDelete() {
             const selected = getSelectedCases();
             if (selected.length === 0) { toast('请先选择要删除的案件', 'error'); return; }
@@ -1321,9 +1241,6 @@
             toast(`成功导出 ${selected.length} 件案件 📥`, 'success');
         }
 
-        // ============================================================
-        //  标签筛选 & 排序
-        // ============================================================
         function renderTagFilters() {
             const container = document.getElementById('tagFilterGroup');
             const allTags = getAllTags();
@@ -1352,9 +1269,6 @@
             renderTable();
         }
 
-        // ============================================================
-        //  单个新建/编辑
-        // ============================================================
         function openAddModal() {
             document.getElementById('modalTitle').textContent = '新建案件';
             document.getElementById('modalSubmitBtn').innerHTML = '<i class="fas fa-plus"></i> 新建';
@@ -1404,7 +1318,7 @@
             document.body.style.overflow = 'auto';
         }
 
-                async function saveCase(e) {
+        async function saveCase(e) {
             e.preventDefault();
             const editId = document.getElementById('editId').value;
             const editVersion = parseInt(document.getElementById('editVersion').value) || 1;
@@ -1500,91 +1414,8 @@
                 toast('保存失败：' + err.message, 'error');
                 setSyncStatus('error', '保存失败');
             }
-        };
-
-            if (!formData.caseNumber || !formData.caseName || !formData.clientName || !formData.contactPerson || !formData.receiveDate) {
-                toast('请填写所有必填项', 'error');
-                return;
-            }
-
-            const payload = toDB(formData);
-
-            // 离线模式
-            if (!isOnline) {
-                pendingQueue.push({
-                    type: editId ? 'update' : 'insert',
-                    id: editId,
-                    payload,
-                });
-                if (editId) {
-                    const idx = cases.findIndex(c => c.id === editId);
-                    if (idx > -1) cases[idx] = { ...cases[idx], ...formData };
-                } else {
-                    cases.unshift({ id: genId(), version: 1, ...formData });
-                }
-                closeModal();
-                renderStats();
-                renderTable();
-                toast('离线模式：已缓存，网络恢复后自动上传', 'info');
-                return;
-            }
-
-            setSyncStatus('syncing', '正在保存...');
-
-            try {
-                if (editId) {
-                    // 乐观锁：版本号匹配才更新
-                    const { data, error } = await sb.from('cases')
-                        .update({ ...payload, version: editVersion + 1, updated_at: new Date().toISOString() })
-                        .eq('id', editId)
-                        .eq('version', editVersion)
-                        .select();
-
-                    if (error) throw error;
-                    if (!data || data.length === 0) {
-                        toast('该案件已被其他设备修改，请刷新后重试', 'error');
-                        setSyncStatus('error', '冲突');
-                        return;
-                    }
-                    const idx = cases.findIndex(c => c.id === editId);
-                    if (idx > -1) cases[idx] = fromDB(data[0]);
-                    toast('案件已更新 ✅', 'success');
-                } else {
-                    const { data: { user } } = await sb.auth.getUser();
-    if (!user) {
-        toast('请先登录', 'error');
-        return;
-    }
-    const payloadWithUser = { ...payload, user_id: user.id };
-    const { data, error } = await sb.from('cases').insert(payloadWithUser).select();
-    if (error) {
-        if (error.code === '23505') {
-            toast('案件编号已存在，请修改', 'error');
-        } else {
-            toast('保存失败：' + error.message, 'error');
-        }
-        setSyncStatus('error', '保存失败');
-        return;
-    }
-    cases.unshift(fromDB(data[0]));
-    toast('案件已创建 ✅', 'success');
-                    }
-                    cases.unshift(fromDB(data[0]));
-                    toast('案件已创建 ✅', 'success');
-                }
-                setSyncStatus('ok', '已同步 · ' + new Date().toLocaleTimeString());
-                closeModal();
-                renderStats();
-                renderTable();
-            } catch (err) {
-                toast('保存失败：' + err.message, 'error');
-                setSyncStatus('error', '保存失败');
-            }
         }
 
-        // ============================================================
-        //  删除单个
-        // ============================================================
         async function deleteCase(id) {
             if (!confirm('确定要删除该案件吗？')) return;
 
@@ -1613,9 +1444,6 @@
             toast('案件已删除 🗑️', 'info');
         }
 
-        // ============================================================
-        //  查看详情
-        // ============================================================
         function viewDetail(id) {
             const c = cases.find(item => item.id === id);
             if (!c) return toast('案件不存在', 'error');
@@ -1657,9 +1485,6 @@
             document.body.style.overflow = 'auto';
         }
 
-        // ============================================================
-        //  批量新建
-        // ============================================================
         let batchRowCount = 0;
 
         function openBatchModal() {
@@ -1761,7 +1586,6 @@
 
             if (hasError || details.length === 0) return;
 
-            const now = new Date().toISOString();
             const newCases = details.map(d => ({
                 case_number: d.caseNumber,
                 case_name: d.caseName,
@@ -1777,20 +1601,15 @@
                 notes: d.notes || '',
             }));
 
-            setSyncStatus('syncing', '正在批量保存...');
             const { data: { user } } = await sb.auth.getUser();
-if (!user) {
-    toast('请先登录', 'error');
-    return;
-}
-const newCasesWithUser = newCases.map(c => ({ ...c, user_id: user.id }));
-const { data: { user } } = await sb.auth.getUser();
-if (!user) {
-    toast('请先登录', 'error');
-    return;
-}
-const newCasesWithUser = newCases.map(c => ({ ...c, user_id: user.id }));
-const { data, error } = await sb.from('cases').insert(newCasesWithUser).select();
+            if (!user) {
+                toast('请先登录', 'error');
+                return;
+            }
+            const newCasesWithUser = newCases.map(c => ({ ...c, user_id: user.id }));
+
+            setSyncStatus('syncing', '正在批量保存...');
+            const { data, error } = await sb.from('cases').insert(newCasesWithUser).select();
 
             if (error) {
                 toast('批量创建失败：' + error.message, 'error');
@@ -1806,9 +1625,6 @@ const { data, error } = await sb.from('cases').insert(newCasesWithUser).select()
             toast(`成功批量创建 ${data.length} 件案件 ✅`, 'success');
         }
 
-        // ============================================================
-        //  导出/导入
-        // ============================================================
         function downloadCSV(list, filename) {
             const headers = [
                 '案件编号', '案件名称', '客户名称', '业务类型',
@@ -1901,18 +1717,13 @@ const { data, error } = await sb.from('cases').insert(newCasesWithUser).select()
                     if (toInsert.length === 0) { toast('没有新数据可导入', 'info'); return; }
 
                     const { data: { user } } = await sb.auth.getUser();
-if (!user) {
-    toast('请先登录', 'error');
-    return;
-}
-const toInsertWithUser = toInsert.map(c => ({ ...c, user_id: user.id }));
-const { data: { user } } = await sb.auth.getUser();
-if (!user) {
-    toast('请先登录', 'error');
-    return;
-}
-const toInsertWithUser = toInsert.map(c => ({ ...c, user_id: user.id }));
-const { data, error } = await sb.from('cases').insert(toInsertWithUser).select();
+                    if (!user) {
+                        toast('请先登录', 'error');
+                        return;
+                    }
+                    const toInsertWithUser = toInsert.map(c => ({ ...c, user_id: user.id }));
+
+                    const { data, error } = await sb.from('cases').insert(toInsertWithUser).select();
                     if (error) { toast('导入失败：' + error.message, 'error'); return; }
                     cases.unshift(...data.map(fromDB));
                     renderStats();
@@ -1926,9 +1737,6 @@ const { data, error } = await sb.from('cases').insert(toInsertWithUser).select()
             reader.readAsText(file, 'UTF-8');
         }
 
-        // ============================================================
-        //  Toast
-        // ============================================================
         function toast(message, type = 'info') {
             const container = document.getElementById('toastContainer');
             const icons = { success: 'fa-check-circle', error: 'fa-exclamation-circle', info: 'fa-info-circle' };
@@ -1944,9 +1752,6 @@ const { data, error } = await sb.from('cases').insert(toInsertWithUser).select()
             setTimeout(() => { if (toastEl.parentElement) toastEl.remove(); }, 3500);
         }
 
-        // ============================================================
-        //  快捷键
-        // ============================================================
         document.addEventListener('keydown', (e) => {
             if (e.key === 'Escape') {
                 if (!document.getElementById('modalOverlay').classList.contains('hidden')) closeModal();
@@ -1962,9 +1767,6 @@ const { data, error } = await sb.from('cases').insert(toInsertWithUser).select()
             }
         });
 
-        // ============================================================
-        //  启动：检查登录状态
-        // ============================================================
         (async function boot() {
             const { data: { session } } = await sb.auth.getSession();
             if (session) {
@@ -1975,7 +1777,6 @@ const { data, error } = await sb.from('cases').insert(toInsertWithUser).select()
                 document.getElementById('loginOverlay').classList.remove('hidden');
                 document.getElementById('mainApp').style.display = 'none';
             }
-            console.log('🚀 IP全业务管理系统 (在线同步版) 已启动');
         })();
     </script>
 </body>
