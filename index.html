@@ -39,8 +39,8 @@ body{font-family:var(--font);background:var(--bg);color:var(--text);padding:24px
 .stat-card .icon.orange{background:#e67e22}.stat-card .icon.purple{background:#8e44ad}
 .stat-card .icon.teal{background:#1abc9c}.stat-card .icon.pink{background:#e84393}
 .stat-card .icon.green{background:#2d8f5e}
-.stat-card .info .number{font-size:28px;font-weight:700;line-height:1.2;color:var(--primary)}
-.stat-card .info .label{font-size:14px;color:var(--text-light);font-weight:500}
+.stat-card.alert-card{background:linear-gradient(135deg,#fff5f5,#ffe8e8);border:1px solid #fecaca}
+.stat-card.alert-card .info .number{color:#991b1b}
 .toolbar{display:flex;flex-wrap:wrap;gap:12px;align-items:center;justify-content:space-between;margin-bottom:20px;background:var(--card-bg);padding:14px 20px;border-radius:var(--radius);box-shadow:var(--shadow)}
 .toolbar-left{display:flex;flex-wrap:wrap;gap:12px;align-items:center;flex:1}
 .toolbar-left .search-box{display:flex;align-items:center;gap:8px;background:var(--bg);border-radius:var(--radius-sm);padding:0 14px;border:1px solid var(--border);flex:1;min-width:200px;max-width:360px}
@@ -51,14 +51,12 @@ body{font-family:var(--font);background:var(--bg);color:var(--text);padding:24px
 .toolbar-left .filter-group .filter-btn.active{background:var(--primary);color:#fff;border-color:var(--primary)}
 .toolbar-left .filter-group .filter-btn.tag-filter{background:#f0f0f0;border-color:#ccc}
 .toolbar-left .filter-group .filter-btn.tag-filter.active{background:var(--accent);color:#fff;border-color:var(--accent)}
-/* ===== 视图切换按钮（活跃/归档/全部） ===== */
 .view-btn{padding:7px 14px !important;border-radius:8px !important;font-weight:600 !important}
 .view-btn .view-count{display:inline-block;background:rgba(0,0,0,.08);border-radius:8px;padding:0 6px;font-size:11px;margin-left:2px;font-weight:600;line-height:16px;min-width:18px;text-align:center}
 .view-btn.active .view-count{background:rgba(255,255,255,.28)}
 .view-btn[data-view="archived"]{border-color:#d1d5db;color:#6b7280}
 .view-btn[data-view="archived"].active{background:#6b7280;border-color:#6b7280;color:#fff}
 .view-btn[data-view="archived"]:hover{border-color:#6b7280;color:#6b7280}
-/* 视图按钮组与类型筛选之间的分隔线 */
 .toolbar-left .view-group-wrapper{display:flex;align-items:center;gap:12px}
 .toolbar-left .view-group-wrapper::after{content:'';display:block;width:1px;height:24px;background:var(--border)}
 .toolbar-right{display:flex;gap:8px;flex-wrap:wrap;align-items:center}
@@ -66,7 +64,7 @@ body{font-family:var(--font);background:var(--bg);color:var(--text);padding:24px
 .toolbar-right .batch-actions{display:flex;gap:6px;align-items:center}
 .toolbar-right .batch-actions select{padding:6px 12px;border-radius:var(--radius-sm);border:1px solid var(--border);font-size:14px;background:#fafbfc;font-family:var(--font)}
 .table-wrap{background:var(--card-bg);border-radius:var(--radius);box-shadow:var(--shadow);overflow:hidden;overflow-x:auto}
-.table-wrap table{width:100%;border-collapse:collapse;font-size:14px;min-width:1300px}
+.table-wrap table{width:100%;border-collapse:collapse;font-size:14px;min-width:1400px}
 .table-wrap table th{background:var(--bg);font-weight:600;color:var(--text-light);padding:14px 16px;text-align:left;border-bottom:2px solid var(--border);font-size:13px;text-transform:uppercase;letter-spacing:.3px;white-space:nowrap;cursor:pointer}
 .table-wrap table th i{margin-left:6px;font-size:12px;opacity:.5}
 .table-wrap table td{padding:14px 16px;border-bottom:1px solid var(--border);vertical-align:middle}
@@ -89,6 +87,15 @@ body{font-family:var(--font);background:var(--bg);color:var(--text);padding:24px
 .importance-stars{color:#f59e0b;letter-spacing:2px}
 .tag-list{display:flex;flex-wrap:wrap;gap:4px}
 .tag-item{background:#e5e7eb;color:#374151;padding:2px 10px;border-radius:12px;font-size:11px;font-weight:500;white-space:nowrap}
+/* OA 截止日期徽章 */
+.deadline-badge{display:inline-block;padding:3px 10px;border-radius:12px;font-size:12px;font-weight:700;white-space:nowrap}
+.deadline-ok{background:#d1fae5;color:#065f46}
+.deadline-warn{background:#fef3c7;color:#92400e}
+.deadline-urgent{background:#fed7aa;color:#9a3412}
+.deadline-danger{background:#fee2e2;color:#991b1b}
+.deadline-overdue{background:#991b1b;color:#fff;animation:pulse 1.5s ease-in-out infinite}
+.deadline-none{color:#9ca3af;font-size:12px}
+@keyframes pulse{0%,100%{opacity:1}50%{opacity:.65}}
 .table-wrap .actions{display:flex;gap:6px;flex-wrap:wrap;justify-content:center}
 .table-wrap .empty-state{text-align:center;padding:60px 20px;color:var(--text-light)}
 .table-wrap .empty-state i{font-size:48px;color:var(--border);margin-bottom:16px;display:block}
@@ -106,8 +113,14 @@ input[type=checkbox]{width:18px;height:18px;cursor:pointer;accent-color:var(--ac
 .modal .form-group label .hint{font-weight:400;color:var(--text-light);font-size:12px;margin-left:8px}
 .modal .form-group input,.modal .form-group select,.modal .form-group textarea{width:100%;padding:10px 14px;border:1px solid var(--border);border-radius:var(--radius-sm);font-size:15px;font-family:var(--font);background:#fafbfc}
 .modal .form-group input:focus,.modal .form-group select:focus,.modal .form-group textarea:focus{outline:none;border-color:var(--accent);box-shadow:0 0 0 3px rgba(59,143,194,.12)}
+.modal .form-group input[readonly]{background:#f0f4f9;font-weight:600;color:var(--primary);cursor:not-allowed}
 .modal .form-row{display:grid;grid-template-columns:1fr 1fr;gap:16px}
 .modal .form-actions{display:flex;justify-content:flex-end;gap:12px;margin-top:24px;padding-top:20px;border-top:1px solid var(--border)}
+/* OA 字段区 */
+.oa-section{background:#fffbf0;border:1px solid #fde68a;border-radius:var(--radius-sm);padding:16px 18px;margin-bottom:18px}
+.oa-section .oa-title{font-size:13px;font-weight:700;color:#92400e;margin-bottom:12px;display:flex;align-items:center;gap:6px}
+.oa-section .form-group{margin-bottom:0}
+.oa-days{font-weight:800;font-size:20px}
 .batch-table{width:100%;border-collapse:collapse;margin-top:10px}
 .batch-table th,.batch-table td{border:1px solid var(--border);padding:8px 10px;text-align:left;font-size:14px}
 .batch-table th{background:var(--bg);font-weight:600}
@@ -171,7 +184,7 @@ input[type=checkbox]{width:18px;height:18px;cursor:pointer;accent-color:var(--ac
       <div class="logo"><i class="fas fa-scale-balanced"></i></div>
       <div>
         <h1>IP<span>全业务</span>管理</h1>
-        <div class="subtitle">云端同步 · 数据隔离 · 批量新建 · 客户/联系人记忆 · 自动归档</div>
+        <div class="subtitle">云端同步 · 自动归档 · OA时间监控 · 客户/联系人记忆</div>
       </div>
     </div>
     <div class="header-actions">
@@ -193,7 +206,8 @@ input[type=checkbox]{width:18px;height:18px;cursor:pointer;accent-color:var(--ac
     <span class="step">已提交受理</span> <i class="fas fa-chevron-right"></i>
     <span class="step">协助缴费</span> <i class="fas fa-chevron-right"></i>
     <span class="step" style="color:#2d8f5e;">已移交专人</span>
-    <span style="margin-left:8px;font-size:12px;color:#6b7280;background:#e5e7eb;padding:2px 8px;border-radius:10px;"><i class="fas fa-archive"></i> 「协助缴费/已移交专人」自动归档</span>
+    <span style="margin-left:8px;font-size:12px;color:#6b7280;background:#e5e7eb;padding:2px 8px;border-radius:10px;"><i class="fas fa-archive"></i> 自动归档</span>
+    <span style="margin-left:8px;font-size:12px;color:#92400e;background:#fef3c7;padding:2px 8px;border-radius:10px;" title="OA1：下发后4个月；OA2及以上：下发后2个月"><i class="fas fa-clock"></i> OA1=4个月，OA2+=2个月</span>
     <span style="margin-left:auto;font-size:13px;color:var(--text-light);" id="syncStatus"><i class="fas fa-cloud"></i> 正在连接...</span>
   </div>
 
@@ -205,7 +219,6 @@ input[type=checkbox]{width:18px;height:18px;cursor:pointer;accent-color:var(--ac
         <i class="fas fa-search"></i>
         <input type="text" id="searchInput" placeholder="搜索名称、客户、编号..." oninput="renderTable()" />
       </div>
-      <!-- ===== 视图切换（活跃 / 归档 / 全部） ===== -->
       <div class="view-group-wrapper">
         <div class="filter-group" id="viewGroup">
           <button class="filter-btn view-btn active" data-view="active" onclick="setView('active')" title="仅显示进行中的案件">
@@ -227,6 +240,7 @@ input[type=checkbox]{width:18px;height:18px;cursor:pointer;accent-color:var(--ac
         <button class="filter-btn" data-type="商标代理" onclick="setTypeFilter('商标代理')">商标代理</button>
         <button class="filter-btn" data-type="专利检索" onclick="setTypeFilter('专利检索')">检索</button>
         <button class="filter-btn" data-type="缴费监控" onclick="setTypeFilter('缴费监控')">缴费监控</button>
+        <button class="filter-btn" data-type="OA监控" onclick="setTypeFilter('OA监控')">OA监控</button>
       </div>
       <div class="filter-group" id="tagFilterGroup"></div>
     </div>
@@ -261,6 +275,7 @@ input[type=checkbox]{width:18px;height:18px;cursor:pointer;accent-color:var(--ac
           <th onclick="sortTable('priority')">优先级 <i class="fas fa-sort"></i></th>
           <th onclick="sortTable('importance')">重要性 <i class="fas fa-sort"></i></th>
           <th onclick="sortTable('status')">状态 <i class="fas fa-sort"></i></th>
+          <th onclick="sortTable('oaDeadline')" title="仅OA监控类型显示；OA1=下发后4个月，OA2+=下发后2个月">OA截止 <i class="fas fa-sort"></i></th>
           <th>标签</th>
           <th style="text-align:center;">操作</th>
         </tr>
@@ -302,13 +317,14 @@ input[type=checkbox]{width:18px;height:18px;cursor:pointer;accent-color:var(--ac
         </div>
         <div class="form-group">
           <label>业务类型 <span class="required">*</span></label>
-          <select id="f_caseType" required onchange="generateCaseNumber()">
+          <select id="f_caseType" required onchange="onCaseTypeChange()">
             <option value="专利代理">专利代理</option>
             <option value="专利侵权与规避">专利侵权与规避</option>
             <option value="软件著作权登记">软件著作权登记</option>
             <option value="商标代理">商标代理</option>
             <option value="专利检索">专利检索</option>
             <option value="缴费监控">缴费监控</option>
+            <option value="OA监控">OA监控</option>
             <option value="其他">其他</option>
           </select>
         </div>
@@ -334,6 +350,41 @@ input[type=checkbox]{width:18px;height:18px;cursor:pointer;accent-color:var(--ac
           <select id="f_priority"><option value="高">高</option><option value="中" selected>中</option><option value="低">低</option></select>
         </div>
       </div>
+
+      <!-- ===== OA 监控专属字段 ===== -->
+      <div class="oa-section" id="oaSection" style="display:none;">
+        <div class="oa-title"><i class="fas fa-clock"></i> OA 时间监控（OA1 期限4个月，OA2及以上期限2个月）</div>
+        <div class="form-row">
+          <div class="form-group">
+            <label>OA次数 <span class="required">*</span></label>
+            <select id="f_oaRound" onchange="recalcOaDeadline()">
+              <option value="">请选择</option>
+              <option value="OA1">OA1（4个月期限）</option>
+              <option value="OA2">OA2（2个月期限）</option>
+              <option value="OA3">OA3（2个月期限）</option>
+              <option value="OA4">OA4（2个月期限）</option>
+              <option value="OA5">OA5（2个月期限）</option>
+              <option value="OA6">OA6（2个月期限）</option>
+              <option value="OA7">OA7（2个月期限）</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label>OA下发日期 <span class="required">*</span></label>
+            <input type="date" id="f_oaIssueDate" onchange="recalcOaDeadline()" />
+          </div>
+        </div>
+        <div class="form-row" style="margin-top:16px;">
+          <div class="form-group">
+            <label>答复截止日期（自动计算）</label>
+            <input type="date" id="f_oaDeadline" readonly />
+          </div>
+          <div class="form-group">
+            <label>剩余天数</label>
+            <div id="oaDaysDisplay" style="padding:10px 14px;font-weight:800;font-size:20px;color:#6b7280;">—</div>
+          </div>
+        </div>
+      </div>
+
       <div class="form-row">
         <div class="form-group">
           <label>重要性</label>
@@ -386,13 +437,14 @@ input[type=checkbox]{width:18px;height:18px;cursor:pointer;accent-color:var(--ac
       </div>
       <div class="form-group">
         <label>业务类型 <span class="required">*</span></label>
-        <select id="batch_caseType">
+        <select id="batch_caseType" onchange="onBatchCaseTypeChange()">
           <option value="专利代理">专利代理</option>
           <option value="专利侵权与规避">专利侵权与规避</option>
           <option value="软件著作权登记">软件著作权登记</option>
           <option value="商标代理">商标代理</option>
           <option value="专利检索">专利检索</option>
           <option value="缴费监控">缴费监控</option>
+          <option value="OA监控">OA监控</option>
           <option value="其他">其他</option>
         </select>
       </div>
@@ -419,6 +471,41 @@ input[type=checkbox]{width:18px;height:18px;cursor:pointer;accent-color:var(--ac
         </select>
       </div>
     </div>
+
+    <!-- ===== 批量 OA 专属字段 ===== -->
+    <div class="oa-section" id="batchOaSection" style="display:none;">
+      <div class="oa-title"><i class="fas fa-clock"></i> OA 时间监控（同批案件共用同一 OA 信息，后续可逐个编辑修改）</div>
+      <div class="form-row">
+        <div class="form-group">
+          <label>OA次数</label>
+          <select id="batch_oaRound" onchange="recalcBatchOa()">
+            <option value="">请选择</option>
+            <option value="OA1">OA1（4个月期限）</option>
+            <option value="OA2">OA2（2个月期限）</option>
+            <option value="OA3">OA3（2个月期限）</option>
+            <option value="OA4">OA4（2个月期限）</option>
+            <option value="OA5">OA5（2个月期限）</option>
+            <option value="OA6">OA6（2个月期限）</option>
+            <option value="OA7">OA7（2个月期限）</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label>OA下发日期</label>
+          <input type="date" id="batch_oaIssueDate" onchange="recalcBatchOa()" />
+        </div>
+      </div>
+      <div class="form-row" style="margin-top:16px;">
+        <div class="form-group">
+          <label>答复截止日期（自动计算）</label>
+          <input type="date" id="batch_oaDeadline" readonly />
+        </div>
+        <div class="form-group">
+          <label>剩余天数</label>
+          <div id="batchOaDaysDisplay" style="padding:10px 14px;font-weight:800;font-size:20px;color:#6b7280;">—</div>
+        </div>
+      </div>
+    </div>
+
     <div class="form-row">
       <div class="form-group">
         <label>重要性 (1-5星)</label>
@@ -498,12 +585,14 @@ let currentSort = { field: 'receiveDate', asc: false };
 let selectedIds = new Set();
 let realtimeChannel = null;
 
-// ===== 视图：活跃（默认）/ 归档 / 全部 =====
+// ===== 视图：活跃 / 归档 / 全部 =====
 let currentView = 'active';
-// 状态为这两个视为"已结束"，自动归档到隐藏视图
 const ENDED_STATUSES = ['协助缴费', '已移交专人'];
 
-const TYPE_PREFIX = {'专利代理':'ZL','专利侵权与规避':'QG','软件著作权登记':'RJ','商标代理':'SB','专利检索':'JS','缴费监控':'JF','其他':'QT'};
+const TYPE_PREFIX = {
+  '专利代理':'ZL','专利侵权与规避':'QG','软件著作权登记':'RJ','商标代理':'SB',
+  '专利检索':'JS','缴费监控':'JF','OA监控':'OA','其他':'QT'
+};
 const STATUS_CLASS = {'收案':'status-receive','处理中':'status-processing','待提交':'status-pending-submit','已提交受理':'status-submitted','协助缴费':'status-payment','已移交专人':'status-transferred'};
 
 const DB_TO_UI = {
@@ -511,6 +600,7 @@ const DB_TO_UI = {
   contact_person:'contactPerson', contact_phone:'contactPhone', receive_date:'receiveDate',
   submit_date:'submitDate', payment_date:'paymentDate', transfer_date:'transferDate',
   status:'status', priority:'priority', importance:'importance', tags:'tags', notes:'notes',
+  oa_round:'oaRound', oa_issue_date:'oaIssueDate', oa_deadline:'oaDeadline',
   created_at:'createTime', updated_at:'updateTime'
 };
 
@@ -611,6 +701,142 @@ function getStatusClass(s){ return STATUS_CLASS[s] || ''; }
 function getPriorityClass(p){ return {'高':'priority-high','中':'priority-medium','低':'priority-low'}[p] || 'priority-medium'; }
 function renderStars(i){ const n=parseInt(i)||0; return '★'.repeat(n)+'☆'.repeat(5-n); }
 
+// ============================================================
+//  OA 截止日期计算与预警
+// ============================================================
+// 在指定日期上加 months 个月（月末自动对齐：1月31日 + 1个月 = 2月最后一天）
+function addMonths(dateStr, months){
+  if (!dateStr) return '';
+  const d = new Date(dateStr + 'T00:00:00');
+  const day = d.getDate();
+  d.setDate(1);
+  d.setMonth(d.getMonth() + months);
+  const lastDay = new Date(d.getFullYear(), d.getMonth()+1, 0).getDate();
+  d.setDate(Math.min(day, lastDay));
+  const y = d.getFullYear();
+  const m = String(d.getMonth()+1).padStart(2,'0');
+  const dd = String(d.getDate()).padStart(2,'0');
+  return `${y}-${m}-${dd}`;
+}
+
+// 根据 OA 次数获取月数：OA1 = 4 个月；其他 = 2 个月
+function getOaMonths(round){
+  if (!round) return 0;
+  if (String(round).toUpperCase() === 'OA1') return 4;
+  return 2;
+}
+
+// 计算截止日期
+function calcOaDeadline(round, issueDate){
+  const months = getOaMonths(round);
+  if (!months || !issueDate) return '';
+  return addMonths(issueDate, months);
+}
+
+// 计算剩余天数（今天到目标日）
+function daysUntil(dateStr){
+  if (!dateStr) return null;
+  const today = new Date();
+  today.setHours(0,0,0,0);
+  const target = new Date(dateStr + 'T00:00:00');
+  target.setHours(0,0,0,0);
+  return Math.round((target - today) / 86400000);
+}
+
+// 根据剩余天数返回样式类
+function getDeadlineClass(days){
+  if (days === null || days === undefined) return 'deadline-none';
+  if (days < 0) return 'deadline-overdue';
+  if (days <= 7) return 'deadline-danger';
+  if (days <= 15) return 'deadline-urgent';
+  if (days <= 30) return 'deadline-warn';
+  return 'deadline-ok';
+}
+
+// 根据剩余天数返回颜色（用于纯文本色）
+function getDeadlineColor(days){
+  if (days === null || days === undefined) return '#9ca3af';
+  if (days < 0) return '#991b1b';
+  if (days <= 7) return '#b91c1c';
+  if (days <= 15) return '#c2410c';
+  if (days <= 30) return '#b45309';
+  return '#059669';
+}
+
+// 单件表单：OA 字段显示/隐藏
+function toggleOaFields(){
+  const type = document.getElementById('f_caseType').value;
+  const show = type === 'OA监控';
+  document.getElementById('oaSection').style.display = show ? 'block' : 'none';
+  if (!show){
+    document.getElementById('f_oaRound').value = '';
+    document.getElementById('f_oaIssueDate').value = '';
+    document.getElementById('f_oaDeadline').value = '';
+    document.getElementById('oaDaysDisplay').textContent = '—';
+    document.getElementById('oaDaysDisplay').style.color = '#6b7280';
+  }
+}
+
+// 单件表单：业务类型变化时
+function onCaseTypeChange(){
+  generateCaseNumber();
+  toggleOaFields();
+}
+
+// 单件表单：重新计算截止日期
+function recalcOaDeadline(){
+  const round = document.getElementById('f_oaRound').value;
+  const issueDate = document.getElementById('f_oaIssueDate').value;
+  const deadline = calcOaDeadline(round, issueDate);
+  document.getElementById('f_oaDeadline').value = deadline;
+  const daysEl = document.getElementById('oaDaysDisplay');
+  if (deadline){
+    const days = daysUntil(deadline);
+    daysEl.textContent = days >= 0 ? `${days} 天` : `已超期 ${Math.abs(days)} 天`;
+    daysEl.style.color = getDeadlineColor(days);
+  } else {
+    daysEl.textContent = '—';
+    daysEl.style.color = '#6b7280';
+  }
+}
+
+// 批量表单：OA 字段显示/隐藏
+function toggleBatchOaFields(){
+  const type = document.getElementById('batch_caseType').value;
+  const show = type === 'OA监控';
+  document.getElementById('batchOaSection').style.display = show ? 'block' : 'none';
+  if (!show){
+    document.getElementById('batch_oaRound').value = '';
+    document.getElementById('batch_oaIssueDate').value = '';
+    document.getElementById('batch_oaDeadline').value = '';
+    document.getElementById('batchOaDaysDisplay').textContent = '—';
+    document.getElementById('batchOaDaysDisplay').style.color = '#6b7280';
+  }
+}
+
+function onBatchCaseTypeChange(){
+  toggleBatchOaFields();
+}
+
+function recalcBatchOa(){
+  const round = document.getElementById('batch_oaRound').value;
+  const issueDate = document.getElementById('batch_oaIssueDate').value;
+  const deadline = calcOaDeadline(round, issueDate);
+  document.getElementById('batch_oaDeadline').value = deadline;
+  const daysEl = document.getElementById('batchOaDaysDisplay');
+  if (deadline){
+    const days = daysUntil(deadline);
+    daysEl.textContent = days >= 0 ? `${days} 天` : `已超期 ${Math.abs(days)} 天`;
+    daysEl.style.color = getDeadlineColor(days);
+  } else {
+    daysEl.textContent = '—';
+    daysEl.style.color = '#6b7280';
+  }
+}
+
+// ============================================================
+//  编号生成
+// ============================================================
 function generateCaseNumber(){
   if (document.getElementById('editId').value) return;
   const type = document.getElementById('f_caseType').value;
@@ -619,7 +845,6 @@ function generateCaseNumber(){
   document.getElementById('f_caseNumber').value = generateBatchNumber(type, date, []);
 }
 
-// 供单件与批量共用的编号生成器
 function generateBatchNumber(type, date, extraNumbers){
   const prefix = TYPE_PREFIX[type] || 'QT';
   const year = (date || '').substring(0,4);
@@ -636,6 +861,9 @@ function generateBatchNumber(type, date, extraNumbers){
   return `${prefix}-${year}-${String(maxSeq+1).padStart(3,'0')}`;
 }
 
+// ============================================================
+//  统计
+// ============================================================
 function renderStats(){
   const total = cases.length;
   const activeCount = cases.filter(c => !ENDED_STATUSES.includes(c.status)).length;
@@ -647,6 +875,13 @@ function renderStats(){
     const p = c.priority || '中';
     if (byPriority[p] !== undefined) byPriority[p]++;
   });
+  // OA 预警：15天内到期或已超期
+  const oaWarningCount = cases.filter(c => {
+    if (c.caseType !== 'OA监控' || !c.oaDeadline) return false;
+    const d = daysUntil(c.oaDeadline);
+    return d !== null && d <= 15;
+  }).length;
+
   const typeMap = {
     '专利代理':{icon:'fa-gavel',color:'blue',label:'专利代理'},
     '专利侵权与规避':{icon:'fa-balance-scale',color:'red',label:'侵权与规避'},
@@ -656,12 +891,19 @@ function renderStats(){
     '缴费监控':{icon:'fa-hand-holding-usd',color:'pink',label:'缴费监控'}
   };
   let html = `<div class="stat-card"><div class="icon blue"><i class="fas fa-folder-open"></i></div><div class="info"><div class="number">${total}</div><div class="label">总案件</div></div></div>`;
-  // 活跃 / 归档 卡片
   html += `<div class="stat-card"><div class="icon green"><i class="fas fa-briefcase"></i></div><div class="info"><div class="number">${activeCount}</div><div class="label">活跃案件</div></div></div>`;
   html += `<div class="stat-card"><div class="icon purple"><i class="fas fa-archive"></i></div><div class="info"><div class="number">${archivedCount}</div><div class="label">归档案件</div></div></div>`;
+  // OA 预警卡片（有预警时突出显示）
+  if (oaWarningCount > 0){
+    html += `<div class="stat-card alert-card"><div class="icon red"><i class="fas fa-exclamation-triangle"></i></div><div class="info"><div class="number">${oaWarningCount}</div><div class="label">OA预警（15天内）</div></div></div>`;
+  }
   for (const [k,cfg] of Object.entries(typeMap)){
     const count = byType[k]||0;
     if (count>0) html += `<div class="stat-card"><div class="icon ${cfg.color}"><i class="fas ${cfg.icon}"></i></div><div class="info"><div class="number">${count}</div><div class="label">${cfg.label}</div></div></div>`;
+  }
+  // OA 监控案件总数
+  if (byType['OA监控'] > 0){
+    html += `<div class="stat-card"><div class="icon orange"><i class="fas fa-clock"></i></div><div class="info"><div class="number">${byType['OA监控']}</div><div class="label">OA监控</div></div></div>`;
   }
   html += `<div class="stat-card"><div class="icon red"><i class="fas fa-flag"></i></div><div class="info"><div class="number">${byPriority['高']}</div><div class="label">高优先级</div></div></div>`;
   html += `<div class="stat-card"><div class="icon orange"><i class="fas fa-flag"></i></div><div class="info"><div class="number">${byPriority['中']}</div><div class="label">中优先级</div></div></div>`;
@@ -671,12 +913,11 @@ function renderStats(){
 }
 
 // ============================================================
-//  视图切换：活跃 / 归档 / 全部
+//  视图切换
 // ============================================================
 function setView(view){
   currentView = view;
   document.querySelectorAll('#viewGroup .view-btn').forEach(b => b.classList.toggle('active', b.dataset.view === view));
-  // 切换视图时清空选中，避免误操作隐藏案件
   selectedIds.clear();
   renderTable();
 }
@@ -721,20 +962,14 @@ function setTagFilter(tag){
 function getFiltered(){
   const kw = document.getElementById('searchInput').value.trim().toLowerCase();
   let list = cases.filter(c => {
-    // ===== 视图过滤（核心逻辑） =====
     const isEnded = ENDED_STATUSES.includes(c.status);
     if (currentView === 'active' && isEnded) return false;
     if (currentView === 'archived' && !isEnded) return false;
-    // currentView === 'all' 时不过滤
-
-    // ===== 类型过滤 =====
     if (currentTypeFilter !== 'all' && c.caseType !== currentTypeFilter) return false;
-    // ===== 标签过滤 =====
     if (currentTagFilter){
       const tags = (c.tags||'').split(',').map(t=>t.trim());
       if (!tags.includes(currentTagFilter)) return false;
     }
-    // ===== 关键词搜索 =====
     if (kw){
       const s = `${c.caseNumber} ${c.caseName} ${c.clientName} ${c.contactPerson} ${c.notes||''}`.toLowerCase();
       if (!s.includes(kw)) return false;
@@ -768,7 +1003,7 @@ function renderTable(){
     } else {
       emptyHtml = `<i class="fas fa-gavel"></i><h3>暂无案件</h3><p>点击「新建案件」或「批量新建」开始</p>`;
     }
-    tbody.innerHTML = `<tr><td colspan="10"><div class="empty-state">${emptyHtml}</div></td></tr>`;
+    tbody.innerHTML = `<tr><td colspan="11"><div class="empty-state">${emptyHtml}</div></td></tr>`;
     updateSelectedInfo();
     return;
   }
@@ -779,8 +1014,20 @@ function renderTable(){
     const tagHtml = tags.map(t => `<span class="tag-item">${t}</span>`).join('');
     const checked = selectedIds.has(c.id) ? 'checked' : '';
     const isEnded = ENDED_STATUSES.includes(c.status);
-    // 归档状态的案件行整体略带灰色调，作为视觉提示
     const rowStyle = isEnded ? 'style="opacity:.82;"' : '';
+
+    // ===== OA 截止单元格 =====
+    let oaCell = '<span class="deadline-none">-</span>';
+    if (c.caseType === 'OA监控' && c.oaDeadline){
+      const days = daysUntil(c.oaDeadline);
+      const cls = getDeadlineClass(days);
+      const label = days >= 0 ? `${days}天` : `超期${Math.abs(days)}天`;
+      const tip = `${c.oaRound || 'OA'} · 下发：${c.oaIssueDate || '-'} · 截止：${c.oaDeadline}`;
+      oaCell = `<span class="deadline-badge ${cls}" title="${tip}">${label}</span>`;
+    } else if (c.caseType === 'OA监控' && !c.oaDeadline){
+      oaCell = `<span class="deadline-none" title="未填写OA信息">待填</span>`;
+    }
+
     html += `<tr class="${checked?'selected':''}" ${rowStyle} data-id="${c.id}">
       <td class="checkbox-col"><input type="checkbox" class="row-checkbox" data-id="${c.id}" ${checked} onchange="toggleRow('${c.id}')" /></td>
       <td><span class="case-id">${c.caseNumber||'-'}</span></td>
@@ -790,6 +1037,7 @@ function renderTable(){
       <td><span class="priority-badge ${getPriorityClass(c.priority)}">${c.priority||'中'}</span></td>
       <td><span class="importance-stars">${renderStars(c.importance)}</span></td>
       <td><span class="status-badge ${getStatusClass(c.status)}">${c.status||'-'}</span></td>
+      <td>${oaCell}</td>
       <td><div class="tag-list">${tagHtml}</div></td>
       <td><div class="actions">
         <button class="btn btn-accent btn-xs" onclick="viewDetail('${c.id}')"><i class="fas fa-eye"></i></button>
@@ -869,7 +1117,6 @@ async function batchUpdateStatus(){
   cases = cases.map(c => ids.includes(c.id) ? { ...c, status: s } : c);
   selectedIds.clear(); renderStats(); renderTable();
   document.getElementById('batchStatusSelect').value = '';
-  // 如果新状态是结束状态，提示用户案件已转入归档
   const isArchived = ENDED_STATUSES.includes(s);
   toast(`已更新 ${sel.length} 件${isArchived ? '，已转入归档' : ''} ✅`,'success');
 }
@@ -886,13 +1133,12 @@ function setTypeFilter(type){
   renderTable();
 }
 
-// ===== 状态提示：编辑时提醒会归档 =====
 function updateStatusHint(){
   const s = document.getElementById('f_status').value;
   const hint = document.getElementById('statusHint');
   if (!hint) return;
   if (ENDED_STATUSES.includes(s)){
-    hint.textContent = '（保存后将自动归档，不在活跃列表显示）';
+    hint.textContent = '（保存后将自动归档）';
     hint.style.color = '#b45309';
   } else {
     hint.textContent = '';
@@ -910,6 +1156,7 @@ function openAddModal(){
   document.getElementById('f_priority').value = '中';
   document.getElementById('f_importance').value = '3';
   updateStatusHint();
+  toggleOaFields();
   generateCaseNumber();
   updateHistoryLists();
   document.getElementById('modalOverlay').classList.remove('hidden');
@@ -937,6 +1184,27 @@ function openEditModal(id){
   document.getElementById('f_importance').value = c.importance||'3';
   document.getElementById('f_tags').value = c.tags||'';
   document.getElementById('f_notes').value = c.notes||'';
+  // OA 字段回填
+  toggleOaFields();
+  if (c.caseType === 'OA监控'){
+    document.getElementById('f_oaRound').value = c.oaRound || '';
+    document.getElementById('f_oaIssueDate').value = c.oaIssueDate || '';
+    // 若数据库中无截止日期但有下发日期，自动补算一次
+    if (!c.oaDeadline && c.oaRound && c.oaIssueDate){
+      recalcOaDeadline();
+    } else {
+      document.getElementById('f_oaDeadline').value = c.oaDeadline || '';
+      const daysEl = document.getElementById('oaDaysDisplay');
+      if (c.oaDeadline){
+        const days = daysUntil(c.oaDeadline);
+        daysEl.textContent = days >= 0 ? `${days} 天` : `已超期 ${Math.abs(days)} 天`;
+        daysEl.style.color = getDeadlineColor(days);
+      } else {
+        daysEl.textContent = '—';
+        daysEl.style.color = '#6b7280';
+      }
+    }
+  }
   updateStatusHint();
   updateHistoryLists();
   document.getElementById('modalOverlay').classList.remove('hidden');
@@ -948,11 +1216,21 @@ async function saveCase(e){
   e.preventDefault();
   const editId = document.getElementById('editId').value;
   const editVersion = parseInt(document.getElementById('editVersion').value) || 1;
+  const caseType = document.getElementById('f_caseType').value;
+
+  // 收集 OA 字段（仅 OA 监控类型）
+  let oaRound = '', oaIssueDate = '', oaDeadline = '';
+  if (caseType === 'OA监控'){
+    oaRound = document.getElementById('f_oaRound').value || '';
+    oaIssueDate = document.getElementById('f_oaIssueDate').value || '';
+    oaDeadline = oaRound && oaIssueDate ? calcOaDeadline(oaRound, oaIssueDate) : '';
+  }
+
   const formData = {
     caseNumber: document.getElementById('f_caseNumber').value.trim(),
     caseName: document.getElementById('f_caseName').value.trim(),
     clientName: document.getElementById('f_clientName').value.trim(),
-    caseType: document.getElementById('f_caseType').value,
+    caseType: caseType,
     contactPerson: document.getElementById('f_contactPerson').value.trim(),
     contactPhone: document.getElementById('f_contactPhone').value.trim(),
     receiveDate: document.getElementById('f_receiveDate').value,
@@ -963,10 +1241,17 @@ async function saveCase(e){
     priority: document.getElementById('f_priority').value,
     importance: document.getElementById('f_importance').value,
     tags: document.getElementById('f_tags').value.trim(),
-    notes: document.getElementById('f_notes').value.trim()
+    notes: document.getElementById('f_notes').value.trim(),
+    oaRound: oaRound,
+    oaIssueDate: oaIssueDate,
+    oaDeadline: oaDeadline
   };
   if (!formData.caseNumber || !formData.caseName || !formData.clientName || !formData.contactPerson || !formData.receiveDate){
     return toast('请填写所有必填项','error');
+  }
+  // OA监控类型必须填写 OA 次数与下发日期
+  if (caseType === 'OA监控' && (!formData.oaRound || !formData.oaIssueDate)){
+    return toast('OA监控类型必须填写「OA次数」和「OA下发日期」','error');
   }
   const payload = toDB(formData);
   const isArchived = ENDED_STATUSES.includes(formData.status);
@@ -987,6 +1272,9 @@ async function saveCase(e){
       const { data, error } = await sb.from('cases').insert({ ...payload, user_id: user.id }).select();
       if (error){
         if (error.code === '23505') return toast('编号已存在','error');
+        if (error.message && error.message.includes('oa_')){
+          return toast('数据库缺少 OA 字段，请先在 Supabase 执行 ALTER TABLE 语句','error');
+        }
         throw error;
       }
       cases.unshift(fromDB(data[0]));
@@ -1018,9 +1306,23 @@ function viewDetail(id){
     ['业务类型',c.caseType],['联系人',c.contactPerson],['联系方式',c.contactPhone||'-'],
     ['收案日期',fmtDate(c.receiveDate)],['提交受理日期',fmtDate(c.submitDate)],
     ['缴费日期',fmtDate(c.paymentDate)],['移交专人日期',fmtDate(c.transferDate)],
-    ['状态',c.status + (isEnded ? '（已归档）' : '')],['优先级',c.priority],['重要性',renderStars(c.importance)],
-    ['标签',c.tags||'-'],['备注',c.notes||'-']
+    ['状态',c.status + (isEnded ? '（已归档）' : '')],['优先级',c.priority],['重要性',renderStars(c.importance)]
   ];
+  // 如果是 OA 监控，插入 OA 相关字段
+  if (c.caseType === 'OA监控'){
+    let oaDaysText = '-';
+    if (c.oaDeadline){
+      const d = daysUntil(c.oaDeadline);
+      oaDaysText = d >= 0 ? `${d} 天` : `已超期 ${Math.abs(d)} 天`;
+    }
+    fields.push(['OA次数',c.oaRound||'-']);
+    fields.push(['OA下发日期',fmtDate(c.oaIssueDate)]);
+    fields.push(['答复截止日期',fmtDate(c.oaDeadline)]);
+    fields.push(['剩余天数',oaDaysText]);
+  }
+  fields.push(['标签',c.tags||'-']);
+  fields.push(['备注',c.notes||'-']);
+
   let html = '';
   fields.forEach(([label,value]) => {
     const full = (label==='备注'||label==='标签');
@@ -1047,6 +1349,12 @@ function openBatchModal(){
   document.getElementById('batch_tags').value = '';
   document.getElementById('batch_status').value = '收案';
   document.getElementById('batch_caseType').value = '专利代理';
+  document.getElementById('batch_oaRound').value = '';
+  document.getElementById('batch_oaIssueDate').value = '';
+  document.getElementById('batch_oaDeadline').value = '';
+  document.getElementById('batchOaDaysDisplay').textContent = '—';
+  document.getElementById('batchOaDaysDisplay').style.color = '#6b7280';
+  toggleBatchOaFields();
   const tbody = document.getElementById('batchTableBody');
   tbody.innerHTML = '';
   batchRowCount = 0;
@@ -1109,6 +1417,14 @@ async function submitBatch(){
     return toast('请填写完整的通用信息（客户、联系人、收案日期）','error');
   }
 
+  // OA 通用字段
+  let oaRound = '', oaIssueDate = '', oaDeadline = '';
+  if (caseType === 'OA监控'){
+    oaRound = document.getElementById('batch_oaRound').value || '';
+    oaIssueDate = document.getElementById('batch_oaIssueDate').value || '';
+    if (oaRound && oaIssueDate) oaDeadline = calcOaDeadline(oaRound, oaIssueDate);
+  }
+
   const rows = document.querySelectorAll('#batchTableBody tr');
   const details = [];
   for (const tr of rows){
@@ -1143,7 +1459,10 @@ async function submitBatch(){
     priority: priority,
     importance: parseInt(importance) || 3,
     tags: baseTags || null,
-    notes: d.notes || null
+    notes: d.notes || null,
+    oa_round: oaRound || null,
+    oa_issue_date: oaIssueDate || null,
+    oa_deadline: oaDeadline || null
   }));
 
   const btn = document.getElementById('batchSubmitBtn');
@@ -1154,6 +1473,9 @@ async function submitBatch(){
     const { data, error } = await sb.from('cases').insert(payload).select();
     if (error){
       if (error.code === '23505') return toast('存在重复的案件编号，请检查后重试','error');
+      if (error.message && error.message.includes('oa_')){
+        return toast('数据库缺少 OA 字段，请先在 Supabase 执行 ALTER TABLE 语句','error');
+      }
       throw error;
     }
     cases.unshift(...data.map(fromDB));
@@ -1173,8 +1495,13 @@ async function submitBatch(){
 //  导出 / 导入
 // ============================================================
 function downloadCSV(list, filename){
-  const headers = ['案件编号','案件名称','客户名称','业务类型','联系人','联系方式','收案日期','提交受理日期','缴费日期','移交日期','状态','优先级','重要性','标签','备注'];
-  const rows = list.map(c => [c.caseNumber||'',c.caseName||'',c.clientName||'',c.caseType||'',c.contactPerson||'',c.contactPhone||'',c.receiveDate||'',c.submitDate||'',c.paymentDate||'',c.transferDate||'',c.status||'',c.priority||'中',c.importance||'3',(c.tags||'').replace(/,/g,';'),(c.notes||'').replace(/,/g,';')]);
+  const headers = ['案件编号','案件名称','客户名称','业务类型','联系人','联系方式','收案日期','提交受理日期','缴费日期','移交日期','状态','优先级','重要性','标签','备注','OA次数','OA下发日期','OA截止日期'];
+  const rows = list.map(c => [
+    c.caseNumber||'',c.caseName||'',c.clientName||'',c.caseType||'',c.contactPerson||'',c.contactPhone||'',
+    c.receiveDate||'',c.submitDate||'',c.paymentDate||'',c.transferDate||'',c.status||'',c.priority||'中',
+    c.importance||'3',(c.tags||'').replace(/,/g,';'),(c.notes||'').replace(/,/g,';'),
+    c.oaRound||'',c.oaIssueDate||'',c.oaDeadline||''
+  ]);
   const csv = [headers.join(','), ...rows.map(r=>r.join(','))].join('\n');
   const blob = new Blob(['\uFEFF'+csv], {type:'text/csv;charset=utf-8;'});
   const link = document.createElement('a');
@@ -1186,7 +1513,6 @@ function downloadCSV(list, filename){
 
 function exportCSV(){
   if (!cases.length) return toast('没有案件','error');
-  // 导出当前视图下的案件（活跃/归档/全部），让导出更符合当前上下文
   const list = getFiltered();
   if (!list.length) return toast('当前视图没有案件可导出','info');
   const viewLabel = currentView === 'active' ? '活跃' : (currentView === 'archived' ? '归档' : '全部');
@@ -1203,7 +1529,7 @@ async function importCSV(event){
       const lines = e.target.result.split('\n').filter(l => l.trim());
       if (lines.length < 2) return toast('CSV 无效','error');
       const headers = lines[0].split(',').map(h=>h.trim());
-      const expected = ['案件编号','案件名称','客户名称','业务类型','联系人','联系方式','收案日期','提交受理日期','缴费日期','移交日期','状态','优先级','重要性','标签','备注'];
+      const expected = ['案件编号','案件名称','客户名称','业务类型','联系人','联系方式','收案日期','提交受理日期','缴费日期','移交日期','状态','优先级','重要性','标签','备注','OA次数','OA下发日期','OA截止日期'];
       const idxMap = {};
       expected.forEach((h,i) => { const idx = headers.findIndex(x => x.includes(h)); idxMap[h] = idx!==-1?idx:i; });
       const validStatus = ['收案','处理中','待提交','已提交受理','协助缴费','已移交专人'];
@@ -1216,6 +1542,12 @@ async function importCSV(event){
         let st = get('状态'); if (!validStatus.includes(st)) st = '收案';
         const num = get('案件编号') || `IMP-${String(i).padStart(4,'0')}`;
         if (cases.some(c => c.caseNumber === num)) continue;
+        // OA 信息
+        const oaRound = get('OA次数') || '';
+        const oaIssueDate = get('OA下发日期') || '';
+        let oaDeadline = get('OA截止日期') || '';
+        if (!oaDeadline && oaRound && oaIssueDate) oaDeadline = calcOaDeadline(oaRound, oaIssueDate);
+
         toInsert.push({
           user_id: user.id,
           case_number: num,
@@ -1232,7 +1564,10 @@ async function importCSV(event){
           priority: get('优先级') || '中',
           importance: parseInt(get('重要性')) || 3,
           tags: get('标签') || '',
-          notes: get('备注') || ''
+          notes: get('备注') || '',
+          oa_round: oaRound || null,
+          oa_issue_date: oaIssueDate || null,
+          oa_deadline: oaDeadline || null
         });
       }
       if (!toInsert.length) return toast('没有新数据','info');
