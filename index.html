@@ -46,11 +46,21 @@ body{font-family:var(--font);background:var(--bg);color:var(--text);padding:24px
 .toolbar-left .search-box{display:flex;align-items:center;gap:8px;background:var(--bg);border-radius:var(--radius-sm);padding:0 14px;border:1px solid var(--border);flex:1;min-width:200px;max-width:360px}
 .toolbar-left .search-box input{border:none;background:transparent;padding:10px 0;font-size:15px;outline:none;flex:1;font-family:var(--font)}
 .toolbar-left .filter-group{display:flex;gap:6px;flex-wrap:wrap}
-.toolbar-left .filter-group .filter-btn{padding:6px 14px;border-radius:20px;border:1px solid var(--border);background:transparent;font-size:13px;cursor:pointer;font-family:var(--font);color:var(--text-light);font-weight:500;white-space:nowrap}
+.toolbar-left .filter-group .filter-btn{padding:6px 14px;border-radius:20px;border:1px solid var(--border);background:transparent;font-size:13px;cursor:pointer;font-family:var(--font);color:var(--text-light);font-weight:500;white-space:nowrap;display:inline-flex;align-items:center;gap:4px}
 .toolbar-left .filter-group .filter-btn:hover{border-color:var(--accent);color:var(--accent)}
 .toolbar-left .filter-group .filter-btn.active{background:var(--primary);color:#fff;border-color:var(--primary)}
 .toolbar-left .filter-group .filter-btn.tag-filter{background:#f0f0f0;border-color:#ccc}
 .toolbar-left .filter-group .filter-btn.tag-filter.active{background:var(--accent);color:#fff;border-color:var(--accent)}
+/* ===== 视图切换按钮（活跃/归档/全部） ===== */
+.view-btn{padding:7px 14px !important;border-radius:8px !important;font-weight:600 !important}
+.view-btn .view-count{display:inline-block;background:rgba(0,0,0,.08);border-radius:8px;padding:0 6px;font-size:11px;margin-left:2px;font-weight:600;line-height:16px;min-width:18px;text-align:center}
+.view-btn.active .view-count{background:rgba(255,255,255,.28)}
+.view-btn[data-view="archived"]{border-color:#d1d5db;color:#6b7280}
+.view-btn[data-view="archived"].active{background:#6b7280;border-color:#6b7280;color:#fff}
+.view-btn[data-view="archived"]:hover{border-color:#6b7280;color:#6b7280}
+/* 视图按钮组与类型筛选之间的分隔线 */
+.toolbar-left .view-group-wrapper{display:flex;align-items:center;gap:12px}
+.toolbar-left .view-group-wrapper::after{content:'';display:block;width:1px;height:24px;background:var(--border)}
 .toolbar-right{display:flex;gap:8px;flex-wrap:wrap;align-items:center}
 .toolbar-right .selected-info{font-size:14px;color:var(--text-light);margin-right:8px}
 .toolbar-right .batch-actions{display:flex;gap:6px;align-items:center}
@@ -161,7 +171,7 @@ input[type=checkbox]{width:18px;height:18px;cursor:pointer;accent-color:var(--ac
       <div class="logo"><i class="fas fa-scale-balanced"></i></div>
       <div>
         <h1>IP<span>全业务</span>管理</h1>
-        <div class="subtitle">云端同步 · 数据隔离 · 批量新建 · 客户/联系人记忆</div>
+        <div class="subtitle">云端同步 · 数据隔离 · 批量新建 · 客户/联系人记忆 · 自动归档</div>
       </div>
     </div>
     <div class="header-actions">
@@ -183,6 +193,7 @@ input[type=checkbox]{width:18px;height:18px;cursor:pointer;accent-color:var(--ac
     <span class="step">已提交受理</span> <i class="fas fa-chevron-right"></i>
     <span class="step">协助缴费</span> <i class="fas fa-chevron-right"></i>
     <span class="step" style="color:#2d8f5e;">已移交专人</span>
+    <span style="margin-left:8px;font-size:12px;color:#6b7280;background:#e5e7eb;padding:2px 8px;border-radius:10px;"><i class="fas fa-archive"></i> 「协助缴费/已移交专人」自动归档</span>
     <span style="margin-left:auto;font-size:13px;color:var(--text-light);" id="syncStatus"><i class="fas fa-cloud"></i> 正在连接...</span>
   </div>
 
@@ -193,6 +204,20 @@ input[type=checkbox]{width:18px;height:18px;cursor:pointer;accent-color:var(--ac
       <div class="search-box">
         <i class="fas fa-search"></i>
         <input type="text" id="searchInput" placeholder="搜索名称、客户、编号..." oninput="renderTable()" />
+      </div>
+      <!-- ===== 视图切换（活跃 / 归档 / 全部） ===== -->
+      <div class="view-group-wrapper">
+        <div class="filter-group" id="viewGroup">
+          <button class="filter-btn view-btn active" data-view="active" onclick="setView('active')" title="仅显示进行中的案件">
+            <i class="fas fa-briefcase"></i> 活跃 <span class="view-count" id="viewCountActive">0</span>
+          </button>
+          <button class="filter-btn view-btn" data-view="archived" onclick="setView('archived')" title="显示已结束的案件（协助缴费/已移交专人）">
+            <i class="fas fa-archive"></i> 归档 <span class="view-count" id="viewCountArchived">0</span>
+          </button>
+          <button class="filter-btn view-btn" data-view="all" onclick="setView('all')" title="显示全部案件">
+            <i class="fas fa-list"></i> 全部 <span class="view-count" id="viewCountAll">0</span>
+          </button>
+        </div>
       </div>
       <div class="filter-group" id="filterGroup">
         <button class="filter-btn active" data-type="all" onclick="setTypeFilter('all')">全部</button>
@@ -328,8 +353,8 @@ input[type=checkbox]{width:18px;height:18px;cursor:pointer;accent-color:var(--ac
       <div class="form-row">
         <div class="form-group"><label>移交专人日期</label><input type="date" id="f_transferDate" /></div>
         <div class="form-group">
-          <label>当前状态 <span class="required">*</span></label>
-          <select id="f_status" required>
+          <label>当前状态 <span class="required">*</span> <span class="hint" id="statusHint"></span></label>
+          <select id="f_status" required onchange="updateStatusHint()">
             <option value="收案">收案</option><option value="处理中">处理中</option><option value="待提交">待提交</option><option value="已提交受理">已提交受理</option><option value="协助缴费">协助缴费</option><option value="已移交专人">已移交专人</option>
           </select>
         </div>
@@ -473,6 +498,11 @@ let currentSort = { field: 'receiveDate', asc: false };
 let selectedIds = new Set();
 let realtimeChannel = null;
 
+// ===== 视图：活跃（默认）/ 归档 / 全部 =====
+let currentView = 'active';
+// 状态为这两个视为"已结束"，自动归档到隐藏视图
+const ENDED_STATUSES = ['协助缴费', '已移交专人'];
+
 const TYPE_PREFIX = {'专利代理':'ZL','专利侵权与规避':'QG','软件著作权登记':'RJ','商标代理':'SB','专利检索':'JS','缴费监控':'JF','其他':'QT'};
 const STATUS_CLASS = {'收案':'status-receive','处理中':'status-processing','待提交':'status-pending-submit','已提交受理':'status-submitted','协助缴费':'status-payment','已移交专人':'status-transferred'};
 
@@ -608,6 +638,8 @@ function generateBatchNumber(type, date, extraNumbers){
 
 function renderStats(){
   const total = cases.length;
+  const activeCount = cases.filter(c => !ENDED_STATUSES.includes(c.status)).length;
+  const archivedCount = total - activeCount;
   const byType = {}, byPriority = {'高':0,'中':0,'低':0};
   cases.forEach(c => {
     const t = c.caseType || '其他';
@@ -624,15 +656,40 @@ function renderStats(){
     '缴费监控':{icon:'fa-hand-holding-usd',color:'pink',label:'缴费监控'}
   };
   let html = `<div class="stat-card"><div class="icon blue"><i class="fas fa-folder-open"></i></div><div class="info"><div class="number">${total}</div><div class="label">总案件</div></div></div>`;
+  // 活跃 / 归档 卡片
+  html += `<div class="stat-card"><div class="icon green"><i class="fas fa-briefcase"></i></div><div class="info"><div class="number">${activeCount}</div><div class="label">活跃案件</div></div></div>`;
+  html += `<div class="stat-card"><div class="icon purple"><i class="fas fa-archive"></i></div><div class="info"><div class="number">${archivedCount}</div><div class="label">归档案件</div></div></div>`;
   for (const [k,cfg] of Object.entries(typeMap)){
     const count = byType[k]||0;
-    if (count>0 || k==='专利代理') html += `<div class="stat-card"><div class="icon ${cfg.color}"><i class="fas ${cfg.icon}"></i></div><div class="info"><div class="number">${count}</div><div class="label">${cfg.label}</div></div></div>`;
+    if (count>0) html += `<div class="stat-card"><div class="icon ${cfg.color}"><i class="fas ${cfg.icon}"></i></div><div class="info"><div class="number">${count}</div><div class="label">${cfg.label}</div></div></div>`;
   }
   html += `<div class="stat-card"><div class="icon red"><i class="fas fa-flag"></i></div><div class="info"><div class="number">${byPriority['高']}</div><div class="label">高优先级</div></div></div>`;
   html += `<div class="stat-card"><div class="icon orange"><i class="fas fa-flag"></i></div><div class="info"><div class="number">${byPriority['中']}</div><div class="label">中优先级</div></div></div>`;
-  html += `<div class="stat-card"><div class="icon green"><i class="fas fa-flag"></i></div><div class="info"><div class="number">${byPriority['低']}</div><div class="label">低优先级</div></div></div>`;
   document.getElementById('statsContainer').innerHTML = html;
   document.getElementById('totalCountFooter').textContent = total;
+  updateViewCounts();
+}
+
+// ============================================================
+//  视图切换：活跃 / 归档 / 全部
+// ============================================================
+function setView(view){
+  currentView = view;
+  document.querySelectorAll('#viewGroup .view-btn').forEach(b => b.classList.toggle('active', b.dataset.view === view));
+  // 切换视图时清空选中，避免误操作隐藏案件
+  selectedIds.clear();
+  renderTable();
+}
+
+function updateViewCounts(){
+  const activeCount = cases.filter(c => !ENDED_STATUSES.includes(c.status)).length;
+  const archivedCount = cases.filter(c => ENDED_STATUSES.includes(c.status)).length;
+  const elA = document.getElementById('viewCountActive');
+  const elR = document.getElementById('viewCountArchived');
+  const elAll = document.getElementById('viewCountAll');
+  if (elA) elA.textContent = activeCount;
+  if (elR) elR.textContent = archivedCount;
+  if (elAll) elAll.textContent = cases.length;
 }
 
 // ---------- 标签 ----------
@@ -664,11 +721,20 @@ function setTagFilter(tag){
 function getFiltered(){
   const kw = document.getElementById('searchInput').value.trim().toLowerCase();
   let list = cases.filter(c => {
+    // ===== 视图过滤（核心逻辑） =====
+    const isEnded = ENDED_STATUSES.includes(c.status);
+    if (currentView === 'active' && isEnded) return false;
+    if (currentView === 'archived' && !isEnded) return false;
+    // currentView === 'all' 时不过滤
+
+    // ===== 类型过滤 =====
     if (currentTypeFilter !== 'all' && c.caseType !== currentTypeFilter) return false;
+    // ===== 标签过滤 =====
     if (currentTagFilter){
       const tags = (c.tags||'').split(',').map(t=>t.trim());
       if (!tags.includes(currentTagFilter)) return false;
     }
+    // ===== 关键词搜索 =====
     if (kw){
       const s = `${c.caseNumber} ${c.caseName} ${c.clientName} ${c.contactPerson} ${c.notes||''}`.toLowerCase();
       if (!s.includes(kw)) return false;
@@ -692,16 +758,30 @@ function renderTable(){
   const list = getFiltered();
   const tbody = document.getElementById('tableBody');
   document.getElementById('resultCount').textContent = `共 ${list.length} 件`;
+
   if (list.length === 0){
-    tbody.innerHTML = `<tr><td colspan="10"><div class="empty-state"><i class="fas fa-gavel"></i><h3>暂无案件</h3><p>点击「新建案件」或「批量新建」开始</p></div></td></tr>`;
+    let emptyHtml;
+    if (currentView === 'archived'){
+      emptyHtml = `<i class="fas fa-archive"></i><h3>暂无归档案件</h3><p>状态为「协助缴费」或「已移交专人」的案件会自动归档到这里</p>`;
+    } else if (currentView === 'active'){
+      emptyHtml = `<i class="fas fa-gavel"></i><h3>暂无活跃案件</h3><p>点击「新建案件」或「批量新建」开始；已结束的案件可在「归档」中查看</p>`;
+    } else {
+      emptyHtml = `<i class="fas fa-gavel"></i><h3>暂无案件</h3><p>点击「新建案件」或「批量新建」开始</p>`;
+    }
+    tbody.innerHTML = `<tr><td colspan="10"><div class="empty-state">${emptyHtml}</div></td></tr>`;
+    updateSelectedInfo();
     return;
   }
+
   let html = '';
   list.forEach(c => {
     const tags = (c.tags||'').split(',').map(t=>t.trim()).filter(t=>t);
     const tagHtml = tags.map(t => `<span class="tag-item">${t}</span>`).join('');
     const checked = selectedIds.has(c.id) ? 'checked' : '';
-    html += `<tr class="${checked?'selected':''}" data-id="${c.id}">
+    const isEnded = ENDED_STATUSES.includes(c.status);
+    // 归档状态的案件行整体略带灰色调，作为视觉提示
+    const rowStyle = isEnded ? 'style="opacity:.82;"' : '';
+    html += `<tr class="${checked?'selected':''}" ${rowStyle} data-id="${c.id}">
       <td class="checkbox-col"><input type="checkbox" class="row-checkbox" data-id="${c.id}" ${checked} onchange="toggleRow('${c.id}')" /></td>
       <td><span class="case-id">${c.caseNumber||'-'}</span></td>
       <td><span style="display:inline-block;max-width:320px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;vertical-align:middle;" title="${c.caseName||''}">${c.caseName||'-'}</span></td>
@@ -789,7 +869,9 @@ async function batchUpdateStatus(){
   cases = cases.map(c => ids.includes(c.id) ? { ...c, status: s } : c);
   selectedIds.clear(); renderStats(); renderTable();
   document.getElementById('batchStatusSelect').value = '';
-  toast(`已更新 ${sel.length} 件`,'success');
+  // 如果新状态是结束状态，提示用户案件已转入归档
+  const isArchived = ENDED_STATUSES.includes(s);
+  toast(`已更新 ${sel.length} 件${isArchived ? '，已转入归档' : ''} ✅`,'success');
 }
 
 function sortTable(field){
@@ -804,6 +886,19 @@ function setTypeFilter(type){
   renderTable();
 }
 
+// ===== 状态提示：编辑时提醒会归档 =====
+function updateStatusHint(){
+  const s = document.getElementById('f_status').value;
+  const hint = document.getElementById('statusHint');
+  if (!hint) return;
+  if (ENDED_STATUSES.includes(s)){
+    hint.textContent = '（保存后将自动归档，不在活跃列表显示）';
+    hint.style.color = '#b45309';
+  } else {
+    hint.textContent = '';
+  }
+}
+
 function openAddModal(){
   document.getElementById('modalTitle').textContent = '新建案件';
   document.getElementById('modalSubmitBtn').innerHTML = '<i class="fas fa-plus"></i> 新建';
@@ -814,6 +909,7 @@ function openAddModal(){
   document.getElementById('f_status').value = '收案';
   document.getElementById('f_priority').value = '中';
   document.getElementById('f_importance').value = '3';
+  updateStatusHint();
   generateCaseNumber();
   updateHistoryLists();
   document.getElementById('modalOverlay').classList.remove('hidden');
@@ -841,6 +937,7 @@ function openEditModal(id){
   document.getElementById('f_importance').value = c.importance||'3';
   document.getElementById('f_tags').value = c.tags||'';
   document.getElementById('f_notes').value = c.notes||'';
+  updateStatusHint();
   updateHistoryLists();
   document.getElementById('modalOverlay').classList.remove('hidden');
 }
@@ -872,6 +969,7 @@ async function saveCase(e){
     return toast('请填写所有必填项','error');
   }
   const payload = toDB(formData);
+  const isArchived = ENDED_STATUSES.includes(formData.status);
 
   try {
     if (editId){
@@ -882,7 +980,7 @@ async function saveCase(e){
       if (!data || !data.length) return toast('案件已被其他设备修改，请刷新','error');
       const idx = cases.findIndex(c => c.id === editId);
       if (idx > -1) cases[idx] = fromDB(data[0]);
-      toast('已更新','success');
+      toast(isArchived ? '已更新，该案件已归档' : '已更新','success');
     } else {
       const { data: { user } } = await sb.auth.getUser();
       if (!user) return toast('请先登录','error');
@@ -892,7 +990,7 @@ async function saveCase(e){
         throw error;
       }
       cases.unshift(fromDB(data[0]));
-      toast('已创建','success');
+      toast(isArchived ? '已创建（已归档）' : '已创建','success');
     }
     closeModal();
     updateHistoryLists(); renderStats(); renderTable();
@@ -914,12 +1012,13 @@ async function deleteCase(id){
 function viewDetail(id){
   const c = cases.find(x => x.id === id);
   if (!c) return;
+  const isEnded = ENDED_STATUSES.includes(c.status);
   const fields = [
     ['案件编号',c.caseNumber],['案件名称',c.caseName],['客户名称',c.clientName],
     ['业务类型',c.caseType],['联系人',c.contactPerson],['联系方式',c.contactPhone||'-'],
     ['收案日期',fmtDate(c.receiveDate)],['提交受理日期',fmtDate(c.submitDate)],
     ['缴费日期',fmtDate(c.paymentDate)],['移交专人日期',fmtDate(c.transferDate)],
-    ['状态',c.status],['优先级',c.priority],['重要性',renderStars(c.importance)],
+    ['状态',c.status + (isEnded ? '（已归档）' : '')],['优先级',c.priority],['重要性',renderStars(c.importance)],
     ['标签',c.tags||'-'],['备注',c.notes||'-']
   ];
   let html = '';
@@ -1060,7 +1159,8 @@ async function submitBatch(){
     cases.unshift(...data.map(fromDB));
     closeBatchModal();
     updateHistoryLists(); renderStats(); renderTable();
-    toast(`成功批量创建 ${data.length} 件案件 ✅`,'success');
+    const isArchived = ENDED_STATUSES.includes(status);
+    toast(`成功批量创建 ${data.length} 件${isArchived ? '（已归档）' : ''} ✅`,'success');
   } catch(err){
     toast('批量创建失败：'+err.message,'error');
   } finally {
@@ -1086,8 +1186,12 @@ function downloadCSV(list, filename){
 
 function exportCSV(){
   if (!cases.length) return toast('没有案件','error');
-  downloadCSV(cases, `IP案件_${new Date().toISOString().slice(0,10)}.csv`);
-  toast('已导出','success');
+  // 导出当前视图下的案件（活跃/归档/全部），让导出更符合当前上下文
+  const list = getFiltered();
+  if (!list.length) return toast('当前视图没有案件可导出','info');
+  const viewLabel = currentView === 'active' ? '活跃' : (currentView === 'archived' ? '归档' : '全部');
+  downloadCSV(list, `IP案件_${viewLabel}_${new Date().toISOString().slice(0,10)}.csv`);
+  toast(`已导出 ${list.length} 件（${viewLabel}）`,'success');
 }
 
 async function importCSV(event){
@@ -1136,7 +1240,8 @@ async function importCSV(event){
       if (error) return toast('导入失败：'+error.message,'error');
       cases.unshift(...data.map(fromDB));
       updateHistoryLists(); renderStats(); renderTable();
-      toast(`导入 ${data.length} 件`,'success');
+      const archivedCount = data.filter(r => ENDED_STATUSES.includes(r.status)).length;
+      toast(`导入 ${data.length} 件${archivedCount ? `（其中 ${archivedCount} 件已归档）` : ''}`,'success');
     } catch(err){ toast('导入失败：'+err.message,'error'); }
     event.target.value = '';
   };
