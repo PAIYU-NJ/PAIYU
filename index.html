@@ -1,0 +1,1195 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>专利年费管理系统</title>
+<script src="https://unpkg.com/@supabase/supabase-js@2"></script>
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:-apple-system,"PingFang SC","Microsoft YaHei",sans-serif;background:#f1f5f9;color:#0f172a;font-size:14px;line-height:1.6}
+button{font-family:inherit;cursor:pointer;border:none;background:none;font-size:inherit}
+input,select,textarea{font-family:inherit;font-size:inherit}
+input[type=checkbox]{width:15px;height:15px;cursor:pointer;accent-color:#2563eb}
+#authScreen{position:fixed;inset:0;background:linear-gradient(135deg,#1e3a8a,#2563eb);display:flex;align-items:center;justify-content:center;z-index:200;padding:20px}
+.auth-card{background:#fff;border-radius:18px;padding:36px 32px;width:100%;max-width:400px;box-shadow:0 24px 60px rgba(0,0,0,.3)}
+.auth-card .logo{width:56px;height:56px;border-radius:16px;background:linear-gradient(135deg,#2563eb,#1d4ed8);display:flex;align-items:center;justify-content:center;font-size:26px;color:#fff;margin:0 auto 16px}
+.auth-card h2{text-align:center;font-size:20px;font-weight:800;margin-bottom:4px}
+.auth-card .sub{text-align:center;color:#64748b;font-size:13px;margin-bottom:24px}
+.auth-field{margin-bottom:14px}
+.auth-field label{display:block;font-size:12.5px;font-weight:600;color:#334155;margin-bottom:5px}
+.auth-field input{width:100%;padding:11px 13px;border:1px solid #e2e8f0;border-radius:10px;font-size:14px;outline:none}
+.auth-field input:focus{border-color:#2563eb;box-shadow:0 0 0 3px rgba(37,99,235,.1)}
+.auth-btn{width:100%;padding:12px;border-radius:10px;background:#2563eb;color:#fff;font-weight:700;font-size:14px;margin-top:6px}
+.auth-btn:hover{background:#1d4ed8}
+.auth-btn:disabled{opacity:.6;cursor:not-allowed}
+.auth-toggle{text-align:center;margin-top:16px;font-size:13px;color:#64748b}
+.auth-toggle a{color:#2563eb;font-weight:600;cursor:pointer;text-decoration:none}
+.auth-msg{font-size:12.5px;text-align:center;margin-top:12px;padding:8px;border-radius:8px;display:none}
+.auth-msg.error{display:block;background:#fef2f2;color:#dc2626}
+.auth-msg.success{display:block;background:#f0fdf4;color:#16a34a}
+.app{max-width:1440px;margin:0 auto;padding:0 20px 60px;display:none}
+.app.ready{display:block}
+.topbar{display:flex;align-items:center;justify-content:space-between;padding:20px 0 16px;flex-wrap:wrap;gap:12px}
+.brand{display:flex;align-items:center;gap:12px}
+.brand .logo{width:44px;height:44px;border-radius:12px;background:linear-gradient(135deg,#2563eb,#1d4ed8);display:flex;align-items:center;justify-content:center;font-size:22px;color:#fff}
+.brand h1{font-size:19px;font-weight:700}
+.brand p{font-size:11px;color:#64748b;letter-spacing:.5px;text-transform:uppercase}
+.actions{display:flex;gap:8px;flex-wrap:wrap;align-items:center}
+.user-chip{display:inline-flex;align-items:center;gap:6px;padding:6px 12px;background:#fff;border:1px solid #e2e8f0;border-radius:999px;font-size:12px;color:#64748b}
+.user-chip .dot{width:7px;height:7px;border-radius:50%;background:#16a34a}
+.btn{padding:9px 16px;border-radius:9px;background:#2563eb;color:#fff;font-weight:600;font-size:13px;display:inline-flex;align-items:center;gap:6px;white-space:nowrap}
+.btn:hover{background:#1d4ed8}
+.btn.ghost{background:#fff;color:#0f172a;border:1px solid #e2e8f0}
+.btn.sm{padding:5px 11px;font-size:12px;border-radius:7px}
+.btn.danger{background:#dc2626}
+.btn.ok{background:#16a34a}
+.btn.amber{background:#d97706}
+.tabs{display:flex;gap:4px;border-bottom:2px solid #e2e8f0;margin-bottom:22px;overflow-x:auto}
+.tab{padding:11px 18px;font-weight:600;color:#64748b;border-bottom:2px solid transparent;margin-bottom:-2px;white-space:nowrap;font-size:13.5px}
+.tab.active{color:#2563eb;border-bottom-color:#2563eb}
+.panel{display:none}
+.panel.active{display:block}
+.card{background:#fff;border:1px solid #e2e8f0;border-radius:12px;margin-bottom:18px;overflow:hidden}
+.card-head{padding:15px 18px;border-bottom:1px solid #e2e8f0;display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap}
+.card-head h3{font-size:14.5px;font-weight:700}
+.card-body{padding:18px}
+.card-actions{display:flex;gap:10px;align-items:center;flex-wrap:wrap}
+select,input[type=text],input[type=date],input[type=number],textarea{padding:7px 10px;border:1px solid #e2e8f0;border-radius:8px;background:#fff;color:#0f172a;outline:none;font-size:13px}
+.seg{display:inline-flex;background:#f1f5f9;border-radius:10px;padding:3px;gap:2px}
+.seg-btn{padding:7px 13px;border-radius:8px;font-size:12.5px;font-weight:600;color:#64748b}
+.seg-btn.active{background:#fff;color:#2563eb;box-shadow:0 1px 3px rgba(15,23,42,.12)}
+.seg-btn .cnt{display:inline-block;background:#e2e8f0;color:#475569;border-radius:999px;padding:0 6px;font-size:10.5px;font-weight:700;min-width:18px;text-align:center}
+.filter-bar{display:flex;flex-wrap:wrap;gap:10px;padding:14px 18px;border-bottom:1px solid #e2e8f0;background:#fcfdfe;align-items:flex-end}
+.fi{display:flex;flex-direction:column;gap:4px}
+.fi label{font-size:11px;color:#64748b;font-weight:600}
+.fi-search{flex:1;min-width:210px}
+.fi-search input{width:100%}
+.fi-date{width:130px}
+.bulk-bar{display:flex;align-items:center;gap:9px;padding:11px 18px;background:#eff6ff;border-bottom:1px solid #bfdbfe;flex-wrap:wrap}
+.bulk-bar[hidden]{display:none}
+.bulk-bar .info{font-size:12.5px;color:#1e40af;font-weight:600}
+.bulk-bar .info b{font-size:16px;font-weight:800}
+.stat-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:14px;margin-bottom:20px}
+.stat{background:#fff;border:1px solid #e2e8f0;border-radius:12px;padding:16px 18px;position:relative;overflow:hidden}
+.stat::before{content:'';position:absolute;left:0;top:0;bottom:0;width:4px;background:#2563eb}
+.stat.danger::before{background:#dc2626}
+.stat.warn::before{background:#d97706}
+.stat.gray::before{background:#94a3b8}
+.stat-label{font-size:12.5px;color:#64748b;font-weight:500}
+.stat-value{font-size:26px;font-weight:800;letter-spacing:-1px;margin:4px 0 2px}
+.stat-value small{font-size:13px;font-weight:600;color:#64748b;margin-left:2px}
+.stat-sub{font-size:12px;color:#64748b}
+.table-wrap{overflow-x:auto}
+table{width:100%;border-collapse:collapse;font-size:13px}
+th{text-align:left;padding:11px 12px;font-weight:600;color:#64748b;font-size:12px;background:#f8fafc;border-bottom:1px solid #e2e8f0;white-space:nowrap}
+td{padding:11px 12px;border-bottom:1px solid #f1f5f9;vertical-align:middle}
+tbody tr:nth-child(odd){background:#fff}
+tbody tr:nth-child(even){background:#fafbfc}
+tbody tr:hover{background:#f1f5f9}
+tbody tr.selected{background:#eff6ff!important}
+tbody tr.archived-row{opacity:.62}
+.num{font-variant-numeric:tabular-nums;font-weight:600}
+.mono{font-family:ui-monospace,Menlo,monospace;font-size:12px;color:#64748b}
+.truncate{max-width:260px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.empty{padding:48px 20px;text-align:center;color:#64748b}
+.empty .icon{font-size:40px;opacity:.35;display:block;margin-bottom:10px}
+.badge{display:inline-flex;align-items:center;gap:4px;padding:2.5px 9px;border-radius:999px;font-size:11.5px;font-weight:600;white-space:nowrap}
+.badge.blue{background:#eff6ff;color:#1d4ed8}
+.badge.cyan{background:#ecfeff;color:#0891b2}
+.badge.purple{background:#f5f3ff;color:#7c3aed}
+.badge.red{background:#fef2f2;color:#dc2626}
+.badge.amber{background:#fffbeb;color:#d97706}
+.badge.green{background:#f0fdf4;color:#16a34a}
+.badge.gray{background:#f1f5f9;color:#475569}
+.badge.slate{background:#e2e8f0;color:#334155}
+.alert-row{display:flex;align-items:center;gap:14px;padding:13px 18px;border-bottom:1px solid #f1f5f9;flex-wrap:wrap}
+.alert-row:nth-child(even){background:#fafbfc}
+.alert-row .bar{width:4px;height:38px;border-radius:2px;flex-shrink:0}
+.alert-main{flex:1;min-width:220px}
+.alert-main .t{font-weight:600;font-size:13.5px}
+.alert-main .s{font-size:12px;color:#64748b;margin-top:1px}
+.alert-meta{text-align:right;min-width:130px}
+.alert-meta .amt{font-weight:800;font-size:15px}
+.alert-meta .dt{font-size:11.5px;color:#64748b}
+.overlay{position:fixed;inset:0;background:rgba(15,23,42,.5);display:none;align-items:center;justify-content:center;z-index:100;padding:20px}
+.overlay.show{display:flex}
+.modal{background:#fff;border-radius:16px;width:100%;max-width:680px;max-height:90vh;display:flex;flex-direction:column;box-shadow:0 24px 60px rgba(15,23,42,.3)}
+.modal.wide{max-width:1000px}
+.modal-head{padding:18px 22px;border-bottom:1px solid #e2e8f0;display:flex;align-items:center;justify-content:space-between}
+.modal-head h3{font-size:16px;font-weight:700}
+.modal-head .close{font-size:26px;color:#64748b;line-height:1;padding:0 4px;border-radius:6px}
+.modal-body{padding:22px;overflow-y:auto;flex:1}
+.modal-foot{padding:15px 22px;border-top:1px solid #e2e8f0;display:flex;justify-content:flex-end;gap:10px;background:#f8fafc;border-radius:0 0 16px 16px}
+.form-grid{display:grid;grid-template-columns:1fr 1fr;gap:15px}
+.field{display:flex;flex-direction:column;gap:5px}
+.field.full{grid-column:1/-1}
+.field label{font-size:12.5px;font-weight:600;color:#334155}
+.field label .req{color:#dc2626}
+.field input,.field select,.field textarea{width:100%}
+.field textarea{resize:vertical;min-height:64px}
+.hint{font-size:11.5px;color:#64748b}
+.tl{position:relative;padding-left:22px}
+.tl::before{content:'';position:absolute;left:6px;top:8px;bottom:8px;width:2px;background:#e2e8f0}
+.tl-item{position:relative;padding:9px 0 9px 12px}
+.tl-item::before{content:'';position:absolute;left:-21px;top:15px;width:10px;height:10px;border-radius:50%;background:#cbd5e1;border:2px solid #fff}
+.tl-item.paid::before{background:#16a34a}
+.tl-item.next::before{background:#2563eb}
+.tl-item.overdue::before{background:#dc2626}
+.tl-item .row{display:flex;justify-content:space-between;gap:12px;flex-wrap:wrap;align-items:baseline}
+.tl-item .y{font-weight:700;font-size:13px}
+.tl-item .d{font-size:12px;color:#64748b}
+.tl-item .f{font-weight:700}
+.q-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(300px,1fr));gap:16px}
+.q-card{border:1px solid #e2e8f0;border-radius:12px;overflow:hidden;background:#fff}
+.q-head{padding:12px 16px;background:#f8fafc;border-bottom:1px solid #e2e8f0;display:flex;justify-content:space-between;align-items:center}
+.q-head .name{font-weight:700;font-size:14px}
+.q-head .amt{font-weight:800;color:#2563eb}
+.q-list{max-height:320px;overflow-y:auto}
+.q-item{padding:8px 16px;display:flex;justify-content:space-between;gap:10px;font-size:12.5px;border-bottom:1px solid #f8fafc}
+.q-item:nth-child(even){background:#fafbfc}
+.q-item .n{flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;color:#334155}
+.q-item .v{font-weight:600;white-space:nowrap}
+</style>
+</head>
+<body>
+
+<div id="authScreen">
+  <div class="auth-card">
+    <div class="logo">⚖</div>
+    <h2>专利年费管理系统</h2>
+    <p class="sub" id="authSub">请登录以继续</p>
+    <div class="auth-field"><label>邮箱</label>
+      <input type="email" id="authEmail" placeholder="your@email.com" autocomplete="email"></div>
+    <div class="auth-field"><label>密码</label>
+      <input type="password" id="authPassword" placeholder="至少 6 位" autocomplete="current-password"></div>
+    <button class="auth-btn" id="authSubmit">登录</button>
+    <div class="auth-msg" id="authMsg"></div>
+    <div class="auth-toggle"><span id="authToggleText">还没有账户？</span>
+      <a id="authToggleLink">立即注册</a></div>
+  </div>
+</div>
+
+<div class="app" id="app">
+  <header class="topbar">
+    <div class="brand"><div class="logo">⚖</div>
+      <div><h1>专利年费管理系统</h1><p>Patent Annuity Manager</p></div></div>
+    <div class="actions">
+      <span class="user-chip"><span class="dot"></span><span id="userEmail"></span></span>
+      <button class="btn" id="btnAdd">＋ 新增专利</button>
+      <button class="btn ghost" id="btnExportAll">导出数据</button>
+      <button class="btn ghost" id="btnImport">导入数据</button>
+      <button class="btn ghost" id="btnLogout">退出</button>
+      <input type="file" id="fileInput" accept=".json" hidden>
+    </div>
+  </header>
+  <nav class="tabs">
+    <button class="tab active" data-tab="dashboard">📊 看板</button>
+    <button class="tab" data-tab="ledger">📋 专利台账</button>
+    <button class="tab" data-tab="schedule">📅 缴费计划</button>
+    <button class="tab" data-tab="report">📈 周期报表</button>
+  </nav>
+  <section class="panel active" id="panel-dashboard">
+    <div class="stat-grid" id="statGrid"></div>
+    <div class="card">
+      <div class="card-head"><h3>⏰ 缴费提醒</h3>
+        <div class="card-actions"><label>范围
+          <select id="alertHorizon">
+            <option value="30">未来 30 天</option><option value="60">未来 60 天</option>
+            <option value="90" selected>未来 90 天</option><option value="180">未来 180 天</option>
+            <option value="99999">全部未缴</option>
+          </select></label></div></div>
+      <div id="alertList"></div>
+    </div>
+  </section>
+  <section class="panel" id="panel-ledger">
+    <div class="card">
+      <div class="card-head"><h3>📋 专利台账</h3>
+        <div class="seg" id="ledgerScope">
+          <button class="seg-btn active" data-scope="active">监控中 <span class="cnt" id="cntActive">0</span></button>
+          <button class="seg-btn" data-scope="archived">已归档 <span class="cnt" id="cntArchived">0</span></button>
+          <button class="seg-btn" data-scope="all">全部 <span class="cnt" id="cntAll">0</span></button>
+        </div></div>
+      <div class="filter-bar">
+        <div class="fi fi-search"><label>关键词</label>
+          <input type="text" id="ledgerSearch" placeholder="🔍 名称 / 申请号 / 客户 / 联系人…"></div>
+        <div class="fi"><label>客户</label>
+          <select id="ledgerClient"><option value="">全部</option></select></div>
+        <div class="fi"><label>类型</label>
+          <select id="ledgerType"><option value="">全部</option>
+            <option>发明</option><option>实用新型</option><option>外观设计</option></select></div>
+        <div class="fi"><label>减免</label>
+          <select id="ledgerReduction"><option value="">全部</option>
+            <option value="0">不减缴</option><option value="70">减缴 70%</option>
+            <option value="85">减缴 85%</option></select></div>
+        <div class="fi"><label>状态</label>
+          <select id="ledgerStatus"><option value="">全部</option>
+            <option>有效</option><option>申请中</option><option>放弃</option><option>终止</option></select></div>
+        <div class="fi"><label>紧急度</label>
+          <select id="ledgerUrgency"><option value="">全部</option>
+            <option value="overdue">已逾期</option><option value="30">30 天内</option>
+            <option value="90">90 天内</option><option value="none">无待缴</option></select></div>
+        <div class="fi fi-date"><label>申请日 ≥</label><input type="date" id="ledgerAppFrom"></div>
+        <div class="fi fi-date"><label>申请日 ≤</label><input type="date" id="ledgerAppTo"></div>
+        <div class="fi"><label>&nbsp;</label>
+          <button class="btn ghost sm" id="btnResetFilters">重置</button></div>
+      </div>
+      <div class="bulk-bar" id="bulkBar" hidden>
+        <span class="info">已选中 <b id="selCount">0</b> 件</span>
+        <button class="btn sm amber" id="bulkArchive">📦 归档</button>
+        <button class="btn sm ok" id="bulkRestore">↩ 恢复</button>
+        <select id="bulkStatusSel" style="padding:5px 9px;font-size:12px">
+          <option value="有效">有效</option><option value="申请中">申请中</option>
+          <option value="放弃">放弃</option><option value="终止">终止</option></select>
+        <button class="btn sm ghost" id="bulkSetStatus">批量改状态</button>
+        <button class="btn sm ghost" id="bulkExport">导出选中</button>
+        <button class="btn sm ghost" id="bulkClear">取消</button>
+      </div>
+      <div class="table-wrap">
+        <table><thead><tr>
+          <th style="width:36px"><input type="checkbox" id="checkAll"></th>
+          <th style="width:40px">#</th><th>专利名称</th><th>申请号</th><th>类型</th>
+          <th>客户</th><th>申请日</th><th>授权日</th><th>减免</th>
+          <th>当前年度</th><th>下次截止</th><th>应缴</th><th>状态</th>
+          <th style="width:120px">操作</th>
+        </tr></thead><tbody id="ledgerBody"></tbody></table>
+      </div>
+    </div>
+  </section>
+  <section class="panel" id="panel-schedule">
+    <div class="card">
+      <div class="card-head"><h3>📅 缴费计划<span style="font-size:12px;color:#64748b;font-weight:400;margin-left:8px" id="scheduleSub"></span></h3>
+        <div class="card-actions">
+          <select id="scheduleRange">
+            <option value="90">未来 3 个月</option><option value="180">未来 6 个月</option>
+            <option value="365" selected>未来 12 个月</option><option value="1095">未来 3 年</option>
+            <option value="all">全部未缴</option><option value="overdue">仅逾期</option>
+          </select>
+          <select id="scheduleClient"><option value="">全部客户</option></select>
+          <button class="btn sm" id="btnExportSchedule">导出 CSV</button>
+        </div></div>
+      <div class="table-wrap">
+        <table><thead><tr>
+          <th>截止日</th><th>剩余</th><th>客户</th><th>专利名称</th><th>申请号</th>
+          <th>类型</th><th>年度</th><th>官费</th><th>减免</th><th>应缴</th>
+          <th>滞纳金</th><th>合计</th><th style="width:80px">操作</th>
+        </tr></thead><tbody id="scheduleBody"></tbody></table>
+      </div>
+    </div>
+  </section>
+  <section class="panel" id="panel-report">
+    <div class="card">
+      <div class="card-head"><h3>📈 季度缴费报表</h3>
+        <div class="card-actions">
+          <select id="reportYear"></select>
+          <select id="reportClient"><option value="">全部客户</option></select>
+          <button class="btn sm" id="btnExportReport">导出 CSV</button>
+        </div></div>
+      <div class="card-body"><div class="q-grid" id="reportGrid"></div></div>
+    </div>
+  </section>
+</div>
+
+<div class="overlay" id="modalPatent">
+  <div class="modal">
+    <div class="modal-head"><h3 id="patentModalTitle">新增专利</h3>
+      <button class="close" data-close>×</button></div>
+    <div class="modal-body"><div class="form-grid">
+      <div class="field full"><label>专利名称 <span class="req">*</span></label>
+        <input type="text" id="f_name" placeholder="例如：基于FPGA亮度自适应的CMOS图像降噪方法"></div>
+      <div class="field"><label>申请号 <span class="req">*</span></label>
+        <input type="text" id="f_appNo" placeholder="2023104073316"></div>
+      <div class="field"><label>专利类型 <span class="req">*</span></label>
+        <select id="f_type"><option>发明</option><option>实用新型</option><option>外观设计</option></select></div>
+      <div class="field"><label>申请日 <span class="req">*</span></label>
+        <input type="date" id="f_appDate"></div>
+      <div class="field"><label>授权日</label>
+        <input type="date" id="f_grantDate"><span class="hint">留空表示尚未授权</span></div>
+      <div class="field full"><label>申请人 / 客户 <span class="req">*</span></label>
+        <input type="text" id="f_client" list="clientOptions" autocomplete="off"
+               placeholder="选择已有或输入新客户">
+        <span class="hint">💡 已录入的客户会自动出现在下拉候选</span></div>
+      <div class="field"><label>费减比例</label>
+        <select id="f_reduction"><option value="0">不减缴</option>
+          <option value="70">减缴 70%</option><option value="85">减缴 85%</option></select></div>
+      <div class="field"><label>状态</label>
+        <select id="f_status"><option>有效</option><option>申请中</option>
+          <option>放弃</option><option>终止</option></select></div>
+      <div class="field"><label>监控状态</label>
+        <select id="f_archived"><option value="0">监控中</option><option value="1">已归档</option></select></div>
+      <div class="field"><label>联系人</label>
+        <input type="text" id="f_contact" list="contactOptions" autocomplete="off"></div>
+      <div class="field"><label>联系电话</label><input type="text" id="f_phone"></div>
+      <div class="field full"><label>备注</label>
+        <textarea id="f_notes" placeholder="代理机构、内部编号等"></textarea></div>
+    </div></div>
+    <div class="modal-foot">
+      <button class="btn ghost" data-close>取消</button>
+      <button class="btn" id="btnSavePatent">保存</button>
+    </div>
+  </div>
+</div>
+
+<div class="overlay" id="modalDetail">
+  <div class="modal wide">
+    <div class="modal-head"><h3 id="detailTitle">专利详情</h3>
+      <button class="close" data-close>×</button></div>
+    <div class="modal-body" id="detailBody"></div>
+    <div class="modal-foot"><button class="btn ghost" data-close>关闭</button></div>
+  </div>
+</div>
+
+<datalist id="clientOptions"></datalist>
+<datalist id="contactOptions"></datalist>
+
+<script>
+var SUPABASE_URL = 'https://vqbwdrfioxlaaxaeqtxh.supabase.co';
+var SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InZxYndkcmZpb3hsYWF4YWVxdHhoIiwicm9sZSI6ImFub24iLCJpYXQiOjE3OTAyMTQ0NDgsImV4cCI6MjEwNTc5MDQ0OH0.JHs2kqc3ydkaT0SFhzxONKM8LcnsNQ2P45zALIihQhY';
+
+var sb = null;
+var sdkOK = (typeof window.supabase !== 'undefined');
+if (sdkOK) { sb = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY); }
+
+var DAY_MS = 86400000;
+var FEE_TABLE = {
+  '发明': [[1,3,900],[4,6,1200],[7,9,2000],[10,12,4000],[13,15,6000],[16,20,8000]],
+  '实用新型': [[1,3,600],[4,5,900],[6,8,1200],[9,10,2000]],
+  '外观设计': [[1,3,600],[4,5,900],[6,8,1200],[9,10,2000],[11,15,3000]]
+};
+var TYPE_BADGE = { '发明':'blue', '实用新型':'cyan', '外观设计':'purple' };
+
+function parseDate(s){
+  if(!s) return null;
+  if(s instanceof Date) return new Date(s.getFullYear(), s.getMonth(), s.getDate());
+  var m = String(s).match(/(\d{4})\D(\d{1,2})\D(\d{1,2})/);
+  if(!m) return null;
+  var d = new Date(+m[1], +m[2]-1, +m[3]);
+  return isNaN(d.getTime()) ? null : d;
+}
+function fmtDate(d){
+  if(!d) return '';
+  return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0');
+}
+function addDays(d,n){ var r=new Date(d.getTime()); r.setDate(r.getDate()+n); return r; }
+function addMonths(d,n){
+  var r=new Date(d.getTime()); var day=r.getDate();
+  r.setDate(1); r.setMonth(r.getMonth()+n);
+  var last=new Date(r.getFullYear(),r.getMonth()+1,0).getDate();
+  r.setDate(Math.min(day,last)); return r;
+}
+function addYears(d,n){
+  var r=new Date(d.getTime()); var day=r.getDate(),mon=r.getMonth();
+  r.setDate(1); r.setFullYear(r.getFullYear()+n); r.setMonth(mon);
+  var last=new Date(r.getFullYear(),mon+1,0).getDate();
+  r.setDate(Math.min(day,last)); return r;
+}
+function startOfDay(d){ return new Date(d.getFullYear(),d.getMonth(),d.getDate()); }
+function daysBetween(a,b){ return Math.round((startOfDay(b)-startOfDay(a))/DAY_MS); }
+function money(n){ return (n||0).toLocaleString('zh-CN'); }
+function esc(s){
+  return String(s==null?'':s).replace(/[&<>"']/g,function(c){
+    return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c];
+  });
+}
+function getBaseFee(type,year){
+  var rows=FEE_TABLE[type]; if(!rows) return null;
+  for(var i=0;i<rows.length;i++){
+    var a=rows[i][0],b=rows[i][1],f=rows[i][2];
+    if(year>=a&&year<=b) return f;
+  }
+  return null;
+}
+function maxYear(type){ var r=FEE_TABLE[type]; return r?r[r.length-1][1]:20; }
+function yearOf(appDate,date){
+  if(date<appDate) return 0;
+  var n=1; while(addYears(appDate,n)<=date) n++;
+  return n;
+}
+function buildSchedule(p){
+  var appDate=parseDate(p.appDate); if(!appDate) return [];
+  var grantDate=p.grantDate?parseDate(p.grantDate):null;
+  var grantYear=grantDate?yearOf(appDate,grantDate):null;
+  var reduction=Number(p.reduction)||0;
+  var max=maxYear(p.type);
+  var out=[];
+  for(var n=1;n<=max;n++){
+    var base=getBaseFee(p.type,n); if(base==null) continue;
+    var start=addYears(appDate,n-1);
+    var end=addDays(addYears(appDate,n),-1);
+    var applyRed=0;
+    if(grantYear!=null&&reduction>0&&n>=grantYear&&n<=grantYear+9) applyRed=reduction;
+    var fee=Math.round(base*(1-applyRed/100));
+    var phase,dueDate;
+    if(grantYear==null){ phase='pending-grant'; dueDate=start; }
+    else if(n<=grantYear){ phase='grant-registration'; dueDate=grantDate; }
+    else { phase='annuity'; dueDate=start; }
+    out.push({year:n, startDate:fmtDate(start), endDate:fmtDate(end), dueDate:fmtDate(dueDate),
+      baseFee:base, reduction:applyRed, fee:fee, phase:phase, isGrantYear:n===grantYear});
+  }
+  return out;
+}
+function isPaid(p,item){
+  if((p.paidYears||[]).indexOf(item.year)>=0) return true;
+  if(item.phase==='grant-registration') return true;
+  return false;
+}
+function calcLate(dueDateStr,fee,asOf){
+  var due=parseDate(dueDateStr);
+  if(!due||asOf<=due) return {months:0,rate:0,amount:0,terminated:false};
+  var m=0; while(m<24&&addMonths(due,m+1)<asOf) m++;
+  var terminated=m>=6;
+  var rate=m===0?0:Math.min(m,5)*0.05;
+  return {months:m,rate:rate,amount:Math.round(fee*rate),terminated:terminated};
+}
+function getUnpaidItems(p,asOf){
+  var out=[];
+  if(p.status==='放弃'||p.status==='终止') return out;
+  var sch=buildSchedule(p);
+  for(var i=0;i<sch.length;i++){
+    var item=sch[i];
+    if(item.phase==='pending-grant') continue;
+    if(isPaid(p,item)) continue;
+    var due=parseDate(item.dueDate);
+    var daysLeft=daysBetween(asOf,due);
+    var late=calcLate(item.dueDate,item.fee,asOf);
+    out.push({year:item.year, startDate:item.startDate, endDate:item.endDate,
+      dueDate:item.dueDate, baseFee:item.baseFee, reduction:item.reduction,
+      fee:item.fee, phase:item.phase, isGrantYear:item.isGrantYear,
+      patent:p, daysLeft:daysLeft, lateMonths:late.months, lateFee:late.amount,
+      terminated:late.terminated, total:item.fee+late.amount});
+  }
+  return out;
+}
+function getNextDue(p,asOf){
+  var list=getUnpaidItems(p,asOf);
+  return list.length?list[0]:null;
+}
+function statusMeta(it){
+  if(it.terminated) return {cls:'red',label:'⚠ 可能已终止'};
+  if(it.daysLeft<0) return {cls:'red',label:'已逾期 '+(-it.daysLeft)+' 天'};
+  if(it.daysLeft===0) return {cls:'red',label:'今日到期'};
+  if(it.daysLeft<=30) return {cls:'amber',label:'剩余 '+it.daysLeft+' 天'};
+  if(it.daysLeft<=90) return {cls:'cyan',label:'剩余 '+it.daysLeft+' 天'};
+  return {cls:'gray',label:'剩余 '+it.daysLeft+' 天'};
+}
+function monitored(){ return state.patents.filter(function(p){return !p.archived;}); }
+
+var state = { patents: [], settings: { alertHorizon: 90 }, user: null };
+var editingId = null;
+var ledgerScope = 'active';
+var selectedIds = new Set();
+var scheduleCache = [];
+var authMode = 'login';
+
+function showAuthMsg(msg, type){
+  var el=document.getElementById('authMsg');
+  el.textContent=msg||''; el.className='auth-msg '+(type||'');
+}
+function setAuthMode(mode){
+  authMode=mode;
+  var isLogin=mode==='login';
+  document.getElementById('authSub').textContent=isLogin?'请登录以继续':'创建新账户';
+  document.getElementById('authSubmit').textContent=isLogin?'登录':'注册';
+  document.getElementById('authToggleText').textContent=isLogin?'还没有账户？':'已有账户？';
+  document.getElementById('authToggleLink').textContent=isLogin?'立即注册':'去登录';
+  showAuthMsg('');
+}
+async function handleAuth(){
+  if(!sb){ showAuthMsg('Supabase 未加载，请刷新页面','error'); return; }
+  var email=document.getElementById('authEmail').value.trim();
+  var password=document.getElementById('authPassword').value;
+  if(!email||!password){ showAuthMsg('请填写邮箱和密码','error'); return; }
+  if(password.length<6){ showAuthMsg('密码至少 6 位','error'); return; }
+  var btn=document.getElementById('authSubmit');
+  btn.disabled=true; btn.textContent='处理中…';
+  try {
+    if(authMode==='login'){
+      var r1 = await sb.auth.signInWithPassword({ email:email, password:password });
+      if(r1.error) throw r1.error;
+      showAuthMsg('登录成功，正在加载…','success');
+    } else {
+      var r2 = await sb.auth.signUp({ email:email, password:password,
+        options:{ emailRedirectTo: window.location.href } });
+      if(r2.error) throw r2.error;
+      if(r2.data.user && r2.data.session){
+        showAuthMsg('注册成功，正在进入…','success');
+      } else {
+        showAuthMsg('注册成功！请查收邮箱确认链接后再登录。','success');
+        btn.disabled=false; btn.textContent='注册';
+        return;
+      }
+    }
+  } catch(e){
+    showAuthMsg((e&&e.message)||'操作失败','error');
+    btn.disabled=false;
+    btn.textContent = authMode==='login' ? '登录' : '注册';
+  }
+}
+async function logout(){
+  if(sb) await sb.auth.signOut();
+  state.user=null; state.patents=[];
+  document.getElementById('app').classList.remove('ready');
+  document.getElementById('authScreen').style.display='flex';
+}
+function showApp(user){
+  state.user=user;
+  document.getElementById('userEmail').textContent=user.email;
+  document.getElementById('authScreen').style.display='none';
+  document.getElementById('app').classList.add('ready');
+}
+async function loadPatents(){
+  var res = await sb.from('patents').select('*').order('created_at',{ascending:true});
+  if(res.error){ console.error('加载失败',res.error); return false; }
+  state.patents=(res.data||[]).map(function(row){
+    return {id:row.id, name:row.name, appNo:row.app_no, appDate:row.app_date,
+      grantDate:row.grant_date, type:row.type, client:row.client,
+      reduction:row.reduction, status:row.status, archived:row.archived,
+      archivedAt:row.archived_at, contact:row.contact, phone:row.phone,
+      notes:row.notes, paidYears:row.paid_years||[]};
+  });
+  return true;
+}
+async function upsertPatent(p){
+  var row={id:p.id, user_id:state.user.id, name:p.name, app_no:p.appNo,
+    app_date:p.appDate, grant_date:p.grantDate||'', type:p.type, client:p.client,
+    reduction:p.reduction||0, status:p.status||'有效', archived:!!p.archived,
+    archived_at:p.archivedAt||'', contact:p.contact||'', phone:p.phone||'',
+    notes:p.notes||'', paid_years:p.paidYears||[]};
+  var res = await sb.from('patents').upsert(row,{onConflict:'id'});
+  if(res.error){ alert('保存失败：'+res.error.message); return false; }
+  return true;
+}
+async function deletePatentById(id){
+  var res = await sb.from('patents').delete().eq('id',id);
+  if(res.error){ alert('删除失败：'+res.error.message); return false; }
+  return true;
+}
+async function updatePatentField(id, fields){
+  var res = await sb.from('patents').update(fields).eq('id',id);
+  if(res.error){ alert('更新失败：'+res.error.message); return false; }
+  return true;
+}
+async function markPaid(patentId, year){
+  var p=state.patents.find(function(x){return x.id===patentId;});
+  if(!p) return;
+  var years=(p.paidYears||[]).concat(year).filter(function(v,i,a){return a.indexOf(v)===i;}).sort(function(a,b){return a-b;});
+  var ok=await updatePatentField(patentId,{paid_years:years});
+  if(ok){ p.paidYears=years; renderAll(); }
+}
+async function unmarkPaid(patentId, year){
+  var p=state.patents.find(function(x){return x.id===patentId;});
+  if(!p) return;
+  var years=(p.paidYears||[]).filter(function(y){return y!==year;});
+  var ok=await updatePatentField(patentId,{paid_years:years});
+  if(ok){ p.paidYears=years; renderAll(); }
+}
+function renderClientOptions(){
+  var clients=Array.from(new Set(state.patents.map(function(p){return (p.client||'').trim();}).filter(Boolean))).sort();
+  var contacts=Array.from(new Set(state.patents.map(function(p){return (p.contact||'').trim();}).filter(Boolean))).sort();
+  ['ledgerClient','scheduleClient','reportClient'].forEach(function(id){
+    var sel=document.getElementById(id); var cur=sel.value;
+    sel.innerHTML='<option value="">全部客户</option>'+
+      clients.map(function(c){return '<option value="'+esc(c)+'">'+esc(c)+'</option>';}).join('');
+    if(clients.indexOf(cur)>=0) sel.value=cur;
+  });
+  document.getElementById('clientOptions').innerHTML=clients.map(function(c){return '<option value="'+esc(c)+'"></option>';}).join('');
+  document.getElementById('contactOptions').innerHTML=contacts.map(function(c){return '<option value="'+esc(c)+'"></option>';}).join('');
+}
+function renderDashboard(){
+  var today=startOfDay(new Date());
+  var list=monitored();
+  var all=[]; list.forEach(function(p){ all=all.concat(getUnpaidItems(p,today)); });
+  var overdue=all.filter(function(it){return it.daysLeft<0;});
+  var within90=all.filter(function(it){return it.daysLeft>=0&&it.daysLeft<=90;});
+  var within30=all.filter(function(it){return it.daysLeft>=0&&it.daysLeft<=30;});
+  var archived=state.patents.length-list.length;
+  var amt=function(arr){ return arr.reduce(function(s,it){return s+it.total;},0); };
+  document.getElementById('statGrid').innerHTML=
+    '<div class="stat"><div class="stat-label">监控中专利</div>'+
+      '<div class="stat-value">'+list.length+'<small>件</small></div>'+
+      '<div class="stat-sub">客户 '+new Set(list.map(function(p){return p.client;})).size+' 家 · 已归档 '+archived+' 件</div></div>'+
+    '<div class="stat warn"><div class="stat-label">90 天内到期</div>'+
+      '<div class="stat-value">'+within90.length+'<small>笔</small></div>'+
+      '<div class="stat-sub">含 30 天内 '+within30.length+' 笔 · ¥'+money(amt(within90))+'</div></div>'+
+    '<div class="stat danger"><div class="stat-label">已逾期</div>'+
+      '<div class="stat-value">'+overdue.length+'<small>笔</small></div>'+
+      '<div class="stat-sub">¥'+money(amt(overdue))+'</div></div>'+
+    '<div class="stat gray"><div class="stat-label">已归档</div>'+
+      '<div class="stat-value">'+archived+'<small>件</small></div>'+
+      '<div class="stat-sub">记录保留，不参与提醒</div></div>';
+  var horizon=Number(state.settings.alertHorizon)||90;
+  var alertList=all.filter(function(it){return it.daysLeft<0||it.daysLeft<=horizon;})
+    .sort(function(a,b){return a.daysLeft-b.daysLeft;});
+  var box=document.getElementById('alertList');
+  if(!alertList.length){
+    box.innerHTML='<div class="empty"><span class="icon">✅</span>该范围内暂无待缴年费</div>';
+    return;
+  }
+  box.innerHTML=alertList.slice(0,60).map(function(it){
+    var st=statusMeta(it);
+    var bar=it.terminated||it.daysLeft<0?'#dc2626':it.daysLeft<=30?'#d97706':'#2563eb';
+    return '<div class="alert-row">'+
+      '<div class="bar" style="background:'+bar+'"></div>'+
+      '<div class="alert-main"><div class="t">'+esc(it.patent.name)+'</div>'+
+        '<div class="s">'+esc(it.patent.client)+' · 第 '+it.year+' 年度 · 截止 '+it.dueDate+
+        (it.lateFee?' · <span style="color:#dc2626">滞纳金 ¥'+money(it.lateFee)+'</span>':'')+'</div></div>'+
+      '<div class="alert-meta"><div class="amt">¥'+money(it.total)+'</div>'+
+        '<div class="dt"><span class="badge '+st.cls+'">'+st.label+'</span></div></div>'+
+      '<button class="btn sm ok" data-pay="'+it.patent.id+'|'+it.year+'">标记已缴</button>'+
+    '</div>';
+  }).join('');
+  box.querySelectorAll('[data-pay]').forEach(function(b){
+    b.addEventListener('click',function(){
+      var parts=b.dataset.pay.split('|'); markPaid(parts[0],Number(parts[1]));
+    });
+  });
+}
+function filterPatents(){
+  var q=document.getElementById('ledgerSearch').value.trim().toLowerCase();
+  var fClient=document.getElementById('ledgerClient').value;
+  var fType=document.getElementById('ledgerType').value;
+  var fRed=document.getElementById('ledgerReduction').value;
+  var fStatus=document.getElementById('ledgerStatus').value;
+  var fUrg=document.getElementById('ledgerUrgency').value;
+  var fFrom=document.getElementById('ledgerAppFrom').value;
+  var fTo=document.getElementById('ledgerAppTo').value;
+  var today=startOfDay(new Date());
+  var rows=state.patents.filter(function(p){
+    if(ledgerScope==='active'&&p.archived) return false;
+    if(ledgerScope==='archived'&&!p.archived) return false;
+    return true;
+  });
+  if(q) rows=rows.filter(function(p){
+    return (p.name||'').toLowerCase().indexOf(q)>=0||
+      (p.appNo||'').toLowerCase().indexOf(q)>=0||
+      (p.client||'').toLowerCase().indexOf(q)>=0||
+      (p.contact||'').toLowerCase().indexOf(q)>=0;
+  });
+  if(fClient) rows=rows.filter(function(p){return p.client===fClient;});
+  if(fType) rows=rows.filter(function(p){return p.type===fType;});
+  if(fRed!=='') rows=rows.filter(function(p){return String(p.reduction||0)===fRed;});
+  if(fStatus) rows=rows.filter(function(p){return (p.status||'有效')===fStatus;});
+  if(fFrom) rows=rows.filter(function(p){return p.appDate&&p.appDate>=fFrom;});
+  if(fTo) rows=rows.filter(function(p){return p.appDate&&p.appDate<=fTo;});
+  var out=rows.map(function(p){
+    var appDate=parseDate(p.appDate);
+    var curYear=appDate?yearOf(appDate,today):0;
+    var next=getNextDue(p,today);
+    return {p:p,curYear:curYear,next:next};
+  });
+  if(fUrg==='overdue') out=out.filter(function(r){return r.next&&r.next.daysLeft<0;});
+  else if(fUrg==='30') out=out.filter(function(r){return r.next&&r.next.daysLeft>=0&&r.next.daysLeft<=30;});
+  else if(fUrg==='90') out=out.filter(function(r){return r.next&&r.next.daysLeft>=0&&r.next.daysLeft<=90;});
+  else if(fUrg==='none') out=out.filter(function(r){return !r.next;});
+  out.sort(function(a,b){
+    if(!!a.p.archived!==!!b.p.archived) return a.p.archived?1:-1;
+    return (a.next?a.next.daysLeft:99999)-(b.next?b.next.daysLeft:99999);
+  });
+  return out;
+}
+function renderLedger(){
+  var rows=filterPatents();
+  document.getElementById('cntActive').textContent=state.patents.filter(function(p){return !p.archived;}).length;
+  document.getElementById('cntArchived').textContent=state.patents.filter(function(p){return p.archived;}).length;
+  document.getElementById('cntAll').textContent=state.patents.length;
+  var visible=new Set(rows.map(function(r){return r.p.id;}));
+  Array.from(selectedIds).forEach(function(id){ if(!visible.has(id)) selectedIds.delete(id); });
+  var tbody=document.getElementById('ledgerBody');
+  if(!rows.length){
+    tbody.innerHTML='<tr><td colspan="14"><div class="empty"><span class="icon">📭</span>没有符合条件的记录</div></td></tr>';
+    updateBulkBar(); syncCheckAll(); return;
+  }
+  tbody.innerHTML=rows.map(function(r,i){
+    var p=r.p, next=r.next, isSel=selectedIds.has(p.id);
+    var statusHtml='<span class="badge gray">—</span>', nextDate='—', nextAmt='—';
+    if(p.archived){ statusHtml='<span class="badge slate">📦 已归档</span>'; }
+    else if(!p.grantDate){ statusHtml='<span class="badge gray">待授权</span>'; }
+    else if(next){ var st=statusMeta(next); statusHtml='<span class="badge '+st.cls+'">'+st.label+'</span>';
+      nextDate=next.dueDate; nextAmt='¥'+money(next.total); }
+    else { statusHtml='<span class="badge green">全部已缴</span>'; }
+    if(p.status==='放弃'||p.status==='终止') statusHtml='<span class="badge gray">'+p.status+'</span>';
+    var red=p.reduction>0?'<span class="badge amber">减 '+p.reduction+'%</span>':'<span class="mono">—</span>';
+    return '<tr class="'+(isSel?'selected':'')+' '+(p.archived?'archived-row':'')+'">'+
+      '<td><input type="checkbox" class="row-check" data-id="'+p.id+'" '+(isSel?'checked':'')+'></td>'+
+      '<td class="mono">'+(i+1)+'</td>'+
+      '<td><div class="truncate" title="'+esc(p.name)+'"><strong>'+esc(p.name)+'</strong></div></td>'+
+      '<td class="mono">'+esc(p.appNo)+'</td>'+
+      '<td><span class="badge '+(TYPE_BADGE[p.type]||'gray')+'">'+esc(p.type)+'</span></td>'+
+      '<td><div class="truncate" title="'+esc(p.client)+'">'+esc(p.client)+'</div></td>'+
+      '<td class="mono">'+esc(p.appDate)+'</td>'+
+      '<td class="mono">'+esc(p.grantDate||'—')+'</td>'+
+      '<td>'+red+'</td>'+
+      '<td class="mono">第 '+(r.curYear||'—')+' 年</td>'+
+      '<td class="mono">'+nextDate+'</td>'+
+      '<td class="num">'+nextAmt+'</td>'+
+      '<td>'+statusHtml+'</td>'+
+      '<td><button class="btn sm ghost" data-detail="'+p.id+'">详情</button>'+
+          '<button class="btn sm ghost" data-edit="'+p.id+'">编辑</button></td>'+
+    '</tr>';
+  }).join('');
+  tbody.querySelectorAll('.row-check').forEach(function(cb){
+    cb.addEventListener('change',function(){
+      if(cb.checked) selectedIds.add(cb.dataset.id); else selectedIds.delete(cb.dataset.id);
+      cb.closest('tr').classList.toggle('selected',cb.checked);
+      updateBulkBar(); syncCheckAll();
+    });
+  });
+  tbody.querySelectorAll('[data-edit]').forEach(function(b){
+    b.addEventListener('click',function(){openPatentModal(b.dataset.edit);});
+  });
+  tbody.querySelectorAll('[data-detail]').forEach(function(b){
+    b.addEventListener('click',function(){openDetail(b.dataset.detail);});
+  });
+  updateBulkBar(); syncCheckAll();
+}
+function updateBulkBar(){
+  document.getElementById('selCount').textContent=selectedIds.size;
+  document.getElementById('bulkBar').hidden=selectedIds.size===0;
+}
+function syncCheckAll(){
+  var boxes=document.querySelectorAll('#ledgerBody .row-check');
+  var all=document.getElementById('checkAll');
+  if(!boxes.length){ all.checked=false; all.indeterminate=false; return; }
+  var c=Array.from(boxes).filter(function(b){return b.checked;}).length;
+  all.checked=c===boxes.length; all.indeterminate=c>0&&c<boxes.length;
+}
+function clearSelection(){
+  selectedIds.clear();
+  document.getElementById('checkAll').checked=false;
+  document.getElementById('checkAll').indeterminate=false;
+}
+function renderSchedule(){
+  var today=startOfDay(new Date());
+  var range=document.getElementById('scheduleRange').value;
+  var fClient=document.getElementById('scheduleClient').value;
+  var items=[]; monitored().forEach(function(p){ items=items.concat(getUnpaidItems(p,today)); });
+  if(fClient) items=items.filter(function(it){return it.patent.client===fClient;});
+  if(range==='overdue') items=items.filter(function(it){return it.daysLeft<0;});
+  else if(range!=='all') items=items.filter(function(it){return it.daysLeft<=Number(range);});
+  items.sort(function(a,b){return a.daysLeft-b.daysLeft;});
+  scheduleCache=items;
+  document.getElementById('scheduleSub').textContent=
+    '共 '+items.length+' 笔 · 合计 ¥'+money(items.reduce(function(s,it){return s+it.total;},0));
+  var tbody=document.getElementById('scheduleBody');
+  if(!items.length){
+    tbody.innerHTML='<tr><td colspan="13"><div class="empty"><span class="icon">📅</span>暂无待缴年费</div></td></tr>';
+    return;
+  }
+  tbody.innerHTML=items.map(function(it){
+    var st=statusMeta(it);
+    var red=it.reduction>0?'<span class="badge amber">减 '+it.reduction+'%</span>':'<span class="mono">—</span>';
+    var late=it.lateFee>0?'<span style="color:#dc2626;font-weight:700">¥'+money(it.lateFee)+'</span>'+
+      '<div style="font-size:11px;color:#64748b">逾期 '+it.lateMonths+' 月</div>':'<span class="mono">—</span>';
+    return '<tr>'+
+      '<td class="mono" style="'+(it.daysLeft<0?'color:#dc2626;font-weight:700':'')+'">'+it.dueDate+'</td>'+
+      '<td><span class="badge '+st.cls+'">'+st.label+'</span></td>'+
+      '<td><div class="truncate">'+esc(it.patent.client)+'</div></td>'+
+      '<td><div class="truncate" title="'+esc(it.patent.name)+'">'+esc(it.patent.name)+'</div></td>'+
+      '<td class="mono">'+esc(it.patent.appNo)+'</td>'+
+      '<td><span class="badge '+(TYPE_BADGE[it.patent.type]||'gray')+'">'+esc(it.patent.type)+'</span></td>'+
+      '<td class="mono">第 '+it.year+' 年</td>'+
+      '<td class="num" style="color:#64748b">¥'+money(it.baseFee)+'</td>'+
+      '<td>'+red+'</td>'+
+      '<td class="num">¥'+money(it.fee)+'</td>'+
+      '<td>'+late+'</td>'+
+      '<td class="num" style="color:#2563eb;font-size:14px">¥'+money(it.total)+'</td>'+
+      '<td><button class="btn sm ok" data-pay="'+it.patent.id+'|'+it.year+'">已缴</button></td>'+
+    '</tr>';
+  }).join('');
+  tbody.querySelectorAll('[data-pay]').forEach(function(b){
+    b.addEventListener('click',function(){
+      var parts=b.dataset.pay.split('|'); markPaid(parts[0],Number(parts[1]));
+    });
+  });
+}
+function renderReport(){
+  var yearSel=document.getElementById('reportYear');
+  var today=startOfDay(new Date());
+  var years=new Set([today.getFullYear(),today.getFullYear()+1,today.getFullYear()+2]);
+  state.patents.forEach(function(p){
+    var a=parseDate(p.appDate);
+    if(a) for(var y=a.getFullYear();y<=today.getFullYear()+3;y++) years.add(y);
+  });
+  var sorted=Array.from(years).sort();
+  var cur=yearSel.value||String(today.getFullYear());
+  yearSel.innerHTML=sorted.map(function(y){
+    return '<option value="'+y+'"'+(String(y)===cur?' selected':'')+'>'+y+' 年</option>';
+  }).join('');
+  var year=Number(yearSel.value||today.getFullYear());
+  var fClient=document.getElementById('reportClient').value;
+  var items=[]; monitored().forEach(function(p){ items=items.concat(getUnpaidItems(p,today)); });
+  if(fClient) items=items.filter(function(it){return it.patent.client===fClient;});
+  items=items.filter(function(it){
+    var d=parseDate(it.dueDate); return d&&d.getFullYear()===year;
+  });
+  var qs=[{name:'第一季度',m:[0,1,2]},{name:'第二季度',m:[3,4,5]},
+          {name:'第三季度',m:[6,7,8]},{name:'第四季度',m:[9,10,11]}];
+  var total=items.reduce(function(s,it){return s+it.total;},0);
+  document.getElementById('reportGrid').innerHTML=qs.map(function(q,qi){
+    var qiItems=items.filter(function(it){
+      var d=parseDate(it.dueDate); return q.m.indexOf(d.getMonth())>=0;
+    }).sort(function(a,b){return parseDate(a.dueDate)-parseDate(b.dueDate);});
+    var sum=qiItems.reduce(function(s,it){return s+it.total;},0);
+    var list=qiItems.length?qiItems.map(function(it){
+      return '<div class="q-item">'+
+        '<span class="n" title="'+esc(it.patent.name)+'">'+it.dueDate.slice(5)+' · '+esc(it.patent.client)+' · '+esc(it.patent.name)+'</span>'+
+        '<span class="v">¥'+money(it.total)+'</span></div>';
+    }).join(''):'<div style="padding:22px;text-align:center;color:#64748b;font-size:12.5px">本季度无需缴纳</div>';
+    return '<div class="q-card"><div class="q-head">'+
+      '<span class="name">'+q.name+' <span style="color:#64748b;font-weight:400;font-size:12px">('+year+'.'+(qi*3+1)+'–'+(qi*3+3)+')</span></span>'+
+      '<span class="amt">¥'+money(sum)+'</span></div><div class="q-list">'+list+'</div></div>';
+  }).join('')+'<div class="q-card" style="grid-column:1/-1;background:#f8fafc">'+
+    '<div class="q-head" style="background:#eff6ff"><span class="name">'+year+' 年度合计</span>'+
+    '<span class="amt" style="font-size:18px">¥'+money(total)+'</span></div>'+
+    '<div style="padding:14px 16px;color:#64748b;font-size:12.5px">共 '+items.length+' 笔 · 涉及 '+
+    new Set(items.map(function(i){return i.patent.client;})).size+' 家客户</div></div>';
+}
+function openPatentModal(id){
+  editingId=id||null;
+  var p=id?state.patents.find(function(x){return x.id===id;}):null;
+  document.getElementById('patentModalTitle').textContent=p?'编辑专利':'新增专利';
+  document.getElementById('f_name').value=p?p.name:'';
+  document.getElementById('f_appNo').value=p?p.appNo:'';
+  document.getElementById('f_type').value=p?p.type:'发明';
+  document.getElementById('f_appDate').value=p?p.appDate:'';
+  document.getElementById('f_grantDate').value=p?(p.grantDate||''):'';
+  document.getElementById('f_client').value=p?p.client:'';
+  document.getElementById('f_reduction').value=p?String(p.reduction||0):'0';
+  document.getElementById('f_status').value=p?(p.status||'有效'):'有效';
+  document.getElementById('f_archived').value=p&&p.archived?'1':'0';
+  document.getElementById('f_contact').value=p?(p.contact||''):'';
+  document.getElementById('f_phone').value=p?(p.phone||''):'';
+  document.getElementById('f_notes').value=p?(p.notes||''):'';
+  document.getElementById('modalPatent').classList.add('show');
+  setTimeout(function(){document.getElementById('f_name').focus();},60);
+}
+async function savePatent(){
+  var name=document.getElementById('f_name').value.trim();
+  var appNo=document.getElementById('f_appNo').value.trim();
+  var appDate=document.getElementById('f_appDate').value;
+  var client=document.getElementById('f_client').value.trim();
+  if(!name) return alert('请填写专利名称');
+  if(!appNo) return alert('请填写申请号');
+  if(!appDate) return alert('请填写申请日');
+  if(!client) return alert('请填写客户');
+  var archived=document.getElementById('f_archived').value==='1';
+  var data={
+    id: editingId || ('P'+Date.now()+Math.random().toString(36).slice(2,7)),
+    name:name, appNo:appNo, appDate:appDate,
+    type:document.getElementById('f_type').value,
+    grantDate:document.getElementById('f_grantDate').value||'',
+    client:client,
+    reduction:Number(document.getElementById('f_reduction').value)||0,
+    status:document.getElementById('f_status').value,
+    archived:archived, archivedAt: archived?fmtDate(new Date()):'',
+    contact:document.getElementById('f_contact').value.trim(),
+    phone:document.getElementById('f_phone').value.trim(),
+    notes:document.getElementById('f_notes').value.trim(),
+    paidYears: editingId ? (state.patents.find(function(x){return x.id===editingId;}).paidYears||[]) : []
+  };
+  var ok=await upsertPatent(data);
+  if(!ok) return;
+  document.getElementById('modalPatent').classList.remove('show');
+  await loadPatents(); renderAll();
+}
+async function deletePatent(id){
+  var p=state.patents.find(function(x){return x.id===id;}); if(!p) return;
+  if(!confirm('确定永久删除「'+p.name+'」？建议改用归档以保留记录。')) return;
+  if(!await deletePatentById(id)) return;
+  state.patents=state.patents.filter(function(x){return x.id!==id;});
+  document.getElementById('modalDetail').classList.remove('show');
+  renderAll();
+}
+function openDetail(id){
+  var p=state.patents.find(function(x){return x.id===id;}); if(!p) return;
+  var today=startOfDay(new Date());
+  var schedule=buildSchedule(p);
+  var next=getNextDue(p,today);
+  var nextYear=next?next.year:-1;
+  document.getElementById('detailTitle').textContent=p.name;
+  var info='<div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(190px,1fr));gap:14px;margin-bottom:18px">'+
+    [['申请号',p.appNo],['类型',p.type],['申请日',p.appDate],['授权日',p.grantDate||'未授权'],
+     ['客户',p.client],['费减',p.reduction>0?'减缴 '+p.reduction+'%':'不减缴'],
+     ['当前年度',p.grantDate?'第 '+yearOf(parseDate(p.appDate),today)+' 年度':'—'],
+     ['状态',p.status||'有效'],['监控',p.archived?'已归档':'监控中'],
+     ['联系人',(p.contact||'—')+(p.phone?' / '+p.phone:'')]
+    ].map(function(kv){
+      return '<div><div style="font-size:11.5px;color:#64748b;font-weight:600">'+kv[0]+'</div>'+
+        '<div style="font-weight:600;margin-top:2px">'+esc(kv[1])+'</div></div>';
+    }).join('')+'</div>'+
+    (p.notes?'<div style="background:#f8fafc;padding:12px 14px;border-radius:8px;font-size:12.5px;margin-bottom:20px"><b>备注：</b>'+esc(p.notes)+'</div>':'')+
+    '<h4 style="font-size:13.5px;margin-bottom:6px">年费时间轴</h4>';
+  var timeline=schedule.length?'<div class="tl">'+schedule.map(function(it){
+    var paid=isPaid(p,it); var isNext=it.year===nextYear;
+    var due=parseDate(it.dueDate);
+    var late=!paid&&due&&today>due?calcLate(it.dueDate,it.fee,today):null;
+    var cls=paid?'paid':(isNext?(late&&late.months>0?'overdue':'next'):'');
+    var tag=paid?'<span class="badge green">已缴</span>':isNext?
+      (late&&late.months>0?'<span class="badge red">逾期 '+late.months+' 月</span>':'<span class="badge blue">待缴</span>')
+      :'<span class="badge gray">—</span>';
+    var feeTxt=it.reduction>0?'¥'+money(it.fee)+' <span style="font-size:11px;color:#64748b">(标价 ¥'+money(it.baseFee)+'，减 '+it.reduction+'%)</span>':'¥'+money(it.fee);
+    return '<div class="tl-item '+cls+'"><div class="row">'+
+      '<div><div class="y">第 '+it.year+' 年度 '+(it.isGrantYear?'<span class="badge blue" style="font-size:10px">授权当年</span>':'')+'</div>'+
+      '<div class="d">'+it.startDate+' ~ '+it.endDate+' · 截止 '+it.dueDate+'</div></div>'+
+      '<div style="text-align:right"><div class="f">'+feeTxt+'</div><div style="margin-top:3px">'+tag+'</div></div></div>'+
+      '<div style="margin-top:6px">'+(paid?'<button class="btn sm ghost" data-dunpay="'+it.year+'">撤销已缴</button>':
+        '<button class="btn sm ok" data-dpay="'+it.year+'">标记已缴</button>')+'</div></div>';
+  }).join('')+'</div>':'<div class="empty">尚未授权，暂不产生年费</div>';
+  document.getElementById('detailBody').innerHTML=info+timeline+
+    '<div style="margin-top:24px;display:flex;gap:10px;flex-wrap:wrap">'+
+      '<button class="btn ghost" id="btnEditFromDetail">编辑</button>'+
+      (p.archived?'<button class="btn ok" id="btnRestoreFromDetail">↩ 恢复监控</button>':
+        '<button class="btn amber" id="btnArchiveFromDetail">📦 归档</button>')+
+      '<button class="btn danger" id="btnDeletePatent">删除</button></div>';
+  var body=document.getElementById('detailBody');
+  body.querySelectorAll('[data-dpay]').forEach(function(b){
+    b.addEventListener('click',function(){ markPaid(p.id,Number(b.dataset.dpay)).then(function(){openDetail(p.id);}); });
+  });
+  body.querySelectorAll('[data-dunpay]').forEach(function(b){
+    b.addEventListener('click',function(){ unmarkPaid(p.id,Number(b.dataset.dunpay)).then(function(){openDetail(p.id);}); });
+  });
+  document.getElementById('btnEditFromDetail').addEventListener('click',function(){
+    document.getElementById('modalDetail').classList.remove('show'); openPatentModal(p.id);
+  });
+  var ba=document.getElementById('btnArchiveFromDetail');
+  if(ba) ba.addEventListener('click',async function(){
+    await updatePatentField(p.id,{archived:true,archived_at:fmtDate(new Date())});
+    p.archived=true; p.archivedAt=fmtDate(new Date()); renderAll(); openDetail(p.id);
+  });
+  var br=document.getElementById('btnRestoreFromDetail');
+  if(br) br.addEventListener('click',async function(){
+    await updatePatentField(p.id,{archived:false,archived_at:''});
+    p.archived=false; p.archivedAt=''; renderAll(); openDetail(p.id);
+  });
+  document.getElementById('btnDeletePatent').addEventListener('click',function(){deletePatent(p.id);});
+  document.getElementById('modalDetail').classList.add('show');
+}
+async function bulkArchive(){
+  var ids=Array.from(selectedIds); if(!ids.length) return;
+  if(!confirm('确定将选中的 '+ids.length+' 件专利移入归档？')) return;
+  var res = await sb.from('patents').update({archived:true,archived_at:fmtDate(new Date())}).in('id',ids);
+  if(res.error){ alert('归档失败：'+res.error.message); return; }
+  selectedIds.clear(); await loadPatents(); renderAll();
+}
+async function bulkRestore(){
+  var ids=Array.from(selectedIds); if(!ids.length) return;
+  if(!confirm('确定恢复选中的 '+ids.length+' 件专利？')) return;
+  var res = await sb.from('patents').update({archived:false,archived_at:''}).in('id',ids);
+  if(res.error){ alert('恢复失败：'+res.error.message); return; }
+  selectedIds.clear(); await loadPatents(); renderAll();
+}
+async function bulkSetStatus(){
+  var ids=Array.from(selectedIds); if(!ids.length) return;
+  var st=document.getElementById('bulkStatusSel').value;
+  if(!confirm('确定将 '+ids.length+' 件专利状态改为「'+st+'」？')) return;
+  var res = await sb.from('patents').update({status:st}).in('id',ids);
+  if(res.error){ alert('更新失败：'+res.error.message); return; }
+  selectedIds.clear(); await loadPatents(); renderAll();
+}
+function bulkExport(){
+  var rows=state.patents.filter(function(p){return selectedIds.has(p.id);});
+  if(!rows.length) return;
+  var header=['专利名称','申请号','类型','客户','申请日','授权日','费减','状态','监控','联系人','电话','备注'];
+  var body=rows.map(function(p){
+    return [p.name,p.appNo,p.type,p.client,p.appDate,p.grantDate||'',
+      (p.reduction||0)+'%',p.status||'有效',p.archived?'已归档':'监控中',
+      p.contact||'',p.phone||'',p.notes||''];
+  });
+  exportCSV('选中专利_'+fmtDate(new Date())+'.csv',header,body);
+}
+function exportJSON(){
+  var blob=new Blob([JSON.stringify({patents:state.patents},null,2)],{type:'application/json'});
+  var url=URL.createObjectURL(blob); var a=document.createElement('a');
+  a.href=url; a.download='专利年费数据_'+fmtDate(new Date())+'.json'; a.click();
+  URL.revokeObjectURL(url);
+}
+function importJSON(file){
+  var reader=new FileReader();
+  reader.onload=async function(e){
+    try{
+      var data=JSON.parse(e.target.result);
+      var list=Array.isArray(data)?data:(data.patents||[]);
+      if(!Array.isArray(list)) throw new Error('格式不正确');
+      var ok=0;
+      for(var i=0;i<list.length;i++){
+        var item=list[i];
+        var row={id:item.id||('P'+Date.now()+Math.random().toString(36).slice(2,7)),
+          user_id:state.user.id, name:item.name||'',
+          app_no:item.appNo||item.app_no||'', app_date:item.appDate||item.app_date||'',
+          grant_date:item.grantDate||item.grant_date||'', type:item.type||'发明',
+          client:item.client||'', reduction:Number(item.reduction)||0,
+          status:item.status||'有效', archived:!!item.archived,
+          archived_at:item.archivedAt||'', contact:item.contact||'',
+          phone:item.phone||'', notes:item.notes||'',
+          paid_years:item.paidYears||item.paid_years||[]};
+        var res = await sb.from('patents').upsert(row,{onConflict:'id'});
+        if(!res.error) ok++;
+      }
+      await loadPatents(); renderAll();
+      alert('导入完成：成功 '+ok+' 条 / 共 '+list.length+' 条');
+    }catch(err){ alert('导入失败：'+err.message); }
+  };
+  reader.readAsText(file);
+}
+function exportCSV(filename,header,rows){
+  var lines=[header].concat(rows);
+  var csv=lines.map(function(r){
+    return r.map(function(c){
+      var s=String(c==null?'':c);
+      return /[",\n]/.test(s)?'"'+s.replace(/"/g,'""')+'"':s;
+    }).join(',');
+  }).join('\r\n');
+  var blob=new Blob(['\ufeff'+csv],{type:'text/csv;charset=utf-8'});
+  var url=URL.createObjectURL(blob); var a=document.createElement('a');
+  a.href=url; a.download=filename; a.click(); URL.revokeObjectURL(url);
+}
+function bindEvents(){
+  document.getElementById('authSubmit').addEventListener('click',handleAuth);
+  document.getElementById('authToggleLink').addEventListener('click',function(){
+    setAuthMode(authMode==='login'?'signup':'login');
+  });
+  document.getElementById('authPassword').addEventListener('keydown',function(e){
+    if(e.key==='Enter') handleAuth();
+  });
+  document.getElementById('btnLogout').addEventListener('click',logout);
+  document.querySelectorAll('.tab').forEach(function(tab){
+    tab.addEventListener('click',function(){
+      document.querySelectorAll('.tab').forEach(function(t){t.classList.remove('active');});
+      document.querySelectorAll('.panel').forEach(function(p){p.classList.remove('active');});
+      tab.classList.add('active');
+      document.getElementById('panel-'+tab.dataset.tab).classList.add('active');
+      var t=tab.dataset.tab;
+      if(t==='dashboard') renderDashboard();
+      if(t==='ledger') renderLedger();
+      if(t==='schedule') renderSchedule();
+      if(t==='report') renderReport();
+    });
+  });
+  document.getElementById('btnAdd').addEventListener('click',function(){openPatentModal(null);});
+  document.getElementById('btnExportAll').addEventListener('click',exportJSON);
+  document.getElementById('btnImport').addEventListener('click',function(){document.getElementById('fileInput').click();});
+  document.getElementById('fileInput').addEventListener('change',function(e){
+    if(e.target.files[0]) importJSON(e.target.files[0]); e.target.value='';
+  });
+  document.getElementById('alertHorizon').addEventListener('change',function(e){
+    state.settings.alertHorizon=Number(e.target.value); renderDashboard();
+  });
+  document.querySelectorAll('#ledgerScope .seg-btn').forEach(function(btn){
+    btn.addEventListener('click',function(){
+      document.querySelectorAll('#ledgerScope .seg-btn').forEach(function(b){b.classList.remove('active');});
+      btn.classList.add('active'); ledgerScope=btn.dataset.scope;
+      clearSelection(); renderLedger();
+    });
+  });
+  ['ledgerClient','ledgerType','ledgerReduction','ledgerStatus','ledgerUrgency','ledgerAppFrom','ledgerAppTo']
+    .forEach(function(id){ document.getElementById(id).addEventListener('change',renderLedger); });
+  document.getElementById('ledgerSearch').addEventListener('input',renderLedger);
+  document.getElementById('btnResetFilters').addEventListener('click',function(){
+    document.getElementById('ledgerSearch').value='';
+    ['ledgerClient','ledgerType','ledgerReduction','ledgerStatus','ledgerUrgency','ledgerAppFrom','ledgerAppTo']
+      .forEach(function(id){document.getElementById(id).value='';});
+    clearSelection(); renderLedger();
+  });
+  document.getElementById('checkAll').addEventListener('change',function(e){
+    var checked=e.target.checked;
+    document.querySelectorAll('#ledgerBody .row-check').forEach(function(cb){
+      cb.checked=checked;
+      if(checked) selectedIds.add(cb.dataset.id); else selectedIds.delete(cb.dataset.id);
+      cb.closest('tr').classList.toggle('selected',checked);
+    });
+    updateBulkBar();
+  });
+  document.getElementById('bulkArchive').addEventListener('click',bulkArchive);
+  document.getElementById('bulkRestore').addEventListener('click',bulkRestore);
+  document.getElementById('bulkSetStatus').addEventListener('click',bulkSetStatus);
+  document.getElementById('bulkExport').addEventListener('click',bulkExport);
+  document.getElementById('bulkClear').addEventListener('click',function(){
+    clearSelection();
+    document.querySelectorAll('#ledgerBody tr').forEach(function(tr){tr.classList.remove('selected');});
+    document.querySelectorAll('#ledgerBody .row-check').forEach(function(cb){cb.checked=false;});
+    updateBulkBar();
+  });
+  document.getElementById('scheduleRange').addEventListener('change',renderSchedule);
+  document.getElementById('scheduleClient').addEventListener('change',renderSchedule);
+  document.getElementById('btnExportSchedule').addEventListener('click',function(){
+    var header=['截止日','剩余天数','客户','专利名称','申请号','类型','年度','官费','减免','应缴','滞纳金','合计'];
+    var rows=scheduleCache.map(function(it){
+      return [it.dueDate,it.daysLeft,it.patent.client,it.patent.name,
+        it.patent.appNo,it.patent.type,'第'+it.year+'年',it.baseFee,
+        it.reduction>0?it.reduction+'%':'0',it.fee,it.lateFee,it.total];
+    });
+    exportCSV('缴费计划_'+fmtDate(new Date())+'.csv',header,rows);
+  });
+  document.getElementById('reportYear').addEventListener('change',renderReport);
+  document.getElementById('reportClient').addEventListener('change',renderReport);
+  document.getElementById('btnExportReport').addEventListener('click',function(){
+    var today=startOfDay(new Date());
+    var year=Number(document.getElementById('reportYear').value);
+    var fClient=document.getElementById('reportClient').value;
+    var items=[]; monitored().forEach(function(p){ items=items.concat(getUnpaidItems(p,today)); });
+    if(fClient) items=items.filter(function(it){return it.patent.client===fClient;});
+    items=items.filter(function(it){
+      var d=parseDate(it.dueDate); return d&&d.getFullYear()===year;
+    }).sort(function(a,b){return parseDate(a.dueDate)-parseDate(b.dueDate);});
+    var header=['季度','截止日','客户','专利名称','申请号','类型','年度','官费','减免','应缴','滞纳金','合计'];
+    var rows=items.map(function(it){
+      return ['Q'+(Math.floor(parseDate(it.dueDate).getMonth()/3)+1),
+        it.dueDate,it.patent.client,it.patent.name,it.patent.appNo,it.patent.type,
+        '第'+it.year+'年',it.baseFee,it.reduction>0?it.reduction+'%':'0',
+        it.fee,it.lateFee,it.total];
+    });
+    exportCSV('季度报表_'+year+'.csv',header,rows);
+  });
+  document.querySelectorAll('[data-close]').forEach(function(b){
+    b.addEventListener('click',function(){ b.closest('.overlay').classList.remove('show'); });
+  });
+  document.querySelectorAll('.overlay').forEach(function(ov){
+    ov.addEventListener('click',function(e){ if(e.target===ov) ov.classList.remove('show'); });
+  });
+  document.addEventListener('keydown',function(e){
+    if(e.key==='Escape') document.querySelectorAll('.overlay.show').forEach(function(o){o.classList.remove('show');});
+  });
+  document.getElementById('btnSavePatent').addEventListener('click',savePatent);
+}
+function renderAll(){
+  renderClientOptions();
+  renderDashboard();
+  renderLedger();
+  renderSchedule();
+  renderReport();
+}
+(async function init(){
+  bindEvents();
+  setAuthMode('login');
+  if(!sdkOK){
+    var sub=document.getElementById('authSub');
+    sub.innerHTML='❌ 无法加载 Supabase 库<br>请关闭浏览器的防追踪功能后刷新页面';
+    sub.style.color='#dc2626'; sub.style.fontWeight='700';
+    var btn=document.getElementById('authSubmit');
+    btn.disabled=true; btn.style.opacity='.5';
+    return;
+  }
+  var sess = await sb.auth.getSession();
+  if(sess.data.session && sess.data.session.user){
+    showApp(sess.data.session.user);
+    await loadPatents();
+    renderAll();
+  }
+  sb.auth.onAuthStateChange(async function(event, session){
+    if(event==='SIGNED_IN' && session && session.user){
+      showApp(session.user);
+      await loadPatents();
+      renderAll();
+    }
+    if(event==='SIGNED_OUT'){
+      state.user=null; state.patents=[];
+      document.getElementById('app').classList.remove('ready');
+      document.getElementById('authScreen').style.display='flex';
+      document.getElementById('authPassword').value='';
+      setAuthMode('login');
+    }
+  });
+})();
+</script>
+</body>
+</html>
