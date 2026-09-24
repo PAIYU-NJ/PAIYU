@@ -1,1381 +1,1279 @@
 <!DOCTYPE html>
 <html lang="zh-CN">
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width,initial-scale=1">
-<title>专利年费管理系统</title>
-<script src="https://unpkg.com/@supabase/supabase-js@2"></script>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>IP业务管理系统</title>
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css" />
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <style>
-*{box-sizing:border-box;margin:0;padding:0}
-body{font-family:-apple-system,"PingFang SC","Microsoft YaHei",sans-serif;background:#f1f5f9;color:#0f172a;font-size:14px;line-height:1.6}
-button{font-family:inherit;cursor:pointer;border:none;background:none;font-size:inherit}
-input,select,textarea{font-family:inherit;font-size:inherit}
-input[type=checkbox]{width:15px;height:15px;cursor:pointer;accent-color:#2563eb}
-#authScreen{position:fixed;inset:0;background:linear-gradient(135deg,#1e3a8a,#2563eb);display:flex;align-items:center;justify-content:center;z-index:200;padding:20px}
-.auth-card{background:#fff;border-radius:18px;padding:36px 32px;width:100%;max-width:400px;box-shadow:0 24px 60px rgba(0,0,0,.3)}
-.auth-card .logo{width:56px;height:56px;border-radius:16px;background:linear-gradient(135deg,#2563eb,#1d4ed8);display:flex;align-items:center;justify-content:center;font-size:26px;color:#fff;margin:0 auto 16px}
-.auth-card h2{text-align:center;font-size:20px;font-weight:800;margin-bottom:4px}
-.auth-card .sub{text-align:center;color:#64748b;font-size:13px;margin-bottom:24px}
-.auth-field{margin-bottom:14px}
-.auth-field label{display:block;font-size:12.5px;font-weight:600;color:#334155;margin-bottom:5px}
-.auth-field input{width:100%;padding:11px 13px;border:1px solid #e2e8f0;border-radius:10px;font-size:14px;outline:none}
-.auth-field input:focus{border-color:#2563eb;box-shadow:0 0 0 3px rgba(37,99,235,.1)}
-.auth-btn{width:100%;padding:12px;border-radius:10px;background:#2563eb;color:#fff;font-weight:700;font-size:14px;margin-top:6px}
-.auth-btn:hover{background:#1d4ed8}
-.auth-btn:disabled{opacity:.6;cursor:not-allowed}
-.auth-toggle{text-align:center;margin-top:16px;font-size:13px;color:#64748b}
-.auth-toggle a{color:#2563eb;font-weight:600;cursor:pointer;text-decoration:none}
-.auth-msg{font-size:12.5px;text-align:center;margin-top:12px;padding:8px;border-radius:8px;display:none}
-.auth-msg.error{display:block;background:#fef2f2;color:#dc2626}
-.auth-msg.success{display:block;background:#f0fdf4;color:#16a34a}
-.app{max-width:1440px;margin:0 auto;padding:0 20px 60px;display:none}
-.app.ready{display:block}
-.topbar{display:flex;align-items:center;justify-content:space-between;padding:20px 0 16px;flex-wrap:wrap;gap:12px}
-.brand{display:flex;align-items:center;gap:12px}
-.brand .logo{width:44px;height:44px;border-radius:12px;background:linear-gradient(135deg,#2563eb,#1d4ed8);display:flex;align-items:center;justify-content:center;font-size:22px;color:#fff}
-.brand h1{font-size:19px;font-weight:700}
-.brand p{font-size:11px;color:#64748b;letter-spacing:.5px;text-transform:uppercase}
-.actions{display:flex;gap:8px;flex-wrap:wrap;align-items:center}
-.user-chip{display:inline-flex;align-items:center;gap:6px;padding:6px 12px;background:#fff;border:1px solid #e2e8f0;border-radius:999px;font-size:12px;color:#64748b}
-.user-chip .dot{width:7px;height:7px;border-radius:50%;background:#16a34a}
-.btn{padding:9px 16px;border-radius:9px;background:#2563eb;color:#fff;font-weight:600;font-size:13px;display:inline-flex;align-items:center;gap:6px;white-space:nowrap}
-.btn:hover{background:#1d4ed8}
-.btn.ghost{background:#fff;color:#0f172a;border:1px solid #e2e8f0}
-.btn.sm{padding:5px 11px;font-size:12px;border-radius:7px}
-.btn.danger{background:#dc2626}
-.btn.ok{background:#16a34a}
-.btn.amber{background:#d97706}
-.tabs{display:flex;gap:4px;border-bottom:2px solid #e2e8f0;margin-bottom:22px;overflow-x:auto}
-.tab{padding:11px 18px;font-weight:600;color:#64748b;border-bottom:2px solid transparent;margin-bottom:-2px;white-space:nowrap;font-size:13.5px}
-.tab.active{color:#2563eb;border-bottom-color:#2563eb}
-.panel{display:none}
-.panel.active{display:block}
-.card{background:#fff;border:1px solid #e2e8f0;border-radius:12px;margin-bottom:18px;overflow:hidden}
-.card-head{padding:15px 18px;border-bottom:1px solid #e2e8f0;display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap}
-.card-head h3{font-size:14.5px;font-weight:700}
-.card-body{padding:18px}
-.card-actions{display:flex;gap:10px;align-items:center;flex-wrap:wrap}
-select,input[type=text],input[type=date],input[type=number],textarea{padding:7px 10px;border:1px solid #e2e8f0;border-radius:8px;background:#fff;color:#0f172a;outline:none;font-size:13px}
-.seg{display:inline-flex;background:#f1f5f9;border-radius:10px;padding:3px;gap:2px}
-.seg-btn{padding:7px 13px;border-radius:8px;font-size:12.5px;font-weight:600;color:#64748b}
-.seg-btn.active{background:#fff;color:#2563eb;box-shadow:0 1px 3px rgba(15,23,42,.12)}
-.seg-btn .cnt{display:inline-block;background:#e2e8f0;color:#475569;border-radius:999px;padding:0 6px;font-size:10.5px;font-weight:700;min-width:18px;text-align:center}
-.filter-bar{display:flex;flex-wrap:wrap;gap:10px;padding:14px 18px;border-bottom:1px solid #e2e8f0;background:#fcfdfe;align-items:flex-end}
-.fi{display:flex;flex-direction:column;gap:4px}
-.fi label{font-size:11px;color:#64748b;font-weight:600}
-.fi-search{flex:1;min-width:210px}
-.fi-search input{width:100%}
-.fi-date{width:130px}
-.bulk-bar{display:flex;align-items:center;gap:9px;padding:11px 18px;background:#eff6ff;border-bottom:1px solid #bfdbfe;flex-wrap:wrap}
-.bulk-bar[hidden]{display:none}
-.bulk-bar .info{font-size:12.5px;color:#1e40af;font-weight:600}
-.bulk-bar .info b{font-size:16px;font-weight:800}
-.stat-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:14px;margin-bottom:20px}
-.stat{background:#fff;border:1px solid #e2e8f0;border-radius:12px;padding:16px 18px;position:relative;overflow:hidden}
-.stat::before{content:'';position:absolute;left:0;top:0;bottom:0;width:4px;background:#2563eb}
-.stat.danger::before{background:#dc2626}
-.stat.warn::before{background:#d97706}
-.stat.gray::before{background:#94a3b8}
-.stat-label{font-size:12.5px;color:#64748b;font-weight:500}
-.stat-value{font-size:26px;font-weight:800;letter-spacing:-1px;margin:4px 0 2px}
-.stat-value small{font-size:13px;font-weight:600;color:#64748b;margin-left:2px}
-.stat-sub{font-size:12px;color:#64748b}
-.table-wrap{overflow-x:auto}
-table{width:100%;border-collapse:collapse;font-size:13px}
-th{text-align:left;padding:11px 12px;font-weight:600;color:#64748b;font-size:12px;background:#f8fafc;border-bottom:1px solid #e2e8f0;white-space:nowrap}
-td{padding:11px 12px;border-bottom:1px solid #f1f5f9;vertical-align:middle}
-tbody tr:nth-child(odd){background:#fff}
-tbody tr:nth-child(even){background:#fafbfc}
-tbody tr:hover{background:#f1f5f9}
-tbody tr.selected{background:#eff6ff!important}
-tbody tr.archived-row{opacity:.62}
-.num{font-variant-numeric:tabular-nums;font-weight:600}
-.mono{font-family:ui-monospace,Menlo,monospace;font-size:12px;color:#64748b}
-.truncate{max-width:260px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
-.empty{padding:48px 20px;text-align:center;color:#64748b}
-.empty .icon{font-size:40px;opacity:.35;display:block;margin-bottom:10px}
-.badge{display:inline-flex;align-items:center;gap:4px;padding:2.5px 9px;border-radius:999px;font-size:11.5px;font-weight:600;white-space:nowrap}
-.badge.blue{background:#eff6ff;color:#1d4ed8}
-.badge.cyan{background:#ecfeff;color:#0891b2}
-.badge.purple{background:#f5f3ff;color:#7c3aed}
-.badge.red{background:#fef2f2;color:#dc2626}
-.badge.amber{background:#fffbeb;color:#d97706}
-.badge.green{background:#f0fdf4;color:#16a34a}
-.badge.gray{background:#f1f5f9;color:#475569}
-.badge.slate{background:#e2e8f0;color:#334155}
-.alert-row{display:flex;align-items:center;gap:14px;padding:13px 18px;border-bottom:1px solid #f1f5f9;flex-wrap:wrap}
-.alert-row:nth-child(even){background:#fafbfc}
-.alert-row .bar{width:4px;height:38px;border-radius:2px;flex-shrink:0}
-.alert-main{flex:1;min-width:220px}
-.alert-main .t{font-weight:600;font-size:13.5px}
-.alert-main .s{font-size:12px;color:#64748b;margin-top:1px}
-.alert-meta{text-align:right;min-width:130px}
-.alert-meta .amt{font-weight:800;font-size:15px}
-.alert-meta .dt{font-size:11.5px;color:#64748b}
-.overlay{position:fixed;inset:0;background:rgba(15,23,42,.5);display:none;align-items:center;justify-content:center;z-index:100;padding:20px}
-.overlay.show{display:flex}
-.modal{background:#fff;border-radius:16px;width:100%;max-width:680px;max-height:90vh;display:flex;flex-direction:column;box-shadow:0 24px 60px rgba(15,23,42,.3)}
-.modal.wide{max-width:1000px}
-.modal-head{padding:18px 22px;border-bottom:1px solid #e2e8f0;display:flex;align-items:center;justify-content:space-between}
-.modal-head h3{font-size:16px;font-weight:700}
-.modal-head .close{font-size:26px;color:#64748b;line-height:1;padding:0 4px;border-radius:6px}
-.modal-body{padding:22px;overflow-y:auto;flex:1}
-.modal-foot{padding:15px 22px;border-top:1px solid #e2e8f0;display:flex;justify-content:flex-end;gap:10px;background:#f8fafc;border-radius:0 0 16px 16px}
-.form-grid{display:grid;grid-template-columns:1fr 1fr;gap:15px}
-.field{display:flex;flex-direction:column;gap:5px}
-.field.full{grid-column:1/-1}
-.field label{font-size:12.5px;font-weight:600;color:#334155}
-.field label .req{color:#dc2626}
-.field input,.field select,.field textarea{width:100%}
-.field textarea{resize:vertical;min-height:64px}
-.hint{font-size:11.5px;color:#64748b}
-.tl{position:relative;padding-left:22px}
-.tl::before{content:'';position:absolute;left:6px;top:8px;bottom:8px;width:2px;background:#e2e8f0}
-.tl-item{position:relative;padding:9px 0 9px 12px}
-.tl-item::before{content:'';position:absolute;left:-21px;top:15px;width:10px;height:10px;border-radius:50%;background:#cbd5e1;border:2px solid #fff}
-.tl-item.paid::before{background:#16a34a}
-.tl-item.next::before{background:#2563eb}
-.tl-item.overdue::before{background:#dc2626}
-.tl-item .row{display:flex;justify-content:space-between;gap:12px;flex-wrap:wrap;align-items:baseline}
-.tl-item .y{font-weight:700;font-size:13px}
-.tl-item .d{font-size:12px;color:#64748b}
-.tl-item .f{font-weight:700}
-.q-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(300px,1fr));gap:16px}
-.q-card{border:1px solid #e2e8f0;border-radius:12px;overflow:hidden;background:#fff}
-.q-head{padding:12px 16px;background:#f8fafc;border-bottom:1px solid #e2e8f0;display:flex;justify-content:space-between;align-items:center}
-.q-head .name{font-weight:700;font-size:14px}
-.q-head .amt{font-weight:800;color:#2563eb}
-.q-list{max-height:320px;overflow-y:auto}
-.q-item{padding:8px 16px;display:flex;justify-content:space-between;gap:10px;font-size:12.5px;border-bottom:1px solid #f8fafc}
-.q-item:nth-child(even){background:#fafbfc}
-.q-item .n{flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;color:#334155}
-.q-item .v{font-weight:600;white-space:nowrap}
-.rules{font-size:13px;line-height:1.9;color:#334155}
-.rules h4{font-size:13.5px;font-weight:700;margin:14px 0 6px}
-.rules h4:first-child{margin-top:0}
-.rules ul{padding-left:20px}
-.rules code{background:#f1f5f9;padding:1px 6px;border-radius:5px;font-size:12px;font-family:monospace}
-.rules .note{background:#fffbeb;border-left:3px solid #d97706;padding:10px 14px;border-radius:0 8px 8px 0;margin:10px 0;font-size:12.5px}
+:root{--primary:#1a3a5c;--primary-light:#2a5a7a;--accent:#3b8fc2;--bg:#f0f4f9;--card-bg:#fff;--text:#1e2a3a;--text-light:#5a6a7a;--border:#dce4ec;--shadow:0 8px 30px rgba(0,0,0,.08);--radius:12px;--radius-sm:8px;--font:'Segoe UI',system-ui,-apple-system,sans-serif}
+*{margin:0;padding:0;box-sizing:border-box}
+body{font-family:var(--font);background:var(--bg);color:var(--text);padding:24px;min-height:100vh}
+.container{max-width:1440px;margin:0 auto}
+.hidden{display:none!important}
+.header{display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:16px;margin-bottom:28px}
+.header-left{display:flex;align-items:center;gap:14px}
+.header-left .logo{width:44px;height:44px;background:var(--primary);border-radius:var(--radius-sm);display:flex;align-items:center;justify-content:center;color:#fff;font-size:22px}
+.header-left h1{font-size:26px;font-weight:700;color:var(--primary)}
+.header-left h1 span{color:var(--accent)}
+.header-left .subtitle{font-size:14px;color:var(--text-light);margin-top:2px}
+.header-actions{display:flex;align-items:center;gap:12px;flex-wrap:wrap}
+.header-actions .btn{font-size:14px;padding:10px 20px}
+.workflow-tip{background:#eef6fc;border-radius:var(--radius-sm);padding:10px 18px;font-size:14px;color:var(--primary);border:1px solid #d0e2f0;display:flex;align-items:center;gap:10px;flex-wrap:wrap;margin-bottom:20px}
+.workflow-tip i{color:var(--accent)}
+.workflow-tip .step{font-weight:600}
+.btn{display:inline-flex;align-items:center;gap:8px;padding:10px 22px;border:none;border-radius:var(--radius-sm);font-size:15px;font-weight:600;cursor:pointer;transition:.25s;font-family:var(--font);background:var(--border);color:var(--text)}
+.btn:hover{transform:translateY(-1px);box-shadow:0 4px 12px rgba(0,0,0,.1)}
+.btn-primary{background:var(--primary);color:#fff}.btn-primary:hover{background:var(--primary-light)}
+.btn-accent{background:var(--accent);color:#fff}.btn-accent:hover{background:#6ab0d9}
+.btn-success{background:#2d8f5e;color:#fff}
+.btn-danger{background:#c0392b;color:#fff}.btn-danger:hover{background:#a93226}
+.btn-outline{background:transparent;border:2px solid var(--border);color:var(--text-light)}.btn-outline:hover{border-color:var(--accent);color:var(--accent)}
+.btn-sm{padding:6px 14px;font-size:13px}
+.btn-xs{padding:4px 10px;font-size:12px;border-radius:6px}
+.stats{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:16px;margin-bottom:28px}
+.stat-card{background:var(--card-bg);border-radius:var(--radius);padding:18px 22px;box-shadow:var(--shadow);display:flex;align-items:center;gap:16px}
+.stat-card .icon{width:44px;height:44px;border-radius:12px;display:flex;align-items:center;justify-content:center;font-size:20px;color:#fff;flex-shrink:0}
+.stat-card .icon.blue{background:var(--accent)}.stat-card .icon.red{background:#c0392b}
+.stat-card .icon.orange{background:#e67e22}.stat-card .icon.purple{background:#8e44ad}
+.stat-card .icon.teal{background:#1abc9c}.stat-card .icon.pink{background:#e84393}
+.stat-card .icon.green{background:#2d8f5e}
+.stat-card .info .number{font-size:28px;font-weight:700;line-height:1.2;color:var(--primary)}
+.stat-card .info .label{font-size:14px;color:var(--text-light);font-weight:500}
+.toolbar{display:flex;flex-wrap:wrap;gap:12px;align-items:center;justify-content:space-between;margin-bottom:20px;background:var(--card-bg);padding:14px 20px;border-radius:var(--radius);box-shadow:var(--shadow)}
+.toolbar-left{display:flex;flex-wrap:wrap;gap:12px;align-items:center;flex:1}
+.toolbar-left .search-box{display:flex;align-items:center;gap:8px;background:var(--bg);border-radius:var(--radius-sm);padding:0 14px;border:1px solid var(--border);flex:1;min-width:200px;max-width:360px}
+.toolbar-left .search-box input{border:none;background:transparent;padding:10px 0;font-size:15px;outline:none;flex:1;font-family:var(--font)}
+.toolbar-left .filter-group{display:flex;gap:6px;flex-wrap:wrap}
+.toolbar-left .filter-group .filter-btn{padding:6px 14px;border-radius:20px;border:1px solid var(--border);background:transparent;font-size:13px;cursor:pointer;font-family:var(--font);color:var(--text-light);font-weight:500;white-space:nowrap;display:inline-flex;align-items:center;gap:4px}
+.toolbar-left .filter-group .filter-btn:hover{border-color:var(--accent);color:var(--accent)}
+.toolbar-left .filter-group .filter-btn.active{background:var(--primary);color:#fff;border-color:var(--primary)}
+.toolbar-left .filter-group .filter-btn.tag-filter{background:#f0f0f0;border-color:#ccc}
+.toolbar-left .filter-group .filter-btn.tag-filter.active{background:var(--accent);color:#fff;border-color:var(--accent)}
+/* ===== 视图切换按钮（活跃/归档/全部） ===== */
+.view-btn{padding:7px 14px !important;border-radius:8px !important;font-weight:600 !important}
+.view-btn .view-count{display:inline-block;background:rgba(0,0,0,.08);border-radius:8px;padding:0 6px;font-size:11px;margin-left:2px;font-weight:600;line-height:16px;min-width:18px;text-align:center}
+.view-btn.active .view-count{background:rgba(255,255,255,.28)}
+.view-btn[data-view="archived"]{border-color:#d1d5db;color:#6b7280}
+.view-btn[data-view="archived"].active{background:#6b7280;border-color:#6b7280;color:#fff}
+.view-btn[data-view="archived"]:hover{border-color:#6b7280;color:#6b7280}
+/* 视图按钮组与类型筛选之间的分隔线 */
+.toolbar-left .view-group-wrapper{display:flex;align-items:center;gap:12px}
+.toolbar-left .view-group-wrapper::after{content:'';display:block;width:1px;height:24px;background:var(--border)}
+.toolbar-right{display:flex;gap:8px;flex-wrap:wrap;align-items:center}
+.toolbar-right .selected-info{font-size:14px;color:var(--text-light);margin-right:8px}
+.toolbar-right .batch-actions{display:flex;gap:6px;align-items:center}
+.toolbar-right .batch-actions select{padding:6px 12px;border-radius:var(--radius-sm);border:1px solid var(--border);font-size:14px;background:#fafbfc;font-family:var(--font)}
+.table-wrap{background:var(--card-bg);border-radius:var(--radius);box-shadow:var(--shadow);overflow:hidden;overflow-x:auto}
+.table-wrap table{width:100%;border-collapse:collapse;font-size:14px;min-width:1300px}
+.table-wrap table th{background:var(--bg);font-weight:600;color:var(--text-light);padding:14px 16px;text-align:left;border-bottom:2px solid var(--border);font-size:13px;text-transform:uppercase;letter-spacing:.3px;white-space:nowrap;cursor:pointer}
+.table-wrap table th i{margin-left:6px;font-size:12px;opacity:.5}
+.table-wrap table td{padding:14px 16px;border-bottom:1px solid var(--border);vertical-align:middle}
+.table-wrap table tbody tr:nth-child(odd){background-color:#fff}
+.table-wrap table tbody tr:nth-child(even){background-color:#f8fafc}
+.table-wrap table tbody tr:hover{background-color:#eef2f6}
+.table-wrap table tbody tr.selected{background-color:rgba(59,143,194,.12)!important}
+.table-wrap .case-id{font-weight:600;color:var(--primary);font-size:13px;white-space:nowrap}
+.status-badge{display:inline-block;padding:4px 14px;border-radius:20px;font-size:12px;font-weight:600;white-space:nowrap}
+.status-receive{background:#dbeafe;color:#1a56db}
+.status-processing{background:#fef3c7;color:#b45309}
+.status-pending-submit{background:#e0e7ff;color:#4338ca}
+.status-submitted{background:#d1fae5;color:#065f46}
+.status-payment{background:#fce4ec;color:#b71c1c}
+.status-transferred{background:#e5e7eb;color:#374151}
+.priority-badge{display:inline-block;padding:2px 10px;border-radius:12px;font-size:12px;font-weight:600}
+.priority-high{background:#fee2e2;color:#991b1b}
+.priority-medium{background:#fef3c7;color:#92400e}
+.priority-low{background:#e0e7ff;color:#3730a3}
+.importance-stars{color:#f59e0b;letter-spacing:2px}
+.tag-list{display:flex;flex-wrap:wrap;gap:4px}
+.tag-item{background:#e5e7eb;color:#374151;padding:2px 10px;border-radius:12px;font-size:11px;font-weight:500;white-space:nowrap}
+.table-wrap .actions{display:flex;gap:6px;flex-wrap:wrap;justify-content:center}
+.table-wrap .empty-state{text-align:center;padding:60px 20px;color:var(--text-light)}
+.table-wrap .empty-state i{font-size:48px;color:var(--border);margin-bottom:16px;display:block}
+input[type=checkbox]{width:18px;height:18px;cursor:pointer;accent-color:var(--accent)}
+.checkbox-col{text-align:center;width:40px}
+.modal-overlay{position:fixed;inset:0;background:rgba(0,0,0,.4);backdrop-filter:blur(4px);display:flex;align-items:center;justify-content:center;z-index:1000;padding:20px}
+.modal-overlay .modal{background:var(--card-bg);border-radius:var(--radius);max-width:820px;width:100%;max-height:90vh;overflow-y:auto;padding:32px 36px;box-shadow:0 24px 60px rgba(0,0,0,.2)}
+.modal .modal-header{display:flex;justify-content:space-between;align-items:center;margin-bottom:24px}
+.modal .modal-header h2{font-size:22px;font-weight:700;color:var(--primary)}
+.modal .modal-header .close-btn{width:36px;height:36px;border:none;background:var(--bg);border-radius:50%;font-size:18px;cursor:pointer;color:var(--text-light);display:flex;align-items:center;justify-content:center}
+.modal .modal-header .close-btn:hover{background:#e2e8f0;transform:rotate(90deg)}
+.modal .form-group{margin-bottom:18px}
+.modal .form-group label{display:block;font-weight:600;font-size:14px;margin-bottom:5px}
+.modal .form-group label .required{color:#c0392b}
+.modal .form-group label .hint{font-weight:400;color:var(--text-light);font-size:12px;margin-left:8px}
+.modal .form-group input,.modal .form-group select,.modal .form-group textarea{width:100%;padding:10px 14px;border:1px solid var(--border);border-radius:var(--radius-sm);font-size:15px;font-family:var(--font);background:#fafbfc}
+.modal .form-group input:focus,.modal .form-group select:focus,.modal .form-group textarea:focus{outline:none;border-color:var(--accent);box-shadow:0 0 0 3px rgba(59,143,194,.12)}
+.modal .form-row{display:grid;grid-template-columns:1fr 1fr;gap:16px}
+.modal .form-actions{display:flex;justify-content:flex-end;gap:12px;margin-top:24px;padding-top:20px;border-top:1px solid var(--border)}
+.batch-table{width:100%;border-collapse:collapse;margin-top:10px}
+.batch-table th,.batch-table td{border:1px solid var(--border);padding:8px 10px;text-align:left;font-size:14px}
+.batch-table th{background:var(--bg);font-weight:600}
+.batch-table input{width:100%;border:1px solid transparent;padding:6px 8px;border-radius:4px;font-size:14px;background:transparent;font-family:var(--font)}
+.batch-table input:focus{border-color:var(--accent);background:#fff;outline:none}
+.batch-table .remove-row-btn{color:#c0392b;cursor:pointer;font-size:16px;background:none;border:none}
+.detail-grid{display:grid;grid-template-columns:1fr 1fr;gap:16px 24px}
+.detail-item{display:flex;flex-direction:column;gap:4px}
+.detail-item .label{font-size:13px;font-weight:600;color:var(--text-light)}
+.detail-item .value{font-size:15px;word-break:break-word}
+.detail-item.full-width{grid-column:1/-1}
+.toast-container{position:fixed;top:24px;right:24px;z-index:2000;display:flex;flex-direction:column;gap:10px;max-width:380px;width:100%}
+.toast{background:var(--card-bg);padding:14px 20px;border-radius:var(--radius-sm);box-shadow:0 8px 28px rgba(0,0,0,.13);display:flex;align-items:center;gap:12px;border-left:4px solid var(--accent);animation:slideInRight .35s}
+.toast.success{border-left-color:#2d8f5e}.toast.error{border-left-color:#c0392b}
+.toast .toast-icon{font-size:20px;flex-shrink:0}
+.toast.success .toast-icon{color:#2d8f5e}.toast.error .toast-icon{color:#c0392b}
+.toast .toast-msg{flex:1;font-size:14px;font-weight:500}
+.toast .toast-close{background:none;border:none;font-size:16px;cursor:pointer;color:var(--text-light)}
+@keyframes slideInRight{from{opacity:0;transform:translateX(60px)}to{opacity:1;transform:translateX(0)}}
+.login-overlay{position:fixed;inset:0;background:rgba(26,58,92,.85);backdrop-filter:blur(6px);display:flex;align-items:center;justify-content:center;z-index:3000}
+.login-card{background:#fff;border-radius:var(--radius);padding:40px 44px;max-width:420px;width:100%;box-shadow:0 24px 60px rgba(0,0,0,.3)}
+.login-card h2{color:var(--primary);margin-bottom:8px;font-size:24px}
+.login-card p{color:var(--text-light);font-size:14px;margin-bottom:24px}
+.login-card .form-group{margin-bottom:16px}
+.login-card .form-group label{display:block;font-weight:600;font-size:14px;margin-bottom:6px}
+.login-card .form-group input{width:100%;padding:12px 14px;border:1px solid var(--border);border-radius:var(--radius-sm);font-size:15px;font-family:var(--font);background:#fafbfc}
+.login-card .form-group input:focus{outline:none;border-color:var(--accent);box-shadow:0 0 0 3px rgba(59,143,194,.12)}
+.login-card .btn{width:100%;justify-content:center;margin-top:8px}
+.text-muted{color:var(--text-light)}
+@media (max-width:820px){
+  .modal .form-row{grid-template-columns:1fr}
+  .modal{padding:24px 20px!important}
+  .detail-grid{grid-template-columns:1fr}
+}
 </style>
 </head>
 <body>
 
-<div id="authScreen">
-  <div class="auth-card">
-    <div class="logo">⚖</div>
-    <h2>专利年费管理系统</h2>
-    <p class="sub" id="authSub">请登录以继续</p>
-    <div class="auth-field"><label>邮箱</label>
-      <input type="email" id="authEmail" placeholder="your@email.com" autocomplete="email"></div>
-    <div class="auth-field"><label>密码</label>
-      <input type="password" id="authPassword" placeholder="至少 6 位" autocomplete="current-password"></div>
-    <button class="auth-btn" id="authSubmit">登录</button>
-    <div class="auth-msg" id="authMsg"></div>
-    <div class="auth-toggle"><span id="authToggleText">还没有账户？</span>
-      <a id="authToggleLink">立即注册</a></div>
+<div class="login-overlay" id="loginOverlay">
+  <div class="login-card">
+    <h2>登录 IP 管理系统</h2>
+    <p>使用管理员分配的邮箱账号登录</p>
+    <div class="form-group">
+      <label>邮箱</label>
+      <input type="email" id="loginEmail" placeholder="you@example.com" />
+    </div>
+    <div class="form-group">
+      <label>密码</label>
+      <input type="password" id="loginPassword" placeholder="密码" />
+    </div>
+    <button class="btn btn-primary" id="loginBtn" onclick="doLogin()">
+      <i class="fas fa-sign-in-alt"></i> <span id="loginBtnText">登录</span>
+    </button>
+    <div style="margin-top:12px;font-size:12px;color:#c0392b;text-align:center;min-height:18px;" id="loginError"></div>
   </div>
 </div>
 
-<div class="app" id="app">
-  <header class="topbar">
-    <div class="brand"><div class="logo">⚖</div>
-      <div><h1>专利年费管理系统</h1><p>Patent Annuity Manager</p></div></div>
-    <div class="actions">
-      <span class="user-chip"><span class="dot"></span><span id="userEmail"></span></span>
-      <button class="btn" id="btnAdd">＋ 新增专利</button>
-      <button class="btn ghost" id="btnTemplate">📄 下载模板</button>
-      <button class="btn ghost" id="btnImport">📥 批量导入</button>
-      <button class="btn ghost" id="btnExportAll">📤 导出 Excel</button>
-      <button class="btn ghost" id="btnLogout">退出</button>
-      <input type="file" id="fileInput" accept=".json,.csv" hidden>
+<div class="container" id="mainApp" style="display:none;">
+  <header class="header">
+    <div class="header-left">
+      <div class="logo"><i class="fas fa-scale-balanced"></i></div>
+      <div>
+        <h1>IP<span>全业务</span>管理</h1>
+        <div class="subtitle">云端同步 · 数据隔离 · 批量新建 · 客户/联系人记忆 · 自动归档</div>
+      </div>
+    </div>
+    <div class="header-actions">
+      <button class="btn btn-outline btn-sm" onclick="exportCSV()"><i class="fas fa-file-export"></i> 导出</button>
+      <button class="btn btn-outline btn-sm" onclick="document.getElementById('importInput').click()"><i class="fas fa-file-import"></i> 导入</button>
+      <input type="file" id="importInput" accept=".csv" style="display:none;" onchange="importCSV(event)" />
+      <button class="btn btn-success btn-sm" onclick="openBatchModal()"><i class="fas fa-layer-group"></i> 批量新建</button>
+      <button class="btn btn-primary" onclick="openAddModal()"><i class="fas fa-plus"></i> 新建案件</button>
+      <button class="btn btn-outline btn-sm" onclick="doLogout()" title="退出"><i class="fas fa-sign-out-alt"></i></button>
     </div>
   </header>
-  <nav class="tabs">
-    <button class="tab active" data-tab="dashboard">📊 看板</button>
-    <button class="tab" data-tab="ledger">📋 专利台账</button>
-    <button class="tab" data-tab="schedule">📅 缴费计划</button>
-    <button class="tab" data-tab="report">📈 周期报表</button>
-    <button class="tab" data-tab="settings">⚙️ 规则说明</button>
-  </nav>
-  <section class="panel active" id="panel-dashboard">
-    <div class="stat-grid" id="statGrid"></div>
-    <div class="card">
-      <div class="card-head"><h3>⏰ 缴费提醒</h3>
-        <div class="card-actions"><label>范围
-          <select id="alertHorizon">
-            <option value="30">未来 30 天</option><option value="60">未来 60 天</option>
-            <option value="90" selected>未来 90 天</option><option value="180">未来 180 天</option>
-            <option value="99999">全部未缴</option>
-          </select></label></div></div>
-      <div id="alertList"></div>
-    </div>
-  </section>
-  <section class="panel" id="panel-ledger">
-    <div class="card">
-      <div class="card-head"><h3>📋 专利台账</h3>
-        <div class="seg" id="ledgerScope">
-          <button class="seg-btn active" data-scope="active">监控中 <span class="cnt" id="cntActive">0</span></button>
-          <button class="seg-btn" data-scope="archived">已归档 <span class="cnt" id="cntArchived">0</span></button>
-          <button class="seg-btn" data-scope="all">全部 <span class="cnt" id="cntAll">0</span></button>
-        </div></div>
-      <div class="filter-bar">
-        <div class="fi fi-search"><label>关键词</label>
-          <input type="text" id="ledgerSearch" placeholder="🔍 名称 / 申请号 / 客户 / 联系人…"></div>
-        <div class="fi"><label>客户</label>
-          <select id="ledgerClient"><option value="">全部</option></select></div>
-        <div class="fi"><label>类型</label>
-          <select id="ledgerType"><option value="">全部</option>
-            <option>发明</option><option>实用新型</option><option>外观设计</option></select></div>
-        <div class="fi"><label>减免</label>
-          <select id="ledgerReduction"><option value="">全部</option>
-            <option value="0">不减缴</option><option value="70">减缴 70%</option>
-            <option value="85">减缴 85%</option></select></div>
-        <div class="fi"><label>状态</label>
-          <select id="ledgerStatus"><option value="">全部</option>
-            <option>有效</option><option>申请中</option><option>放弃</option><option>终止</option></select></div>
-        <div class="fi"><label>紧急度</label>
-          <select id="ledgerUrgency"><option value="">全部</option>
-            <option value="overdue">已逾期</option><option value="30">30 天内</option>
-            <option value="90">90 天内</option><option value="none">无待缴</option></select></div>
-        <div class="fi fi-date"><label>申请日 ≥</label><input type="date" id="ledgerAppFrom"></div>
-        <div class="fi fi-date"><label>申请日 ≤</label><input type="date" id="ledgerAppTo"></div>
-        <div class="fi"><label>&nbsp;</label>
-          <button class="btn ghost sm" id="btnResetFilters">重置</button></div>
-      </div>
-      <div class="bulk-bar" id="bulkBar" hidden>
-        <span class="info">已选中 <b id="selCount">0</b> 件</span>
-        <button class="btn sm amber" id="bulkArchive">📦 归档</button>
-        <button class="btn sm ok" id="bulkRestore">↩ 恢复</button>
-        <select id="bulkStatusSel" style="padding:5px 9px;font-size:12px">
-          <option value="有效">有效</option><option value="申请中">申请中</option>
-          <option value="放弃">放弃</option><option value="终止">终止</option></select>
-        <button class="btn sm ghost" id="bulkSetStatus">批量改状态</button>
-        <button class="btn sm ghost" id="bulkExport">导出选中</button>
-        <button class="btn sm ghost" id="bulkClear">取消</button>
-      </div>
-      <div class="table-wrap">
-        <table><thead><tr>
-          <th style="width:36px"><input type="checkbox" id="checkAll"></th>
-          <th style="width:40px">#</th><th>专利名称</th><th>申请号</th><th>类型</th>
-          <th>客户</th><th>申请日</th><th>授权日</th><th>减免</th>
-          <th>当前年度</th><th>下次截止</th><th>应缴</th><th>状态</th>
-          <th style="width:120px">操作</th>
-        </tr></thead><tbody id="ledgerBody"></tbody></table>
-      </div>
-    </div>
-  </section>
-  <section class="panel" id="panel-schedule">
-    <div class="card">
-      <div class="card-head"><h3>📅 缴费计划<span style="font-size:12px;color:#64748b;font-weight:400;margin-left:8px" id="scheduleSub"></span></h3>
-        <div class="card-actions">
-          <select id="scheduleRange">
-            <option value="90">未来 3 个月</option><option value="180">未来 6 个月</option>
-            <option value="365" selected>未来 12 个月</option><option value="1095">未来 3 年</option>
-            <option value="all">全部未缴</option><option value="overdue">仅逾期</option>
-          </select>
-          <select id="scheduleClient"><option value="">全部客户</option></select>
-          <button class="btn sm" id="btnExportSchedule">导出 CSV</button>
-        </div></div>
-      <div class="table-wrap">
-        <table><thead><tr>
-          <th>截止日</th><th>剩余</th><th>客户</th><th>专利名称</th><th>申请号</th>
-          <th>类型</th><th>年度</th><th>官费</th><th>减免</th><th>应缴</th>
-          <th>滞纳金</th><th>合计</th><th style="width:80px">操作</th>
-        </tr></thead><tbody id="scheduleBody"></tbody></table>
-      </div>
-    </div>
-  </section>
-  <section class="panel" id="panel-report">
-    <div class="card">
-      <div class="card-head"><h3>📈 季度缴费报表</h3>
-        <div class="card-actions">
-          <select id="reportYear"></select>
-          <select id="reportClient"><option value="">全部客户</option></select>
-          <button class="btn sm" id="btnExportReport">导出 CSV</button>
-        </div></div>
-      <div class="card-body"><div class="q-grid" id="reportGrid"></div></div>
-    </div>
-  </section>
-  <section class="panel" id="panel-settings">
-    <div class="card">
-      <div class="card-head"><h3>📐 年费计算规则</h3></div>
-      <div class="card-body rules">
-        <h4>一、专利年度</h4>
-        <p>自申请日起算，第 N 年度 = <code>申请日 + (N-1) 年</code> 至 <code>申请日 + N 年 - 1 天</code>。</p>
-        <ul>
-          <li>申请日 2020-05-12 → 第 1 年度：2020-05-12 ~ 2021-05-11</li>
-          <li>第 2 年度：2021-05-12 ~ 2022-05-11</li>
-          <li>第 3 年度：2022-05-12 ~ 2023-05-11（授权日 2022-08-20 落在本年度 → <b>授权当年即第 3 年度</b>）</li>
-        </ul>
 
-        <h4>二、缴费截止日</h4>
-        <p>年费应当在上一年度期满前缴纳，<b>缴费期限届满日 = 申请日在该年的对应日</b>（即第 N 年度起始日）。</p>
-        <p>授权前各年度及授权当年的年费，在办理授权登记手续时一并缴纳。</p>
+  <div class="workflow-tip">
+    <i class="fas fa-arrow-right"></i>
+    <span>流程：</span>
+    <span class="step">收案</span> <i class="fas fa-chevron-right"></i>
+    <span class="step">处理中</span> <i class="fas fa-chevron-right"></i>
+    <span class="step">待提交</span> <i class="fas fa-chevron-right"></i>
+    <span class="step">已提交受理</span> <i class="fas fa-chevron-right"></i>
+    <span class="step">协助缴费</span> <i class="fas fa-chevron-right"></i>
+    <span class="step" style="color:#2d8f5e;">已移交专人</span>
+    <span style="margin-left:8px;font-size:12px;color:#6b7280;background:#e5e7eb;padding:2px 8px;border-radius:10px;"><i class="fas fa-archive"></i> 「协助缴费/已移交专人」自动归档</span>
+    <span style="margin-left:auto;font-size:13px;color:var(--text-light);" id="syncStatus"><i class="fas fa-cloud"></i> 正在连接...</span>
+  </div>
 
-        <h4>三、滞纳金</h4>
-        <p>超过缴费期限的，可在 6 个月宽限期内补缴，同时缴纳滞纳金：</p>
-        <ul>
-          <li>逾期 1 个月以内：不缴纳滞纳金</li>
-          <li>超过 1 个月后，每超过 1 个月加收<b>当年全额年费的 5%</b>（最高 25%）</li>
-          <li>超过 6 个月仍未缴纳：专利权自应当缴纳年费期满之日起终止</li>
-        </ul>
-        <div class="note">⚠️ 系统按“逾期满月数 × 5%”自动计算，1 个月内为 0，第 6 个月为 25%。实际金额以国家知识产权局缴费通知为准。</div>
+  <section class="stats" id="statsContainer"></section>
 
-        <h4>四、费减政策</h4>
-        <p>符合条件的小微企业可减缴 <b>70%</b>，个人可减缴 <b>85%</b>。减缴适用于<b>自授权当年起算的前 10 个年度</b>的年费。</p>
-        <p>例：授权当年为第 3 年度，则第 3~12 年度享受减缴，第 13 年度起恢复全额。</p>
-
-        <h4>五、归档与监控</h4>
-        <p>「归档」仅将专利移出活跃监控清单，<b>不删除任何记录</b>。归档后不再计入看板提醒、缴费计划与季度报表；可随时在「已归档」标签页中批量恢复监控。</p>
-
-        <h4>六、年费标准（人民币元）</h4>
-        <table style="margin-top:8px;font-size:12.5px">
-          <thead><tr><th>类型</th><th>年度区间</th><th>每年标准</th></tr></thead>
-          <tbody>
-            <tr><td rowspan="6">发明专利</td><td>1–3 年</td><td class="num">900</td></tr>
-            <tr><td>4–6 年</td><td class="num">1,200</td></tr>
-            <tr><td>7–9 年</td><td class="num">2,000</td></tr>
-            <tr><td>10–12 年</td><td class="num">4,000</td></tr>
-            <tr><td>13–15 年</td><td class="num">6,000</td></tr>
-            <tr><td>16–20 年</td><td class="num">8,000</td></tr>
-            <tr><td rowspan="4">实用新型</td><td>1–3 年</td><td class="num">600</td></tr>
-            <tr><td>4–5 年</td><td class="num">900</td></tr>
-            <tr><td>6–8 年</td><td class="num">1,200</td></tr>
-            <tr><td>9–10 年</td><td class="num">2,000</td></tr>
-            <tr><td rowspan="5">外观设计</td><td>1–3 年</td><td class="num">600</td></tr>
-            <tr><td>4–5 年</td><td class="num">900</td></tr>
-            <tr><td>6–8 年</td><td class="num">1,200</td></tr>
-            <tr><td>9–10 年</td><td class="num">2,000</td></tr>
-            <tr><td>11–15 年</td><td class="num">3,000</td></tr>
-          </tbody>
-        </table>
+  <div class="toolbar">
+    <div class="toolbar-left">
+      <div class="search-box">
+        <i class="fas fa-search"></i>
+        <input type="text" id="searchInput" placeholder="搜索名称、客户、编号..." oninput="renderTable()" />
       </div>
+      <!-- ===== 视图切换（活跃 / 归档 / 全部） ===== -->
+      <div class="view-group-wrapper">
+        <div class="filter-group" id="viewGroup">
+          <button class="filter-btn view-btn active" data-view="active" onclick="setView('active')" title="仅显示进行中的案件">
+            <i class="fas fa-briefcase"></i> 活跃 <span class="view-count" id="viewCountActive">0</span>
+          </button>
+          <button class="filter-btn view-btn" data-view="archived" onclick="setView('archived')" title="显示已结束的案件（协助缴费/已移交专人）">
+            <i class="fas fa-archive"></i> 归档 <span class="view-count" id="viewCountArchived">0</span>
+          </button>
+          <button class="filter-btn view-btn" data-view="all" onclick="setView('all')" title="显示全部案件">
+            <i class="fas fa-list"></i> 全部 <span class="view-count" id="viewCountAll">0</span>
+          </button>
+        </div>
+      </div>
+      <div class="filter-group" id="filterGroup">
+        <button class="filter-btn active" data-type="all" onclick="setTypeFilter('all')">全部</button>
+        <button class="filter-btn" data-type="专利代理" onclick="setTypeFilter('专利代理')">专利代理</button>
+        <button class="filter-btn" data-type="专利侵权与规避" onclick="setTypeFilter('专利侵权与规避')">侵权与规避</button>
+        <button class="filter-btn" data-type="软件著作权登记" onclick="setTypeFilter('软件著作权登记')">软著登记</button>
+        <button class="filter-btn" data-type="商标代理" onclick="setTypeFilter('商标代理')">商标代理</button>
+        <button class="filter-btn" data-type="专利检索" onclick="setTypeFilter('专利检索')">检索</button>
+        <button class="filter-btn" data-type="缴费监控" onclick="setTypeFilter('缴费监控')">缴费监控</button>
+      </div>
+      <div class="filter-group" id="tagFilterGroup"></div>
     </div>
-  </section>
+    <div class="toolbar-right">
+      <span class="selected-info" id="selectedInfo">已选 0 件</span>
+      <div class="batch-actions">
+        <select id="batchStatusSelect">
+          <option value="">批量修改状态...</option>
+          <option value="收案">收案</option>
+          <option value="处理中">处理中</option>
+          <option value="待提交">待提交</option>
+          <option value="已提交受理">已提交受理</option>
+          <option value="协助缴费">协助缴费</option>
+          <option value="已移交专人">已移交专人</option>
+        </select>
+        <button class="btn btn-accent btn-sm" onclick="batchUpdateStatus()">应用</button>
+        <button class="btn btn-danger btn-sm" onclick="batchDelete()">删除选中</button>
+      </div>
+      <span class="text-muted" style="font-size:14px;" id="resultCount">共 0 件</span>
+    </div>
+  </div>
+
+  <div class="table-wrap">
+    <table>
+      <thead>
+        <tr>
+          <th class="checkbox-col"><input type="checkbox" id="selectAll" onchange="toggleAllCheckboxes()" /></th>
+          <th onclick="sortTable('caseNumber')">编号 <i class="fas fa-sort"></i></th>
+          <th onclick="sortTable('caseName')">案件名称 <i class="fas fa-sort"></i></th>
+          <th onclick="sortTable('clientName')">客户 <i class="fas fa-sort"></i></th>
+          <th onclick="sortTable('caseType')">业务类型 <i class="fas fa-sort"></i></th>
+          <th onclick="sortTable('priority')">优先级 <i class="fas fa-sort"></i></th>
+          <th onclick="sortTable('importance')">重要性 <i class="fas fa-sort"></i></th>
+          <th onclick="sortTable('status')">状态 <i class="fas fa-sort"></i></th>
+          <th>标签</th>
+          <th style="text-align:center;">操作</th>
+        </tr>
+      </thead>
+      <tbody id="tableBody"></tbody>
+    </table>
+  </div>
+
+  <div style="margin-top:24px;text-align:center;font-size:13px;color:var(--text-light);">
+    <i class="fas fa-cloud"></i> 已同步到云端 · 共 <span id="totalCountFooter">0</span> 件
+  </div>
 </div>
 
-<div class="overlay" id="modalPatent">
+<!-- ===== 新建/编辑模态框 ===== -->
+<div class="modal-overlay hidden" id="modalOverlay" onclick="if(event.target===this) closeModal()">
   <div class="modal">
-    <div class="modal-head"><h3 id="patentModalTitle">新增专利</h3>
-      <button class="close" data-close>×</button></div>
-    <div class="modal-body"><div class="form-grid">
-      <div class="field full"><label>专利名称 <span class="req">*</span></label>
-        <input type="text" id="f_name" placeholder="例如：基于FPGA亮度自适应的CMOS图像降噪方法"></div>
-      <div class="field"><label>申请号 <span class="req">*</span></label>
-        <input type="text" id="f_appNo" placeholder="2023104073316"></div>
-      <div class="field"><label>专利类型 <span class="req">*</span></label>
-        <select id="f_type"><option>发明</option><option>实用新型</option><option>外观设计</option></select></div>
-      <div class="field"><label>申请日 <span class="req">*</span></label>
-        <input type="date" id="f_appDate"></div>
-      <div class="field"><label>授权日</label>
-        <input type="date" id="f_grantDate"><span class="hint">留空表示尚未授权</span></div>
-      <div class="field full"><label>申请人 / 客户 <span class="req">*</span></label>
-        <input type="text" id="f_client" list="clientOptions" autocomplete="off"
-               placeholder="选择已有或输入新客户">
-        <span class="hint">💡 已录入的客户会自动出现在下拉候选</span></div>
-      <div class="field"><label>费减比例</label>
-        <select id="f_reduction"><option value="0">不减缴</option>
-          <option value="70">减缴 70%</option><option value="85">减缴 85%</option></select></div>
-      <div class="field"><label>状态</label>
-        <select id="f_status"><option>有效</option><option>申请中</option>
-          <option>放弃</option><option>终止</option></select></div>
-      <div class="field"><label>监控状态</label>
-        <select id="f_archived"><option value="0">监控中</option><option value="1">已归档</option></select></div>
-      <div class="field"><label>联系人</label>
-        <input type="text" id="f_contact" list="contactOptions" autocomplete="off"></div>
-      <div class="field"><label>联系电话</label><input type="text" id="f_phone"></div>
-      <div class="field full"><label>备注</label>
-        <textarea id="f_notes" placeholder="代理机构、内部编号等"></textarea></div>
-    </div></div>
-    <div class="modal-foot">
-      <button class="btn ghost" data-close>取消</button>
-      <button class="btn" id="btnSavePatent">保存</button>
+    <div class="modal-header">
+      <h2 id="modalTitle">新建案件</h2>
+      <button class="close-btn" onclick="closeModal()"><i class="fas fa-times"></i></button>
+    </div>
+    <form id="caseForm" onsubmit="saveCase(event)">
+      <input type="hidden" id="editId" value="" />
+      <input type="hidden" id="editVersion" value="" />
+      <div class="form-row">
+        <div class="form-group">
+          <label>案件编号 <span class="required">*</span> <span class="hint">自动生成，可修改</span></label>
+          <input type="text" id="f_caseNumber" required />
+        </div>
+        <div class="form-group">
+          <label>案件名称 <span class="required">*</span></label>
+          <input type="text" id="f_caseName" required />
+        </div>
+      </div>
+      <div class="form-row">
+        <div class="form-group">
+          <label>客户名称 <span class="required">*</span> <span class="hint">可输入或选择已有</span></label>
+          <input type="text" id="f_clientName" list="clientList" required autocomplete="off" />
+          <datalist id="clientList"></datalist>
+        </div>
+        <div class="form-group">
+          <label>业务类型 <span class="required">*</span></label>
+          <select id="f_caseType" required onchange="generateCaseNumber()">
+            <option value="专利代理">专利代理</option>
+            <option value="专利侵权与规避">专利侵权与规避</option>
+            <option value="软件著作权登记">软件著作权登记</option>
+            <option value="商标代理">商标代理</option>
+            <option value="专利检索">专利检索</option>
+            <option value="缴费监控">缴费监控</option>
+            <option value="其他">其他</option>
+          </select>
+        </div>
+      </div>
+      <div class="form-row">
+        <div class="form-group">
+          <label>联系人 <span class="required">*</span></label>
+          <input type="text" id="f_contactPerson" list="contactList" required autocomplete="off" />
+          <datalist id="contactList"></datalist>
+        </div>
+        <div class="form-group">
+          <label>联系方式</label>
+          <input type="text" id="f_contactPhone" />
+        </div>
+      </div>
+      <div class="form-row">
+        <div class="form-group">
+          <label>收案日期 <span class="required">*</span></label>
+          <input type="date" id="f_receiveDate" required onchange="generateCaseNumber()" />
+        </div>
+        <div class="form-group">
+          <label>优先级</label>
+          <select id="f_priority"><option value="高">高</option><option value="中" selected>中</option><option value="低">低</option></select>
+        </div>
+      </div>
+      <div class="form-row">
+        <div class="form-group">
+          <label>重要性</label>
+          <select id="f_importance">
+            <option value="1">★</option><option value="2">★★</option><option value="3" selected>★★★</option><option value="4">★★★★</option><option value="5">★★★★★</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label>标签 (逗号分隔)</label>
+          <input type="text" id="f_tags" placeholder="紧急, 大客户" />
+        </div>
+      </div>
+      <div class="form-row">
+        <div class="form-group"><label>提交受理日期</label><input type="date" id="f_submitDate" /></div>
+        <div class="form-group"><label>缴费日期</label><input type="date" id="f_paymentDate" /></div>
+      </div>
+      <div class="form-row">
+        <div class="form-group"><label>移交专人日期</label><input type="date" id="f_transferDate" /></div>
+        <div class="form-group">
+          <label>当前状态 <span class="required">*</span> <span class="hint" id="statusHint"></span></label>
+          <select id="f_status" required onchange="updateStatusHint()">
+            <option value="收案">收案</option><option value="处理中">处理中</option><option value="待提交">待提交</option><option value="已提交受理">已提交受理</option><option value="协助缴费">协助缴费</option><option value="已移交专人">已移交专人</option>
+          </select>
+        </div>
+      </div>
+      <div class="form-group"><label>备注</label><textarea id="f_notes" rows="2"></textarea></div>
+      <div class="form-actions">
+        <button type="button" class="btn btn-outline" onclick="closeModal()">取消</button>
+        <button type="submit" class="btn btn-primary" id="modalSubmitBtn"><i class="fas fa-save"></i> 保存</button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<!-- ===== 批量新建模态框 ===== -->
+<div class="modal-overlay hidden" id="batchModalOverlay" onclick="if(event.target===this) closeBatchModal()">
+  <div class="modal" style="max-width:900px;">
+    <div class="modal-header">
+      <h2>批量新建案件</h2>
+      <button class="close-btn" onclick="closeBatchModal()"><i class="fas fa-times"></i></button>
+    </div>
+    <div style="margin-bottom:16px;">
+      <p class="text-muted">填写通用信息，下方逐行填写案件明细；编号留空会自动生成，也可一键填充。</p>
+    </div>
+
+    <div class="form-row">
+      <div class="form-group">
+        <label>客户名称 <span class="required">*</span> <span class="hint">可输入或选择已有</span></label>
+        <input type="text" id="batch_clientName" list="clientList" required autocomplete="off" />
+      </div>
+      <div class="form-group">
+        <label>业务类型 <span class="required">*</span></label>
+        <select id="batch_caseType">
+          <option value="专利代理">专利代理</option>
+          <option value="专利侵权与规避">专利侵权与规避</option>
+          <option value="软件著作权登记">软件著作权登记</option>
+          <option value="商标代理">商标代理</option>
+          <option value="专利检索">专利检索</option>
+          <option value="缴费监控">缴费监控</option>
+          <option value="其他">其他</option>
+        </select>
+      </div>
+    </div>
+    <div class="form-row">
+      <div class="form-group">
+        <label>联系人 <span class="required">*</span> <span class="hint">可输入或选择已有</span></label>
+        <input type="text" id="batch_contactPerson" list="contactList" required autocomplete="off" />
+      </div>
+      <div class="form-group">
+        <label>联系方式</label>
+        <input type="text" id="batch_contactPhone" />
+      </div>
+    </div>
+    <div class="form-row">
+      <div class="form-group">
+        <label>收案日期 <span class="required">*</span></label>
+        <input type="date" id="batch_receiveDate" required />
+      </div>
+      <div class="form-group">
+        <label>优先级</label>
+        <select id="batch_priority">
+          <option value="高">高</option><option value="中" selected>中</option><option value="低">低</option>
+        </select>
+      </div>
+    </div>
+    <div class="form-row">
+      <div class="form-group">
+        <label>重要性 (1-5星)</label>
+        <select id="batch_importance">
+          <option value="1">★</option><option value="2">★★</option><option value="3" selected>★★★</option><option value="4">★★★★</option><option value="5">★★★★★</option>
+        </select>
+      </div>
+      <div class="form-group">
+        <label>通用标签 (逗号分隔)</label>
+        <input type="text" id="batch_tags" placeholder="如：批量, 重要" />
+      </div>
+    </div>
+    <div class="form-row">
+      <div class="form-group">
+        <label>状态 <span class="required">*</span></label>
+        <select id="batch_status">
+          <option value="收案">收案</option><option value="处理中">处理中</option><option value="待提交">待提交</option><option value="已提交受理">已提交受理</option><option value="协助缴费">协助缴费</option><option value="已移交专人">已移交专人</option>
+        </select>
+      </div>
+      <div class="form-group" style="display:flex;align-items:flex-end;gap:12px;">
+        <button type="button" class="btn btn-accent btn-sm" onclick="addBatchRow()"><i class="fas fa-plus"></i> 添加行</button>
+        <button type="button" class="btn btn-outline btn-sm" onclick="autoFillBatchNumbers()"><i class="fas fa-magic"></i> 自动填充编号</button>
+      </div>
+    </div>
+
+    <div style="margin-top:12px;overflow-x:auto;">
+      <table class="batch-table" id="batchTable">
+        <thead>
+          <tr>
+            <th style="width:25%;">案件编号 <span class="required">*</span></th>
+            <th style="width:45%;">案件名称 <span class="required">*</span></th>
+            <th style="width:20%;">备注</th>
+            <th style="width:10%;">操作</th>
+          </tr>
+        </thead>
+        <tbody id="batchTableBody"></tbody>
+      </table>
+    </div>
+
+    <div class="form-actions">
+      <button type="button" class="btn btn-outline" onclick="closeBatchModal()">取消</button>
+      <button type="button" class="btn btn-primary" id="batchSubmitBtn" onclick="submitBatch()"><i class="fas fa-save"></i> 批量提交</button>
     </div>
   </div>
 </div>
 
-<div class="overlay" id="modalDetail">
-  <div class="modal wide">
-    <div class="modal-head"><h3 id="detailTitle">专利详情</h3>
-      <button class="close" data-close>×</button></div>
-    <div class="modal-body" id="detailBody"></div>
-    <div class="modal-foot"><button class="btn ghost" data-close>关闭</button></div>
+<!-- ===== 查看详情模态框 ===== -->
+<div class="modal-overlay hidden" id="detailModalOverlay" onclick="if(event.target===this) closeDetailModal()">
+  <div class="modal" style="max-width:720px;">
+    <div class="modal-header">
+      <h2>案件详情</h2>
+      <button class="close-btn" onclick="closeDetailModal()"><i class="fas fa-times"></i></button>
+    </div>
+    <div id="detailContent" class="detail-grid"></div>
+    <div class="form-actions" style="border-top:none;padding-top:12px;">
+      <button type="button" class="btn btn-outline" onclick="closeDetailModal()">关闭</button>
+    </div>
   </div>
 </div>
 
-<datalist id="clientOptions"></datalist>
-<datalist id="contactOptions"></datalist>
+<div class="toast-container" id="toastContainer"></div>
 
 <script>
-var SUPABASE_URL = 'https://vqbwdrfioxlaaxaeqtxh.supabase.co';
-var SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InZxYndkcmZpb3hsYWF4YWVxdHhoIiwicm9sZSI6ImFub24iLCJpYXQiOjE3OTAyMTQ0NDgsImV4cCI6MjEwNTc5MDQ0OH0.JHs2kqc3ydkaT0SFhzxONKM8LcnsNQ2P45zALIihQhY';
+// ============================================================
+// Supabase 配置
+// ============================================================
+const SUPABASE_URL = 'https://ldjnusnalzgponneogaq.supabase.co';
+const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imxkam51c25hbHpncG9ubmVvZ2FxIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODkyMTEwNzYsImV4cCI6MjEwNDc4NzA3Nn0.FvMUk3hvrIdDz0raGh3et2eWUsLF8MIQiy6grLSOG2c';
+// ============================================================
 
-var sb = null;
-var sdkOK = (typeof window.supabase !== 'undefined');
-if (sdkOK) { sb = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY); }
+const sb = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
-var DAY_MS = 86400000;
-var FEE_TABLE = {
-  '发明': [[1,3,900],[4,6,1200],[7,9,2000],[10,12,4000],[13,15,6000],[16,20,8000]],
-  '实用新型': [[1,3,600],[4,5,900],[6,8,1200],[9,10,2000]],
-  '外观设计': [[1,3,600],[4,5,900],[6,8,1200],[9,10,2000],[11,15,3000]]
+let cases = [];
+let currentTypeFilter = 'all';
+let currentTagFilter = null;
+let currentSort = { field: 'receiveDate', asc: false };
+let selectedIds = new Set();
+let realtimeChannel = null;
+
+// ===== 视图：活跃（默认）/ 归档 / 全部 =====
+let currentView = 'active';
+// 状态为这两个视为"已结束"，自动归档到隐藏视图
+const ENDED_STATUSES = ['协助缴费', '已移交专人'];
+
+const TYPE_PREFIX = {'专利代理':'ZL','专利侵权与规避':'QG','软件著作权登记':'RJ','商标代理':'SB','专利检索':'JS','缴费监控':'JF','其他':'QT'};
+const STATUS_CLASS = {'收案':'status-receive','处理中':'status-processing','待提交':'status-pending-submit','已提交受理':'status-submitted','协助缴费':'status-payment','已移交专人':'status-transferred'};
+
+const DB_TO_UI = {
+  case_number:'caseNumber', case_name:'caseName', client_name:'clientName', case_type:'caseType',
+  contact_person:'contactPerson', contact_phone:'contactPhone', receive_date:'receiveDate',
+  submit_date:'submitDate', payment_date:'paymentDate', transfer_date:'transferDate',
+  status:'status', priority:'priority', importance:'importance', tags:'tags', notes:'notes',
+  created_at:'createTime', updated_at:'updateTime'
 };
-var TYPE_BADGE = { '发明':'blue', '实用新型':'cyan', '外观设计':'purple' };
 
-function parseDate(s){
-  if(!s) return null;
-  if(s instanceof Date) return new Date(s.getFullYear(), s.getMonth(), s.getDate());
-  var m = String(s).match(/(\d{4})\D(\d{1,2})\D(\d{1,2})/);
-  if(!m) return null;
-  var d = new Date(+m[1], +m[2]-1, +m[3]);
-  return isNaN(d.getTime()) ? null : d;
+function fromDB(row){
+  const o = { id: row.id, version: row.version ?? 1 };
+  for (const [db,ui] of Object.entries(DB_TO_UI)) o[ui] = row[db] ?? '';
+  o.importance = String(o.importance || 3);
+  return o;
 }
-function fmtDate(d){
-  if(!d) return '';
-  return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0');
-}
-function addDays(d,n){ var r=new Date(d.getTime()); r.setDate(r.getDate()+n); return r; }
-function addMonths(d,n){
-  var r=new Date(d.getTime()); var day=r.getDate();
-  r.setDate(1); r.setMonth(r.getMonth()+n);
-  var last=new Date(r.getFullYear(),r.getMonth()+1,0).getDate();
-  r.setDate(Math.min(day,last)); return r;
-}
-function addYears(d,n){
-  var r=new Date(d.getTime()); var day=r.getDate(),mon=r.getMonth();
-  r.setDate(1); r.setFullYear(r.getFullYear()+n); r.setMonth(mon);
-  var last=new Date(r.getFullYear(),mon+1,0).getDate();
-  r.setDate(Math.min(day,last)); return r;
-}
-function startOfDay(d){ return new Date(d.getFullYear(),d.getMonth(),d.getDate()); }
-function daysBetween(a,b){ return Math.round((startOfDay(b)-startOfDay(a))/DAY_MS); }
-function money(n){ return (n||0).toLocaleString('zh-CN'); }
-function esc(s){
-  return String(s==null?'':s).replace(/[&<>"']/g,function(c){
-    return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c];
-  });
-}
-function getBaseFee(type,year){
-  var rows=FEE_TABLE[type]; if(!rows) return null;
-  for(var i=0;i<rows.length;i++){
-    var a=rows[i][0],b=rows[i][1],f=rows[i][2];
-    if(year>=a&&year<=b) return f;
-  }
-  return null;
-}
-function maxYear(type){ var r=FEE_TABLE[type]; return r?r[r.length-1][1]:20; }
-function yearOf(appDate,date){
-  if(date<appDate) return 0;
-  var n=1; while(addYears(appDate,n)<=date) n++;
-  return n;
-}
-function buildSchedule(p){
-  var appDate=parseDate(p.appDate); if(!appDate) return [];
-  var grantDate=p.grantDate?parseDate(p.grantDate):null;
-  var grantYear=grantDate?yearOf(appDate,grantDate):null;
-  var reduction=Number(p.reduction)||0;
-  var max=maxYear(p.type);
-  var out=[];
-  for(var n=1;n<=max;n++){
-    var base=getBaseFee(p.type,n); if(base==null) continue;
-    var start=addYears(appDate,n-1);
-    var end=addDays(addYears(appDate,n),-1);
-    var applyRed=0;
-    if(grantYear!=null&&reduction>0&&n>=grantYear&&n<=grantYear+9) applyRed=reduction;
-    var fee=Math.round(base*(1-applyRed/100));
-    var phase,dueDate;
-    if(grantYear==null){ phase='pending-grant'; dueDate=start; }
-    else if(n<=grantYear){ phase='grant-registration'; dueDate=grantDate; }
-    else { phase='annuity'; dueDate=start; }
-    out.push({year:n, startDate:fmtDate(start), endDate:fmtDate(end), dueDate:fmtDate(dueDate),
-      baseFee:base, reduction:applyRed, fee:fee, phase:phase, isGrantYear:n===grantYear});
-  }
-  return out;
-}
-function isPaid(p,item){
-  if((p.paidYears||[]).indexOf(item.year)>=0) return true;
-  if(item.phase==='grant-registration') return true;
-  return false;
-}
-function calcLate(dueDateStr,fee,asOf){
-  var due=parseDate(dueDateStr);
-  if(!due||asOf<=due) return {months:0,rate:0,amount:0,terminated:false};
-  var m=0; while(m<24&&addMonths(due,m+1)<asOf) m++;
-  var terminated=m>=6;
-  var rate=m===0?0:Math.min(m,5)*0.05;
-  return {months:m,rate:rate,amount:Math.round(fee*rate),terminated:terminated};
-}
-function getUnpaidItems(p,asOf){
-  var out=[];
-  if(p.status==='放弃'||p.status==='终止') return out;
-  var sch=buildSchedule(p);
-  for(var i=0;i<sch.length;i++){
-    var item=sch[i];
-    if(item.phase==='pending-grant') continue;
-    if(isPaid(p,item)) continue;
-    var due=parseDate(item.dueDate);
-    var daysLeft=daysBetween(asOf,due);
-    var late=calcLate(item.dueDate,item.fee,asOf);
-    out.push({year:item.year, startDate:item.startDate, endDate:item.endDate,
-      dueDate:item.dueDate, baseFee:item.baseFee, reduction:item.reduction,
-      fee:item.fee, phase:item.phase, isGrantYear:item.isGrantYear,
-      patent:p, daysLeft:daysLeft, lateMonths:late.months, lateFee:late.amount,
-      terminated:late.terminated, total:item.fee+late.amount});
-  }
-  return out;
-}
-function getNextDue(p,asOf){
-  var list=getUnpaidItems(p,asOf);
-  return list.length?list[0]:null;
-}
-function statusMeta(it){
-  if(it.terminated) return {cls:'red',label:'⚠ 可能已终止'};
-  if(it.daysLeft<0) return {cls:'red',label:'已逾期 '+(-it.daysLeft)+' 天'};
-  if(it.daysLeft===0) return {cls:'red',label:'今日到期'};
-  if(it.daysLeft<=30) return {cls:'amber',label:'剩余 '+it.daysLeft+' 天'};
-  if(it.daysLeft<=90) return {cls:'cyan',label:'剩余 '+it.daysLeft+' 天'};
-  return {cls:'gray',label:'剩余 '+it.daysLeft+' 天'};
-}
-function monitored(){ return state.patents.filter(function(p){return !p.archived;}); }
 
-var state = { patents: [], settings: { alertHorizon: 90 }, user: null };
-var editingId = null;
-var ledgerScope = 'active';
-var selectedIds = new Set();
-var scheduleCache = [];
-var authMode = 'login';
+function toDB(c){
+  const o = {};
+  for (const [db,ui] of Object.entries(DB_TO_UI)){
+    if (ui === 'createTime' || ui === 'updateTime') continue;
+    let v = c[ui];
+    if (v === '' || v === undefined) v = null;
+    if (ui === 'importance') v = parseInt(v) || 3;
+    o[db] = v;
+  }
+  return o;
+}
 
-function showAuthMsg(msg, type){
-  var el=document.getElementById('authMsg');
-  el.textContent=msg||''; el.className='auth-msg '+(type||'');
-}
-function setAuthMode(mode){
-  authMode=mode;
-  var isLogin=mode==='login';
-  document.getElementById('authSub').textContent=isLogin?'请登录以继续':'创建新账户';
-  document.getElementById('authSubmit').textContent=isLogin?'登录':'注册';
-  document.getElementById('authToggleText').textContent=isLogin?'还没有账户？':'已有账户？';
-  document.getElementById('authToggleLink').textContent=isLogin?'立即注册':'去登录';
-  showAuthMsg('');
-}
-async function handleAuth(){
-  if(!sb){ showAuthMsg('Supabase 未加载，请刷新页面','error'); return; }
-  var email=document.getElementById('authEmail').value.trim();
-  var password=document.getElementById('authPassword').value;
-  if(!email||!password){ showAuthMsg('请填写邮箱和密码','error'); return; }
-  if(password.length<6){ showAuthMsg('密码至少 6 位','error'); return; }
-  var btn=document.getElementById('authSubmit');
-  btn.disabled=true; btn.textContent='处理中…';
+async function doLogin(){
+  const email = document.getElementById('loginEmail').value.trim();
+  const password = document.getElementById('loginPassword').value;
+  const errEl = document.getElementById('loginError');
+  errEl.textContent = '';
+  if (!email || !password){ errEl.textContent = '请填写邮箱和密码'; return; }
+  const btn = document.getElementById('loginBtn');
+  btn.disabled = true;
   try {
-    if(authMode==='login'){
-      var r1 = await sb.auth.signInWithPassword({ email:email, password:password });
-      if(r1.error) throw r1.error;
-      showAuthMsg('登录成功，正在加载…','success');
-    } else {
-      var r2 = await sb.auth.signUp({ email:email, password:password,
-        options:{ emailRedirectTo: window.location.href } });
-      if(r2.error) throw r2.error;
-      if(r2.data.user && r2.data.session){
-        showAuthMsg('注册成功，正在进入…','success');
-      } else {
-        showAuthMsg('注册成功！请查收邮箱确认链接后再登录。','success');
-        btn.disabled=false; btn.textContent='注册';
-        return;
-      }
-    }
+    const { error } = await sb.auth.signInWithPassword({ email, password });
+    if (error) throw error;
   } catch(e){
-    showAuthMsg((e&&e.message)||'操作失败','error');
-    btn.disabled=false;
-    btn.textContent = authMode==='login' ? '登录' : '注册';
+    errEl.textContent = e.message || '登录失败';
+  } finally {
+    btn.disabled = false;
   }
 }
-async function logout(){
-  if(sb) await sb.auth.signOut();
-  state.user=null; state.patents=[];
-  document.getElementById('app').classList.remove('ready');
-  document.getElementById('authScreen').style.display='flex';
+
+async function doLogout(){
+  if (!confirm('确定退出登录？')) return;
+  if (realtimeChannel) await sb.removeChannel(realtimeChannel);
+  await sb.auth.signOut();
+  location.reload();
 }
-function showApp(user){
-  state.user=user;
-  document.getElementById('userEmail').textContent=user.email;
-  document.getElementById('authScreen').style.display='none';
-  document.getElementById('app').classList.add('ready');
-}
-async function loadPatents(){
-  var res = await sb.from('patents').select('*').order('created_at',{ascending:true});
-  if(res.error){ console.error('加载失败',res.error); return false; }
-  state.patents=(res.data||[]).map(function(row){
-    return {id:row.id, name:row.name, appNo:row.app_no, appDate:row.app_date,
-      grantDate:row.grant_date, type:row.type, client:row.client,
-      reduction:row.reduction, status:row.status, archived:row.archived,
-      archivedAt:row.archived_at, contact:row.contact, phone:row.phone,
-      notes:row.notes, paidYears:row.paid_years||[]};
-  });
-  return true;
-}
-async function upsertPatent(p){
-  var row={id:p.id, user_id:state.user.id, name:p.name, app_no:p.appNo,
-    app_date:p.appDate, grant_date:p.grantDate||'', type:p.type, client:p.client,
-    reduction:p.reduction||0, status:p.status||'有效', archived:!!p.archived,
-    archived_at:p.archivedAt||'', contact:p.contact||'', phone:p.phone||'',
-    notes:p.notes||'', paid_years:p.paidYears||[]};
-  var res = await sb.from('patents').upsert(row,{onConflict:'id'});
-  if(res.error){ alert('保存失败：'+res.error.message); return false; }
-  return true;
-}
-async function deletePatentById(id){
-  var res = await sb.from('patents').delete().eq('id',id);
-  if(res.error){ alert('删除失败：'+res.error.message); return false; }
-  return true;
-}
-async function updatePatentField(id, fields){
-  var res = await sb.from('patents').update(fields).eq('id',id);
-  if(res.error){ alert('更新失败：'+res.error.message); return false; }
-  return true;
-}
-async function markPaid(patentId, year){
-  var p=state.patents.find(function(x){return x.id===patentId;});
-  if(!p) return;
-  var years=(p.paidYears||[]).concat(year).filter(function(v,i,a){return a.indexOf(v)===i;}).sort(function(a,b){return a-b;});
-  var ok=await updatePatentField(patentId,{paid_years:years});
-  if(ok){ p.paidYears=years; renderAll(); }
-}
-async function unmarkPaid(patentId, year){
-  var p=state.patents.find(function(x){return x.id===patentId;});
-  if(!p) return;
-  var years=(p.paidYears||[]).filter(function(y){return y!==year;});
-  var ok=await updatePatentField(patentId,{paid_years:years});
-  if(ok){ p.paidYears=years; renderAll(); }
-}
-function renderClientOptions(){
-  var clients=Array.from(new Set(state.patents.map(function(p){return (p.client||'').trim();}).filter(Boolean))).sort();
-  var contacts=Array.from(new Set(state.patents.map(function(p){return (p.contact||'').trim();}).filter(Boolean))).sort();
-  ['ledgerClient','scheduleClient','reportClient'].forEach(function(id){
-    var sel=document.getElementById(id); var cur=sel.value;
-    sel.innerHTML='<option value="">全部客户</option>'+
-      clients.map(function(c){return '<option value="'+esc(c)+'">'+esc(c)+'</option>';}).join('');
-    if(clients.indexOf(cur)>=0) sel.value=cur;
-  });
-  document.getElementById('clientOptions').innerHTML=clients.map(function(c){return '<option value="'+esc(c)+'"></option>';}).join('');
-  document.getElementById('contactOptions').innerHTML=contacts.map(function(c){return '<option value="'+esc(c)+'"></option>';}).join('');
-}
-function renderDashboard(){
-  var today=startOfDay(new Date());
-  var list=monitored();
-  var all=[]; list.forEach(function(p){ all=all.concat(getUnpaidItems(p,today)); });
-  var overdue=all.filter(function(it){return it.daysLeft<0;});
-  var within90=all.filter(function(it){return it.daysLeft>=0&&it.daysLeft<=90;});
-  var within30=all.filter(function(it){return it.daysLeft>=0&&it.daysLeft<=30;});
-  var archived=state.patents.length-list.length;
-  var amt=function(arr){ return arr.reduce(function(s,it){return s+it.total;},0); };
-  document.getElementById('statGrid').innerHTML=
-    '<div class="stat"><div class="stat-label">监控中专利</div>'+
-      '<div class="stat-value">'+list.length+'<small>件</small></div>'+
-      '<div class="stat-sub">客户 '+new Set(list.map(function(p){return p.client;})).size+' 家 · 已归档 '+archived+' 件</div></div>'+
-    '<div class="stat warn"><div class="stat-label">90 天内到期</div>'+
-      '<div class="stat-value">'+within90.length+'<small>笔</small></div>'+
-      '<div class="stat-sub">含 30 天内 '+within30.length+' 笔 · ¥'+money(amt(within90))+'</div></div>'+
-    '<div class="stat danger"><div class="stat-label">已逾期</div>'+
-      '<div class="stat-value">'+overdue.length+'<small>笔</small></div>'+
-      '<div class="stat-sub">¥'+money(amt(overdue))+'</div></div>'+
-    '<div class="stat gray"><div class="stat-label">已归档</div>'+
-      '<div class="stat-value">'+archived+'<small>件</small></div>'+
-      '<div class="stat-sub">记录保留，不参与提醒</div></div>';
-  var horizon=Number(state.settings.alertHorizon)||90;
-  var alertList=all.filter(function(it){return it.daysLeft<0||it.daysLeft<=horizon;})
-    .sort(function(a,b){return a.daysLeft-b.daysLeft;});
-  var box=document.getElementById('alertList');
-  if(!alertList.length){
-    box.innerHTML='<div class="empty"><span class="icon">✅</span>该范围内暂无待缴年费</div>';
-    return;
+
+sb.auth.onAuthStateChange((event, session) => {
+  if (session){
+    document.getElementById('loginOverlay').classList.add('hidden');
+    document.getElementById('mainApp').style.display = 'block';
+    initApp();
+  } else {
+    document.getElementById('loginOverlay').classList.remove('hidden');
+    document.getElementById('mainApp').style.display = 'none';
   }
-  box.innerHTML=alertList.slice(0,60).map(function(it){
-    var st=statusMeta(it);
-    var bar=it.terminated||it.daysLeft<0?'#dc2626':it.daysLeft<=30?'#d97706':'#2563eb';
-    return '<div class="alert-row">'+
-      '<div class="bar" style="background:'+bar+'"></div>'+
-      '<div class="alert-main"><div class="t">'+esc(it.patent.name)+'</div>'+
-        '<div class="s">'+esc(it.patent.client)+' · 第 '+it.year+' 年度 · 截止 '+it.dueDate+
-        (it.lateFee?' · <span style="color:#dc2626">滞纳金 ¥'+money(it.lateFee)+'</span>':'')+'</div></div>'+
-      '<div class="alert-meta"><div class="amt">¥'+money(it.total)+'</div>'+
-        '<div class="dt"><span class="badge '+st.cls+'">'+st.label+'</span></div></div>'+
-      '<button class="btn sm ok" data-pay="'+it.patent.id+'|'+it.year+'">标记已缴</button>'+
-    '</div>';
-  }).join('');
-  box.querySelectorAll('[data-pay]').forEach(function(b){
-    b.addEventListener('click',function(){
-      var parts=b.dataset.pay.split('|'); markPaid(parts[0],Number(parts[1]));
-    });
-  });
+});
+
+async function initApp(){
+  await loadData();
+  subscribeRealtime();
 }
-function filterPatents(){
-  var q=document.getElementById('ledgerSearch').value.trim().toLowerCase();
-  var fClient=document.getElementById('ledgerClient').value;
-  var fType=document.getElementById('ledgerType').value;
-  var fRed=document.getElementById('ledgerReduction').value;
-  var fStatus=document.getElementById('ledgerStatus').value;
-  var fUrg=document.getElementById('ledgerUrgency').value;
-  var fFrom=document.getElementById('ledgerAppFrom').value;
-  var fTo=document.getElementById('ledgerAppTo').value;
-  var today=startOfDay(new Date());
-  var rows=state.patents.filter(function(p){
-    if(ledgerScope==='active'&&p.archived) return false;
-    if(ledgerScope==='archived'&&!p.archived) return false;
+
+function setSyncStatus(state, text){
+  const el = document.getElementById('syncStatus');
+  if (!el) return;
+  const icons = { ok:'fa-cloud', syncing:'fa-cloud-arrow-up', error:'fa-cloud-exclamation' };
+  el.innerHTML = `<i class="fas ${icons[state]||'fa-cloud'}"></i> ${text}`;
+}
+
+async function loadData(){
+  setSyncStatus('syncing','正在加载...');
+  const { data, error } = await sb.from('cases').select('*').is('deleted_at', null).order('receive_date',{ascending:false});
+  if (error){ toast('加载失败：'+error.message,'error'); setSyncStatus('error','加载失败'); return; }
+  cases = (data || []).map(fromDB);
+  setSyncStatus('ok','已同步 · ' + new Date().toLocaleTimeString());
+  updateHistoryLists(); renderStats(); renderTable();
+  document.getElementById('totalCountFooter').textContent = cases.length;
+}
+
+function updateHistoryLists(){
+  const cs = new Set(), ct = new Set();
+  cases.forEach(c => {
+    if (c.clientName?.trim()) cs.add(c.clientName.trim());
+    if (c.contactPerson?.trim()) ct.add(c.contactPerson.trim());
+  });
+  const cd = document.getElementById('clientList');
+  if (cd) cd.innerHTML = [...cs].sort().map(n => `<option value="${n}">`).join('');
+  const ctd = document.getElementById('contactList');
+  if (ctd) ctd.innerHTML = [...ct].sort().map(n => `<option value="${n}">`).join('');
+}
+
+function genId(){
+  return crypto.randomUUID ? crypto.randomUUID() : Date.now().toString(36) + Math.random().toString(36).slice(2,10);
+}
+function fmtDate(d){ if(!d) return '-'; const p=d.split('-'); return `${p[0]}年${parseInt(p[1])}月${parseInt(p[2])}日`; }
+function getStatusClass(s){ return STATUS_CLASS[s] || ''; }
+function getPriorityClass(p){ return {'高':'priority-high','中':'priority-medium','低':'priority-low'}[p] || 'priority-medium'; }
+function renderStars(i){ const n=parseInt(i)||0; return '★'.repeat(n)+'☆'.repeat(5-n); }
+
+function generateCaseNumber(){
+  if (document.getElementById('editId').value) return;
+  const type = document.getElementById('f_caseType').value;
+  const date = document.getElementById('f_receiveDate').value;
+  if (!type || !date) return;
+  document.getElementById('f_caseNumber').value = generateBatchNumber(type, date, []);
+}
+
+// 供单件与批量共用的编号生成器
+function generateBatchNumber(type, date, extraNumbers){
+  const prefix = TYPE_PREFIX[type] || 'QT';
+  const year = (date || '').substring(0,4);
+  let maxSeq = 0;
+  const all = cases.map(c => c.caseNumber).concat(extraNumbers || []);
+  all.forEach(num => {
+    if (!num) return;
+    const p = String(num).split('-');
+    if (p.length===3 && p[0]===prefix && p[1]===year){
+      const s = parseInt(p[2],10);
+      if (!isNaN(s) && s>maxSeq) maxSeq = s;
+    }
+  });
+  return `${prefix}-${year}-${String(maxSeq+1).padStart(3,'0')}`;
+}
+
+function renderStats(){
+  const total = cases.length;
+  const activeCount = cases.filter(c => !ENDED_STATUSES.includes(c.status)).length;
+  const archivedCount = total - activeCount;
+  const byType = {}, byPriority = {'高':0,'中':0,'低':0};
+  cases.forEach(c => {
+    const t = c.caseType || '其他';
+    byType[t] = (byType[t]||0)+1;
+    const p = c.priority || '中';
+    if (byPriority[p] !== undefined) byPriority[p]++;
+  });
+  const typeMap = {
+    '专利代理':{icon:'fa-gavel',color:'blue',label:'专利代理'},
+    '专利侵权与规避':{icon:'fa-balance-scale',color:'red',label:'侵权与规避'},
+    '软件著作权登记':{icon:'fa-copyright',color:'purple',label:'软著登记'},
+    '商标代理':{icon:'fa-trademark',color:'orange',label:'商标代理'},
+    '专利检索':{icon:'fa-search',color:'teal',label:'检索'},
+    '缴费监控':{icon:'fa-hand-holding-usd',color:'pink',label:'缴费监控'}
+  };
+  let html = `<div class="stat-card"><div class="icon blue"><i class="fas fa-folder-open"></i></div><div class="info"><div class="number">${total}</div><div class="label">总案件</div></div></div>`;
+  // 活跃 / 归档 卡片
+  html += `<div class="stat-card"><div class="icon green"><i class="fas fa-briefcase"></i></div><div class="info"><div class="number">${activeCount}</div><div class="label">活跃案件</div></div></div>`;
+  html += `<div class="stat-card"><div class="icon purple"><i class="fas fa-archive"></i></div><div class="info"><div class="number">${archivedCount}</div><div class="label">归档案件</div></div></div>`;
+  for (const [k,cfg] of Object.entries(typeMap)){
+    const count = byType[k]||0;
+    if (count>0) html += `<div class="stat-card"><div class="icon ${cfg.color}"><i class="fas ${cfg.icon}"></i></div><div class="info"><div class="number">${count}</div><div class="label">${cfg.label}</div></div></div>`;
+  }
+  html += `<div class="stat-card"><div class="icon red"><i class="fas fa-flag"></i></div><div class="info"><div class="number">${byPriority['高']}</div><div class="label">高优先级</div></div></div>`;
+  html += `<div class="stat-card"><div class="icon orange"><i class="fas fa-flag"></i></div><div class="info"><div class="number">${byPriority['中']}</div><div class="label">中优先级</div></div></div>`;
+  document.getElementById('statsContainer').innerHTML = html;
+  document.getElementById('totalCountFooter').textContent = total;
+  updateViewCounts();
+}
+
+// ============================================================
+//  视图切换：活跃 / 归档 / 全部
+// ============================================================
+function setView(view){
+  currentView = view;
+  document.querySelectorAll('#viewGroup .view-btn').forEach(b => b.classList.toggle('active', b.dataset.view === view));
+  // 切换视图时清空选中，避免误操作隐藏案件
+  selectedIds.clear();
+  renderTable();
+}
+
+function updateViewCounts(){
+  const activeCount = cases.filter(c => !ENDED_STATUSES.includes(c.status)).length;
+  const archivedCount = cases.filter(c => ENDED_STATUSES.includes(c.status)).length;
+  const elA = document.getElementById('viewCountActive');
+  const elR = document.getElementById('viewCountArchived');
+  const elAll = document.getElementById('viewCountAll');
+  if (elA) elA.textContent = activeCount;
+  if (elR) elR.textContent = archivedCount;
+  if (elAll) elAll.textContent = cases.length;
+}
+
+// ---------- 标签 ----------
+function getAllTags(){
+  const set = new Set();
+  cases.forEach(c => {
+    (c.tags || '').split(',').map(t=>t.trim()).filter(t=>t).forEach(t=>set.add(t));
+  });
+  return [...set].sort();
+}
+
+function renderTagFilters(){
+  const container = document.getElementById('tagFilterGroup');
+  if (!container) return;
+  const all = getAllTags();
+  if (!all.length){ container.innerHTML = ''; return; }
+  let html = `<button class="filter-btn tag-filter ${!currentTagFilter?'active':''}" onclick="setTagFilter(null)">全部标签</button>`;
+  all.forEach(t => {
+    html += `<button class="filter-btn tag-filter ${currentTagFilter===t?'active':''}" onclick="setTagFilter('${t.replace(/'/g,"\\'")}')">${t}</button>`;
+  });
+  container.innerHTML = html;
+}
+
+function setTagFilter(tag){
+  currentTagFilter = tag;
+  renderTable();
+}
+
+function getFiltered(){
+  const kw = document.getElementById('searchInput').value.trim().toLowerCase();
+  let list = cases.filter(c => {
+    // ===== 视图过滤（核心逻辑） =====
+    const isEnded = ENDED_STATUSES.includes(c.status);
+    if (currentView === 'active' && isEnded) return false;
+    if (currentView === 'archived' && !isEnded) return false;
+    // currentView === 'all' 时不过滤
+
+    // ===== 类型过滤 =====
+    if (currentTypeFilter !== 'all' && c.caseType !== currentTypeFilter) return false;
+    // ===== 标签过滤 =====
+    if (currentTagFilter){
+      const tags = (c.tags||'').split(',').map(t=>t.trim());
+      if (!tags.includes(currentTagFilter)) return false;
+    }
+    // ===== 关键词搜索 =====
+    if (kw){
+      const s = `${c.caseNumber} ${c.caseName} ${c.clientName} ${c.contactPerson} ${c.notes||''}`.toLowerCase();
+      if (!s.includes(kw)) return false;
+    }
     return true;
   });
-  if(q) rows=rows.filter(function(p){
-    return (p.name||'').toLowerCase().indexOf(q)>=0||
-      (p.appNo||'').toLowerCase().indexOf(q)>=0||
-      (p.client||'').toLowerCase().indexOf(q)>=0||
-      (p.contact||'').toLowerCase().indexOf(q)>=0;
+  const { field, asc } = currentSort;
+  list.sort((a,b) => {
+    let va = a[field]||'', vb = b[field]||'';
+    if (typeof va === 'string') va = va.toLowerCase();
+    if (typeof vb === 'string') vb = vb.toLowerCase();
+    if (va < vb) return asc ? -1 : 1;
+    if (va > vb) return asc ? 1 : -1;
+    return 0;
   });
-  if(fClient) rows=rows.filter(function(p){return p.client===fClient;});
-  if(fType) rows=rows.filter(function(p){return p.type===fType;});
-  if(fRed!=='') rows=rows.filter(function(p){return String(p.reduction||0)===fRed;});
-  if(fStatus) rows=rows.filter(function(p){return (p.status||'有效')===fStatus;});
-  if(fFrom) rows=rows.filter(function(p){return p.appDate&&p.appDate>=fFrom;});
-  if(fTo) rows=rows.filter(function(p){return p.appDate&&p.appDate<=fTo;});
-  var out=rows.map(function(p){
-    var appDate=parseDate(p.appDate);
-    var curYear=appDate?yearOf(appDate,today):0;
-    var next=getNextDue(p,today);
-    return {p:p,curYear:curYear,next:next};
-  });
-  if(fUrg==='overdue') out=out.filter(function(r){return r.next&&r.next.daysLeft<0;});
-  else if(fUrg==='30') out=out.filter(function(r){return r.next&&r.next.daysLeft>=0&&r.next.daysLeft<=30;});
-  else if(fUrg==='90') out=out.filter(function(r){return r.next&&r.next.daysLeft>=0&&r.next.daysLeft<=90;});
-  else if(fUrg==='none') out=out.filter(function(r){return !r.next;});
-  out.sort(function(a,b){
-    if(!!a.p.archived!==!!b.p.archived) return a.p.archived?1:-1;
-    return (a.next?a.next.daysLeft:99999)-(b.next?b.next.daysLeft:99999);
-  });
-  return out;
-}
-function renderLedger(){
-  var rows=filterPatents();
-  document.getElementById('cntActive').textContent=state.patents.filter(function(p){return !p.archived;}).length;
-  document.getElementById('cntArchived').textContent=state.patents.filter(function(p){return p.archived;}).length;
-  document.getElementById('cntAll').textContent=state.patents.length;
-  var visible=new Set(rows.map(function(r){return r.p.id;}));
-  Array.from(selectedIds).forEach(function(id){ if(!visible.has(id)) selectedIds.delete(id); });
-  var tbody=document.getElementById('ledgerBody');
-  if(!rows.length){
-    tbody.innerHTML='<tr><td colspan="14"><div class="empty"><span class="icon">📭</span>没有符合条件的记录</div></td></tr>';
-    updateBulkBar(); syncCheckAll(); return;
-  }
-  tbody.innerHTML=rows.map(function(r,i){
-    var p=r.p, next=r.next, isSel=selectedIds.has(p.id);
-    var statusHtml='<span class="badge gray">—</span>', nextDate='—', nextAmt='—';
-    if(p.archived){ statusHtml='<span class="badge slate">📦 已归档</span>'; }
-    else if(!p.grantDate){ statusHtml='<span class="badge gray">待授权</span>'; }
-    else if(next){ var st=statusMeta(next); statusHtml='<span class="badge '+st.cls+'">'+st.label+'</span>';
-      nextDate=next.dueDate; nextAmt='¥'+money(next.total); }
-    else { statusHtml='<span class="badge green">全部已缴</span>'; }
-    if(p.status==='放弃'||p.status==='终止') statusHtml='<span class="badge gray">'+p.status+'</span>';
-    var red=p.reduction>0?'<span class="badge amber">减 '+p.reduction+'%</span>':'<span class="mono">—</span>';
-    return '<tr class="'+(isSel?'selected':'')+' '+(p.archived?'archived-row':'')+'">'+
-      '<td><input type="checkbox" class="row-check" data-id="'+p.id+'" '+(isSel?'checked':'')+'></td>'+
-      '<td class="mono">'+(i+1)+'</td>'+
-      '<td><div class="truncate" title="'+esc(p.name)+'"><strong>'+esc(p.name)+'</strong></div></td>'+
-      '<td class="mono">'+esc(p.appNo)+'</td>'+
-      '<td><span class="badge '+(TYPE_BADGE[p.type]||'gray')+'">'+esc(p.type)+'</span></td>'+
-      '<td><div class="truncate" title="'+esc(p.client)+'">'+esc(p.client)+'</div></td>'+
-      '<td class="mono">'+esc(p.appDate)+'</td>'+
-      '<td class="mono">'+esc(p.grantDate||'—')+'</td>'+
-      '<td>'+red+'</td>'+
-      '<td class="mono">第 '+(r.curYear||'—')+' 年</td>'+
-      '<td class="mono">'+nextDate+'</td>'+
-      '<td class="num">'+nextAmt+'</td>'+
-      '<td>'+statusHtml+'</td>'+
-      '<td><button class="btn sm ghost" data-detail="'+p.id+'">详情</button>'+
-          '<button class="btn sm ghost" data-edit="'+p.id+'">编辑</button></td>'+
-    '</tr>';
-  }).join('');
-  tbody.querySelectorAll('.row-check').forEach(function(cb){
-    cb.addEventListener('change',function(){
-      if(cb.checked) selectedIds.add(cb.dataset.id); else selectedIds.delete(cb.dataset.id);
-      cb.closest('tr').classList.toggle('selected',cb.checked);
-      updateBulkBar(); syncCheckAll();
-    });
-  });
-  tbody.querySelectorAll('[data-edit]').forEach(function(b){
-    b.addEventListener('click',function(){openPatentModal(b.dataset.edit);});
-  });
-  tbody.querySelectorAll('[data-detail]').forEach(function(b){
-    b.addEventListener('click',function(){openDetail(b.dataset.detail);});
-  });
-  updateBulkBar(); syncCheckAll();
-}
-function updateBulkBar(){
-  document.getElementById('selCount').textContent=selectedIds.size;
-  document.getElementById('bulkBar').hidden=selectedIds.size===0;
-}
-function syncCheckAll(){
-  var boxes=document.querySelectorAll('#ledgerBody .row-check');
-  var all=document.getElementById('checkAll');
-  if(!boxes.length){ all.checked=false; all.indeterminate=false; return; }
-  var c=Array.from(boxes).filter(function(b){return b.checked;}).length;
-  all.checked=c===boxes.length; all.indeterminate=c>0&&c<boxes.length;
-}
-function clearSelection(){
-  selectedIds.clear();
-  document.getElementById('checkAll').checked=false;
-  document.getElementById('checkAll').indeterminate=false;
-}
-function renderSchedule(){
-  var today=startOfDay(new Date());
-  var range=document.getElementById('scheduleRange').value;
-  var fClient=document.getElementById('scheduleClient').value;
-  var items=[]; monitored().forEach(function(p){ items=items.concat(getUnpaidItems(p,today)); });
-  if(fClient) items=items.filter(function(it){return it.patent.client===fClient;});
-  if(range==='overdue') items=items.filter(function(it){return it.daysLeft<0;});
-  else if(range!=='all') items=items.filter(function(it){return it.daysLeft<=Number(range);});
-  items.sort(function(a,b){return a.daysLeft-b.daysLeft;});
-  scheduleCache=items;
-  document.getElementById('scheduleSub').textContent=
-    '共 '+items.length+' 笔 · 合计 ¥'+money(items.reduce(function(s,it){return s+it.total;},0));
-  var tbody=document.getElementById('scheduleBody');
-  if(!items.length){
-    tbody.innerHTML='<tr><td colspan="13"><div class="empty"><span class="icon">📅</span>暂无待缴年费</div></td></tr>';
-    return;
-  }
-  tbody.innerHTML=items.map(function(it){
-    var st=statusMeta(it);
-    var red=it.reduction>0?'<span class="badge amber">减 '+it.reduction+'%</span>':'<span class="mono">—</span>';
-    var late=it.lateFee>0?'<span style="color:#dc2626;font-weight:700">¥'+money(it.lateFee)+'</span>'+
-      '<div style="font-size:11px;color:#64748b">逾期 '+it.lateMonths+' 月</div>':'<span class="mono">—</span>';
-    return '<tr>'+
-      '<td class="mono" style="'+(it.daysLeft<0?'color:#dc2626;font-weight:700':'')+'">'+it.dueDate+'</td>'+
-      '<td><span class="badge '+st.cls+'">'+st.label+'</span></td>'+
-      '<td><div class="truncate">'+esc(it.patent.client)+'</div></td>'+
-      '<td><div class="truncate" title="'+esc(it.patent.name)+'">'+esc(it.patent.name)+'</div></td>'+
-      '<td class="mono">'+esc(it.patent.appNo)+'</td>'+
-      '<td><span class="badge '+(TYPE_BADGE[it.patent.type]||'gray')+'">'+esc(it.patent.type)+'</span></td>'+
-      '<td class="mono">第 '+it.year+' 年</td>'+
-      '<td class="num" style="color:#64748b">¥'+money(it.baseFee)+'</td>'+
-      '<td>'+red+'</td>'+
-      '<td class="num">¥'+money(it.fee)+'</td>'+
-      '<td>'+late+'</td>'+
-      '<td class="num" style="color:#2563eb;font-size:14px">¥'+money(it.total)+'</td>'+
-      '<td><button class="btn sm ok" data-pay="'+it.patent.id+'|'+it.year+'">已缴</button></td>'+
-    '</tr>';
-  }).join('');
-  tbody.querySelectorAll('[data-pay]').forEach(function(b){
-    b.addEventListener('click',function(){
-      var parts=b.dataset.pay.split('|'); markPaid(parts[0],Number(parts[1]));
-    });
-  });
-}
-function renderReport(){
-  var yearSel=document.getElementById('reportYear');
-  var today=startOfDay(new Date());
-  var years=new Set([today.getFullYear(),today.getFullYear()+1,today.getFullYear()+2]);
-  state.patents.forEach(function(p){
-    var a=parseDate(p.appDate);
-    if(a) for(var y=a.getFullYear();y<=today.getFullYear()+3;y++) years.add(y);
-  });
-  var sorted=Array.from(years).sort();
-  var cur=yearSel.value||String(today.getFullYear());
-  yearSel.innerHTML=sorted.map(function(y){
-    return '<option value="'+y+'"'+(String(y)===cur?' selected':'')+'>'+y+' 年</option>';
-  }).join('');
-  var year=Number(yearSel.value||today.getFullYear());
-  var fClient=document.getElementById('reportClient').value;
-  var items=[]; monitored().forEach(function(p){ items=items.concat(getUnpaidItems(p,today)); });
-  if(fClient) items=items.filter(function(it){return it.patent.client===fClient;});
-  items=items.filter(function(it){
-    var d=parseDate(it.dueDate); return d&&d.getFullYear()===year;
-  });
-  var qs=[{name:'第一季度',m:[0,1,2]},{name:'第二季度',m:[3,4,5]},
-          {name:'第三季度',m:[6,7,8]},{name:'第四季度',m:[9,10,11]}];
-  var total=items.reduce(function(s,it){return s+it.total;},0);
-  document.getElementById('reportGrid').innerHTML=qs.map(function(q,qi){
-    var qiItems=items.filter(function(it){
-      var d=parseDate(it.dueDate); return q.m.indexOf(d.getMonth())>=0;
-    }).sort(function(a,b){return parseDate(a.dueDate)-parseDate(b.dueDate);});
-    var sum=qiItems.reduce(function(s,it){return s+it.total;},0);
-    var list=qiItems.length?qiItems.map(function(it){
-      return '<div class="q-item">'+
-        '<span class="n" title="'+esc(it.patent.name)+'">'+it.dueDate.slice(5)+' · '+esc(it.patent.client)+' · '+esc(it.patent.name)+'</span>'+
-        '<span class="v">¥'+money(it.total)+'</span></div>';
-    }).join(''):'<div style="padding:22px;text-align:center;color:#64748b;font-size:12.5px">本季度无需缴纳</div>';
-    return '<div class="q-card"><div class="q-head">'+
-      '<span class="name">'+q.name+' <span style="color:#64748b;font-weight:400;font-size:12px">('+year+'.'+(qi*3+1)+'–'+(qi*3+3)+')</span></span>'+
-      '<span class="amt">¥'+money(sum)+'</span></div><div class="q-list">'+list+'</div></div>';
-  }).join('')+'<div class="q-card" style="grid-column:1/-1;background:#f8fafc">'+
-    '<div class="q-head" style="background:#eff6ff"><span class="name">'+year+' 年度合计</span>'+
-    '<span class="amt" style="font-size:18px">¥'+money(total)+'</span></div>'+
-    '<div style="padding:14px 16px;color:#64748b;font-size:12.5px">共 '+items.length+' 笔 · 涉及 '+
-    new Set(items.map(function(i){return i.patent.client;})).size+' 家客户</div></div>';
-}
-function openPatentModal(id){
-  editingId=id||null;
-  var p=id?state.patents.find(function(x){return x.id===id;}):null;
-  document.getElementById('patentModalTitle').textContent=p?'编辑专利':'新增专利';
-  document.getElementById('f_name').value=p?p.name:'';
-  document.getElementById('f_appNo').value=p?p.appNo:'';
-  document.getElementById('f_type').value=p?p.type:'发明';
-  document.getElementById('f_appDate').value=p?p.appDate:'';
-  document.getElementById('f_grantDate').value=p?(p.grantDate||''):'';
-  document.getElementById('f_client').value=p?p.client:'';
-  document.getElementById('f_reduction').value=p?String(p.reduction||0):'0';
-  document.getElementById('f_status').value=p?(p.status||'有效'):'有效';
-  document.getElementById('f_archived').value=p&&p.archived?'1':'0';
-  document.getElementById('f_contact').value=p?(p.contact||''):'';
-  document.getElementById('f_phone').value=p?(p.phone||''):'';
-  document.getElementById('f_notes').value=p?(p.notes||''):'';
-  document.getElementById('modalPatent').classList.add('show');
-  setTimeout(function(){document.getElementById('f_name').focus();},60);
-}
-async function savePatent(){
-  var name=document.getElementById('f_name').value.trim();
-  var appNo=document.getElementById('f_appNo').value.trim();
-  var appDate=document.getElementById('f_appDate').value;
-  var client=document.getElementById('f_client').value.trim();
-  if(!name) return alert('请填写专利名称');
-  if(!appNo) return alert('请填写申请号');
-  if(!appDate) return alert('请填写申请日');
-  if(!client) return alert('请填写客户');
-  var archived=document.getElementById('f_archived').value==='1';
-  var data={
-    id: editingId || ('P'+Date.now()+Math.random().toString(36).slice(2,7)),
-    name:name, appNo:appNo, appDate:appDate,
-    type:document.getElementById('f_type').value,
-    grantDate:document.getElementById('f_grantDate').value||'',
-    client:client,
-    reduction:Number(document.getElementById('f_reduction').value)||0,
-    status:document.getElementById('f_status').value,
-    archived:archived, archivedAt: archived?fmtDate(new Date()):'',
-    contact:document.getElementById('f_contact').value.trim(),
-    phone:document.getElementById('f_phone').value.trim(),
-    notes:document.getElementById('f_notes').value.trim(),
-    paidYears: editingId ? (state.patents.find(function(x){return x.id===editingId;}).paidYears||[]) : []
-  };
-  var ok=await upsertPatent(data);
-  if(!ok) return;
-  document.getElementById('modalPatent').classList.remove('show');
-  await loadPatents(); renderAll();
-}
-async function deletePatent(id){
-  var p=state.patents.find(function(x){return x.id===id;}); if(!p) return;
-  if(!confirm('确定永久删除「'+p.name+'」？建议改用归档以保留记录。')) return;
-  if(!await deletePatentById(id)) return;
-  state.patents=state.patents.filter(function(x){return x.id!==id;});
-  document.getElementById('modalDetail').classList.remove('show');
-  renderAll();
-}
-function openDetail(id){
-  var p=state.patents.find(function(x){return x.id===id;}); if(!p) return;
-  var today=startOfDay(new Date());
-  var schedule=buildSchedule(p);
-  var next=getNextDue(p,today);
-  var nextYear=next?next.year:-1;
-  document.getElementById('detailTitle').textContent=p.name;
-  var info='<div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(190px,1fr));gap:14px;margin-bottom:18px">'+
-    [['申请号',p.appNo],['类型',p.type],['申请日',p.appDate],['授权日',p.grantDate||'未授权'],
-     ['客户',p.client],['费减',p.reduction>0?'减缴 '+p.reduction+'%':'不减缴'],
-     ['当前年度',p.grantDate?'第 '+yearOf(parseDate(p.appDate),today)+' 年度':'—'],
-     ['状态',p.status||'有效'],['监控',p.archived?'已归档':'监控中'],
-     ['联系人',(p.contact||'—')+(p.phone?' / '+p.phone:'')]
-    ].map(function(kv){
-      return '<div><div style="font-size:11.5px;color:#64748b;font-weight:600">'+kv[0]+'</div>'+
-        '<div style="font-weight:600;margin-top:2px">'+esc(kv[1])+'</div></div>';
-    }).join('')+'</div>'+
-    (p.notes?'<div style="background:#f8fafc;padding:12px 14px;border-radius:8px;font-size:12.5px;margin-bottom:20px"><b>备注：</b>'+esc(p.notes)+'</div>':'')+
-    '<h4 style="font-size:13.5px;margin-bottom:6px">年费时间轴</h4>';
-  var timeline=schedule.length?'<div class="tl">'+schedule.map(function(it){
-    var paid=isPaid(p,it); var isNext=it.year===nextYear;
-    var due=parseDate(it.dueDate);
-    var late=!paid&&due&&today>due?calcLate(it.dueDate,it.fee,today):null;
-    var cls=paid?'paid':(isNext?(late&&late.months>0?'overdue':'next'):'');
-    var tag=paid?'<span class="badge green">已缴</span>':isNext?
-      (late&&late.months>0?'<span class="badge red">逾期 '+late.months+' 月</span>':'<span class="badge blue">待缴</span>')
-      :'<span class="badge gray">—</span>';
-    var feeTxt=it.reduction>0?'¥'+money(it.fee)+' <span style="font-size:11px;color:#64748b">(标价 ¥'+money(it.baseFee)+'，减 '+it.reduction+'%)</span>':'¥'+money(it.fee);
-    return '<div class="tl-item '+cls+'"><div class="row">'+
-      '<div><div class="y">第 '+it.year+' 年度 '+(it.isGrantYear?'<span class="badge blue" style="font-size:10px">授权当年</span>':'')+'</div>'+
-      '<div class="d">'+it.startDate+' ~ '+it.endDate+' · 截止 '+it.dueDate+'</div></div>'+
-      '<div style="text-align:right"><div class="f">'+feeTxt+'</div><div style="margin-top:3px">'+tag+'</div></div></div>'+
-      '<div style="margin-top:6px">'+(paid?'<button class="btn sm ghost" data-dunpay="'+it.year+'">撤销已缴</button>':
-        '<button class="btn sm ok" data-dpay="'+it.year+'">标记已缴</button>')+'</div></div>';
-  }).join('')+'</div>':'<div class="empty">尚未授权，暂不产生年费</div>';
-  document.getElementById('detailBody').innerHTML=info+timeline+
-    '<div style="margin-top:24px;display:flex;gap:10px;flex-wrap:wrap">'+
-      '<button class="btn ghost" id="btnEditFromDetail">编辑</button>'+
-      (p.archived?'<button class="btn ok" id="btnRestoreFromDetail">↩ 恢复监控</button>':
-        '<button class="btn amber" id="btnArchiveFromDetail">📦 归档</button>')+
-      '<button class="btn danger" id="btnDeletePatent">删除</button></div>';
-  var body=document.getElementById('detailBody');
-  body.querySelectorAll('[data-dpay]').forEach(function(b){
-    b.addEventListener('click',function(){ markPaid(p.id,Number(b.dataset.dpay)).then(function(){openDetail(p.id);}); });
-  });
-  body.querySelectorAll('[data-dunpay]').forEach(function(b){
-    b.addEventListener('click',function(){ unmarkPaid(p.id,Number(b.dataset.dunpay)).then(function(){openDetail(p.id);}); });
-  });
-  document.getElementById('btnEditFromDetail').addEventListener('click',function(){
-    document.getElementById('modalDetail').classList.remove('show'); openPatentModal(p.id);
-  });
-  var ba=document.getElementById('btnArchiveFromDetail');
-  if(ba) ba.addEventListener('click',async function(){
-    await updatePatentField(p.id,{archived:true,archived_at:fmtDate(new Date())});
-    p.archived=true; p.archivedAt=fmtDate(new Date()); renderAll(); openDetail(p.id);
-  });
-  var br=document.getElementById('btnRestoreFromDetail');
-  if(br) br.addEventListener('click',async function(){
-    await updatePatentField(p.id,{archived:false,archived_at:''});
-    p.archived=false; p.archivedAt=''; renderAll(); openDetail(p.id);
-  });
-  document.getElementById('btnDeletePatent').addEventListener('click',function(){deletePatent(p.id);});
-  document.getElementById('modalDetail').classList.add('show');
-}
-async function bulkArchive(){
-  var ids=Array.from(selectedIds); if(!ids.length) return;
-  if(!confirm('确定将选中的 '+ids.length+' 件专利移入归档？')) return;
-  var res = await sb.from('patents').update({archived:true,archived_at:fmtDate(new Date())}).in('id',ids);
-  if(res.error){ alert('归档失败：'+res.error.message); return; }
-  selectedIds.clear(); await loadPatents(); renderAll();
-}
-async function bulkRestore(){
-  var ids=Array.from(selectedIds); if(!ids.length) return;
-  if(!confirm('确定恢复选中的 '+ids.length+' 件专利？')) return;
-  var res = await sb.from('patents').update({archived:false,archived_at:''}).in('id',ids);
-  if(res.error){ alert('恢复失败：'+res.error.message); return; }
-  selectedIds.clear(); await loadPatents(); renderAll();
-}
-async function bulkSetStatus(){
-  var ids=Array.from(selectedIds); if(!ids.length) return;
-  var st=document.getElementById('bulkStatusSel').value;
-  if(!confirm('确定将 '+ids.length+' 件专利状态改为「'+st+'」？')) return;
-  var res = await sb.from('patents').update({status:st}).in('id',ids);
-  if(res.error){ alert('更新失败：'+res.error.message); return; }
-  selectedIds.clear(); await loadPatents(); renderAll();
-}
-function bulkExport(){
-  var rows=state.patents.filter(function(p){return selectedIds.has(p.id);});
-  if(!rows.length) return;
-  var header=['专利名称','申请号','专利类型','申请日','授权日','客户','费减比例','状态','联系人','联系电话','备注'];
-  var body=rows.map(function(p){
-    return [p.name,p.appNo,p.type,p.appDate,p.grantDate||'',
-      p.client,p.reduction||0,p.status||'有效',
-      p.contact||'',p.phone||'',p.notes||''];
-  });
-  exportCSV('选中专利_'+fmtDate(new Date())+'.csv',header,body);
+  return list;
 }
 
-var HEADER_MAP = {
-  '专利名称':'name','名称':'name',
-  '申请号':'appNo','申请编号':'appNo',
-  '专利类型':'type','类型':'type',
-  '申请日':'appDate','申请日期':'appDate',
-  '授权日':'grantDate','授权日期':'grantDate',
-  '客户':'client','申请人':'client','申请人/客户':'client','申请人 / 客户':'client',
-  '费减比例':'reduction','减免':'reduction','费减':'reduction',
-  '状态':'status','法律状态':'status',
-  '联系人':'contact',
-  '联系电话':'phone','电话':'phone','手机':'phone',
-  '备注':'notes','说明':'notes'
-};
+function renderTable(){
+  renderTagFilters();
+  const list = getFiltered();
+  const tbody = document.getElementById('tableBody');
+  document.getElementById('resultCount').textContent = `共 ${list.length} 件`;
 
-function normalizeDate(s){
-  if(!s) return '';
-  var d = parseDate(s);
-  return d ? fmtDate(d) : '';
-}
-function parseCSV(text){
-  if(text.charCodeAt(0) === 0xFEFF) text = text.slice(1);
-  var rows = [], cur = [], field = '', inQuote = false;
-  for(var i = 0; i < text.length; i++){
-    var c = text[i];
-    if(inQuote){
-      if(c === '"'){
-        if(text[i+1] === '"'){ field += '"'; i++; }
-        else inQuote = false;
-      } else field += c;
+  if (list.length === 0){
+    let emptyHtml;
+    if (currentView === 'archived'){
+      emptyHtml = `<i class="fas fa-archive"></i><h3>暂无归档案件</h3><p>状态为「协助缴费」或「已移交专人」的案件会自动归档到这里</p>`;
+    } else if (currentView === 'active'){
+      emptyHtml = `<i class="fas fa-gavel"></i><h3>暂无活跃案件</h3><p>点击「新建案件」或「批量新建」开始；已结束的案件可在「归档」中查看</p>`;
     } else {
-      if(c === '"') inQuote = true;
-      else if(c === ','){ cur.push(field); field = ''; }
-      else if(c === '\n' || c === '\r'){
-        if(c === '\r' && text[i+1] === '\n') i++;
-        cur.push(field);
-        if(cur.length > 1 || cur[0] !== '') rows.push(cur);
-        cur = []; field = '';
-      } else field += c;
+      emptyHtml = `<i class="fas fa-gavel"></i><h3>暂无案件</h3><p>点击「新建案件」或「批量新建」开始</p>`;
     }
-  }
-  if(field !== '' || cur.length){ cur.push(field); rows.push(cur); }
-  return rows;
-}
-function downloadTemplate(){
-  var header = ['专利名称','申请号','专利类型','申请日','授权日','客户','费减比例','状态','联系人','联系电话','备注'];
-  var example = [
-    '【示例】一种图像处理方法（导入前请删除本行）',
-    '2023104073316',
-    '发明',
-    '2023-04-14',
-    '2024-06-18',
-    '北方夜视科技（南京）研究院有限公司',
-    '85',
-    '有效',
-    '张三',
-    '18936016196',
-    ''
-  ];
-  var csv = [header, example].map(function(r){
-    return r.map(function(c){
-      var s = String(c == null ? '' : c);
-      return /[",\n]/.test(s) ? '"' + s.replace(/"/g,'""') + '"' : s;
-    }).join(',');
-  }).join('\r\n');
-  var blob = new Blob(['\ufeff' + csv], {type:'text/csv;charset=utf-8'});
-  var url = URL.createObjectURL(blob);
-  var a = document.createElement('a');
-  a.href = url;
-  a.download = '专利导入模板.csv';
-  a.click();
-  URL.revokeObjectURL(url);
-}
-async function importFile(file){
-  var fname = file.name.toLowerCase();
-  var reader = new FileReader();
-  reader.onload = async function(e){
-    try {
-      var items = [];
-      if(fname.endsWith('.json')){
-        var data = JSON.parse(e.target.result);
-        var list = Array.isArray(data) ? data : (data.patents || []);
-        items = list;
-      } else {
-        var rows = parseCSV(e.target.result);
-        if(rows.length < 2){ alert('CSV 内容为空或格式不对（至少需要表头+一行数据）'); return; }
-        var header = rows[0].map(function(h){ return String(h || '').trim(); });
-        for(var i = 1; i < rows.length; i++){
-          var row = rows[i];
-          if(!row || !row.length) continue;
-          var allEmpty = row.every(function(c){ return !c || !String(c).trim(); });
-          if(allEmpty) continue;
-          var item = {};
-          header.forEach(function(h, idx){
-            var key = HEADER_MAP[h];
-            if(key) item[key] = String(row[idx] || '').trim();
-          });
-          if((item.name || '').indexOf('【示例】') === 0) continue;
-          items.push(item);
-        }
-      }
-      if(!items.length){ alert('没有可导入的数据'); return; }
-      if(!confirm('即将导入 ' + items.length + ' 条数据，确定吗？')) return;
-      var ok = 0, fail = 0, firstErr = '';
-      for(var k = 0; k < items.length; k++){
-        var it = items[k];
-        var nm = (it.name || '').trim();
-        var no = (it.appNo || it.app_no || '').trim();
-        var dt = (it.appDate || it.app_date || '').trim();
-        var cl = (it.client || '').trim();
-        if(!nm || !no || !dt || !cl){ fail++; continue; }
-        var row2 = {
-          id: it.id || ('P' + Date.now() + Math.random().toString(36).slice(2,7) + k),
-          user_id: state.user.id,
-          name: nm,
-          app_no: no,
-          app_date: normalizeDate(dt),
-          grant_date: normalizeDate(it.grantDate || it.grant_date || ''),
-          type: it.type || '发明',
-          client: cl,
-          reduction: Number(it.reduction) || 0,
-          status: it.status || '有效',
-          archived: !!it.archived,
-          archived_at: it.archivedAt || it.archived_at || '',
-          contact: it.contact || '',
-          phone: it.phone || '',
-          notes: it.notes || '',
-          paid_years: it.paidYears || it.paid_years || []
-        };
-        var res = await sb.from('patents').upsert(row2, {onConflict:'id'});
-        if(res.error){ fail++; if(!firstErr) firstErr = res.error.message; }
-        else ok++;
-      }
-      await loadPatents();
-      renderAll();
-      var msg = '导入完成：成功 ' + ok + ' 条';
-      if(fail > 0) msg += '，失败 ' + fail + ' 条';
-      if(firstErr) msg += '\n首个错误：' + firstErr;
-      alert(msg);
-    } catch(err){
-      alert('导入失败：' + (err.message || err));
-    }
-  };
-  reader.readAsText(file, 'UTF-8');
-}
-function exportPatentsCSV(){
-  var header = ['专利名称','申请号','专利类型','申请日','授权日','客户','费减比例','状态','联系人','联系电话','备注'];
-  var rows = state.patents.map(function(p){
-    return [
-      p.name, p.appNo, p.type, p.appDate, p.grantDate || '',
-      p.client, p.reduction || 0, p.status || '有效',
-      p.contact || '', p.phone || '', p.notes || ''
-    ];
-  });
-  exportCSV('专利数据_' + fmtDate(new Date()) + '.csv', header, rows);
-}
-function exportCSV(filename,header,rows){
-  var lines=[header].concat(rows);
-  var csv=lines.map(function(r){
-    return r.map(function(c){
-      var s=String(c==null?'':c);
-      return /[",\n]/.test(s)?'"'+s.replace(/"/g,'""')+'"':s;
-    }).join(',');
-  }).join('\r\n');
-  var blob=new Blob(['\ufeff'+csv],{type:'text/csv;charset=utf-8'});
-  var url=URL.createObjectURL(blob); var a=document.createElement('a');
-  a.href=url; a.download=filename; a.click(); URL.revokeObjectURL(url);
-}
-function bindEvents(){
-  document.getElementById('authSubmit').addEventListener('click',handleAuth);
-  document.getElementById('authToggleLink').addEventListener('click',function(){
-    setAuthMode(authMode==='login'?'signup':'login');
-  });
-  document.getElementById('authPassword').addEventListener('keydown',function(e){
-    if(e.key==='Enter') handleAuth();
-  });
-  document.getElementById('btnLogout').addEventListener('click',logout);
-  document.querySelectorAll('.tab').forEach(function(tab){
-    tab.addEventListener('click',function(){
-      document.querySelectorAll('.tab').forEach(function(t){t.classList.remove('active');});
-      document.querySelectorAll('.panel').forEach(function(p){p.classList.remove('active');});
-      tab.classList.add('active');
-      document.getElementById('panel-'+tab.dataset.tab).classList.add('active');
-      var t=tab.dataset.tab;
-      if(t==='dashboard') renderDashboard();
-      if(t==='ledger') renderLedger();
-      if(t==='schedule') renderSchedule();
-      if(t==='report') renderReport();
-    });
-  });
-  document.getElementById('btnAdd').addEventListener('click',function(){openPatentModal(null);});
-  document.getElementById('btnTemplate').addEventListener('click',downloadTemplate);
-  document.getElementById('btnExportAll').addEventListener('click',exportPatentsCSV);
-  document.getElementById('btnImport').addEventListener('click',function(){document.getElementById('fileInput').click();});
-  document.getElementById('fileInput').addEventListener('change',function(e){
-    if(e.target.files[0]) importFile(e.target.files[0]); e.target.value='';
-  });
-  document.getElementById('alertHorizon').addEventListener('change',function(e){
-    state.settings.alertHorizon=Number(e.target.value); renderDashboard();
-  });
-  document.querySelectorAll('#ledgerScope .seg-btn').forEach(function(btn){
-    btn.addEventListener('click',function(){
-      document.querySelectorAll('#ledgerScope .seg-btn').forEach(function(b){b.classList.remove('active');});
-      btn.classList.add('active'); ledgerScope=btn.dataset.scope;
-      clearSelection(); renderLedger();
-    });
-  });
-  ['ledgerClient','ledgerType','ledgerReduction','ledgerStatus','ledgerUrgency','ledgerAppFrom','ledgerAppTo']
-    .forEach(function(id){ document.getElementById(id).addEventListener('change',renderLedger); });
-  document.getElementById('ledgerSearch').addEventListener('input',renderLedger);
-  document.getElementById('btnResetFilters').addEventListener('click',function(){
-    document.getElementById('ledgerSearch').value='';
-    ['ledgerClient','ledgerType','ledgerReduction','ledgerStatus','ledgerUrgency','ledgerAppFrom','ledgerAppTo']
-      .forEach(function(id){document.getElementById(id).value='';});
-    clearSelection(); renderLedger();
-  });
-  document.getElementById('checkAll').addEventListener('change',function(e){
-    var checked=e.target.checked;
-    document.querySelectorAll('#ledgerBody .row-check').forEach(function(cb){
-      cb.checked=checked;
-      if(checked) selectedIds.add(cb.dataset.id); else selectedIds.delete(cb.dataset.id);
-      cb.closest('tr').classList.toggle('selected',checked);
-    });
-    updateBulkBar();
-  });
-  document.getElementById('bulkArchive').addEventListener('click',bulkArchive);
-  document.getElementById('bulkRestore').addEventListener('click',bulkRestore);
-  document.getElementById('bulkSetStatus').addEventListener('click',bulkSetStatus);
-  document.getElementById('bulkExport').addEventListener('click',bulkExport);
-  document.getElementById('bulkClear').addEventListener('click',function(){
-    clearSelection();
-    document.querySelectorAll('#ledgerBody tr').forEach(function(tr){tr.classList.remove('selected');});
-    document.querySelectorAll('#ledgerBody .row-check').forEach(function(cb){cb.checked=false;});
-    updateBulkBar();
-  });
-  document.getElementById('scheduleRange').addEventListener('change',renderSchedule);
-  document.getElementById('scheduleClient').addEventListener('change',renderSchedule);
-  document.getElementById('btnExportSchedule').addEventListener('click',function(){
-    var header=['缴费截止日','剩余天数','客户','专利名称','申请号','类型','年度','官费标准','减免比例','应缴年费','滞纳金','合计'];
-    var rows=scheduleCache.map(function(it){
-      return [it.dueDate,it.daysLeft,it.patent.client,it.patent.name,
-        it.patent.appNo,it.patent.type,'第'+it.year+'年',it.baseFee,
-        it.reduction>0?it.reduction+'%':'0',it.fee,it.lateFee,it.total];
-    });
-    exportCSV('缴费计划_'+fmtDate(new Date())+'.csv',header,rows);
-  });
-  document.getElementById('reportYear').addEventListener('change',renderReport);
-  document.getElementById('reportClient').addEventListener('change',renderReport);
-  document.getElementById('btnExportReport').addEventListener('click',function(){
-    var today=startOfDay(new Date());
-    var year=Number(document.getElementById('reportYear').value);
-    var fClient=document.getElementById('reportClient').value;
-    var items=[]; monitored().forEach(function(p){ items=items.concat(getUnpaidItems(p,today)); });
-    if(fClient) items=items.filter(function(it){return it.patent.client===fClient;});
-    items=items.filter(function(it){
-      var d=parseDate(it.dueDate); return d&&d.getFullYear()===year;
-    }).sort(function(a,b){return parseDate(a.dueDate)-parseDate(b.dueDate);});
-    var header=['季度','缴费截止日','客户','专利名称','申请号','类型','年度','官费标准','减免比例','应缴年费','滞纳金','合计'];
-    var rows=items.map(function(it){
-      return ['Q'+(Math.floor(parseDate(it.dueDate).getMonth()/3)+1),
-        it.dueDate,it.patent.client,it.patent.name,it.patent.appNo,it.patent.type,
-        '第'+it.year+'年',it.baseFee,it.reduction>0?it.reduction+'%':'0',
-        it.fee,it.lateFee,it.total];
-    });
-    exportCSV('季度报表_'+year+'.csv',header,rows);
-  });
-  document.querySelectorAll('[data-close]').forEach(function(b){
-    b.addEventListener('click',function(){ b.closest('.overlay').classList.remove('show'); });
-  });
-  document.querySelectorAll('.overlay').forEach(function(ov){
-    ov.addEventListener('click',function(e){ if(e.target===ov) ov.classList.remove('show'); });
-  });
-  document.addEventListener('keydown',function(e){
-    if(e.key==='Escape') document.querySelectorAll('.overlay.show').forEach(function(o){o.classList.remove('show');});
-  });
-  document.getElementById('btnSavePatent').addEventListener('click',savePatent);
-}
-function renderAll(){
-  renderClientOptions();
-  renderDashboard();
-  renderLedger();
-  renderSchedule();
-  renderReport();
-}
-(async function init(){
-  bindEvents();
-  setAuthMode('login');
-  if(!sdkOK){
-    var sub=document.getElementById('authSub');
-    sub.innerHTML='❌ 无法加载 Supabase 库<br>请关闭浏览器的防追踪功能后刷新页面';
-    sub.style.color='#dc2626'; sub.style.fontWeight='700';
-    var btn=document.getElementById('authSubmit');
-    btn.disabled=true; btn.style.opacity='.5';
+    tbody.innerHTML = `<tr><td colspan="10"><div class="empty-state">${emptyHtml}</div></td></tr>`;
+    updateSelectedInfo();
     return;
   }
-  var sess = await sb.auth.getSession();
-  if(sess.data.session && sess.data.session.user){
-    showApp(sess.data.session.user);
-    await loadPatents();
-    renderAll();
-  }
-  sb.auth.onAuthStateChange(async function(event, session){
-    if(event==='SIGNED_IN' && session && session.user){
-      showApp(session.user);
-      await loadPatents();
-      renderAll();
-    }
-    if(event==='SIGNED_OUT'){
-      state.user=null; state.patents=[];
-      document.getElementById('app').classList.remove('ready');
-      document.getElementById('authScreen').style.display='flex';
-      document.getElementById('authPassword').value='';
-      setAuthMode('login');
-    }
+
+  let html = '';
+  list.forEach(c => {
+    const tags = (c.tags||'').split(',').map(t=>t.trim()).filter(t=>t);
+    const tagHtml = tags.map(t => `<span class="tag-item">${t}</span>`).join('');
+    const checked = selectedIds.has(c.id) ? 'checked' : '';
+    const isEnded = ENDED_STATUSES.includes(c.status);
+    // 归档状态的案件行整体略带灰色调，作为视觉提示
+    const rowStyle = isEnded ? 'style="opacity:.82;"' : '';
+    html += `<tr class="${checked?'selected':''}" ${rowStyle} data-id="${c.id}">
+      <td class="checkbox-col"><input type="checkbox" class="row-checkbox" data-id="${c.id}" ${checked} onchange="toggleRow('${c.id}')" /></td>
+      <td><span class="case-id">${c.caseNumber||'-'}</span></td>
+      <td><span style="display:inline-block;max-width:320px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;vertical-align:middle;" title="${c.caseName||''}">${c.caseName||'-'}</span></td>
+      <td><span style="display:inline-block;max-width:120px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;vertical-align:middle;" title="${c.clientName||''}">${c.clientName||'-'}</span></td>
+      <td>${c.caseType||'-'}</td>
+      <td><span class="priority-badge ${getPriorityClass(c.priority)}">${c.priority||'中'}</span></td>
+      <td><span class="importance-stars">${renderStars(c.importance)}</span></td>
+      <td><span class="status-badge ${getStatusClass(c.status)}">${c.status||'-'}</span></td>
+      <td><div class="tag-list">${tagHtml}</div></td>
+      <td><div class="actions">
+        <button class="btn btn-accent btn-xs" onclick="viewDetail('${c.id}')"><i class="fas fa-eye"></i></button>
+        <button class="btn btn-accent btn-xs" onclick="openEditModal('${c.id}')"><i class="fas fa-edit"></i></button>
+        <button class="btn btn-danger btn-xs" onclick="deleteCase('${c.id}')"><i class="fas fa-trash-alt"></i></button>
+      </div></td>
+    </tr>`;
   });
+  tbody.innerHTML = html;
+  updateSelectedInfo();
+  const cbs = document.querySelectorAll('.row-checkbox');
+  document.getElementById('selectAll').checked = cbs.length>0 && [...cbs].every(cb=>cb.checked);
+}
+
+function toggleRow(id){
+  if (selectedIds.has(id)) selectedIds.delete(id); else selectedIds.add(id);
+  const tr = document.querySelector(`tr[data-id="${id}"]`);
+  if (tr){ tr.classList.toggle('selected', selectedIds.has(id)); const cb = tr.querySelector('.row-checkbox'); if (cb) cb.checked = selectedIds.has(id); }
+  updateSelectedInfo();
+  const cbs = document.querySelectorAll('.row-checkbox');
+  document.getElementById('selectAll').checked = cbs.length>0 && [...cbs].every(cb=>cb.checked);
+}
+
+function toggleAllCheckboxes(){
+  const checked = document.getElementById('selectAll').checked;
+  document.querySelectorAll('.row-checkbox').forEach(cb => {
+    const id = cb.dataset.id;
+    if (checked) selectedIds.add(id); else selectedIds.delete(id);
+    cb.checked = checked;
+    const tr = document.querySelector(`tr[data-id="${id}"]`);
+    if (tr) tr.classList.toggle('selected', checked);
+  });
+  updateSelectedInfo();
+}
+
+function updateSelectedInfo(){ document.getElementById('selectedInfo').textContent = `已选 ${selectedIds.size} 件`; }
+function getSelectedCases(){ return cases.filter(c => selectedIds.has(c.id)); }
+
+function subscribeRealtime(){
+  if (realtimeChannel) sb.removeChannel(realtimeChannel);
+  realtimeChannel = sb.channel('cases-rt')
+    .on('postgres_changes', { event:'*', schema:'public', table:'cases' }, payload => {
+      const row = payload.new || payload.old;
+      if (payload.eventType === 'DELETE' || row.deleted_at){
+        cases = cases.filter(c => c.id !== row.id);
+      } else {
+        const ui = fromDB(row);
+        const idx = cases.findIndex(c => c.id === ui.id);
+        if (idx > -1) cases[idx] = ui; else cases.unshift(ui);
+      }
+      updateHistoryLists(); renderStats(); renderTable();
+      setSyncStatus('ok', '已同步 · ' + new Date().toLocaleTimeString());
+    })
+    .subscribe(status => { if (status === 'SUBSCRIBED') setSyncStatus('ok', '实时同步已连接'); });
+}
+
+async function batchDelete(){
+  const sel = getSelectedCases();
+  if (!sel.length) return toast('请先选择案件','error');
+  if (!confirm(`确定删除选中的 ${sel.length} 件？`)) return;
+  const ids = sel.map(c => c.id);
+  const { error } = await sb.from('cases').update({ deleted_at: new Date().toISOString() }).in('id', ids);
+  if (error) return toast('删除失败：'+error.message,'error');
+  cases = cases.filter(c => !ids.includes(c.id));
+  selectedIds.clear(); renderStats(); renderTable();
+  toast(`已删除 ${sel.length} 件`,'success');
+}
+
+async function batchUpdateStatus(){
+  const s = document.getElementById('batchStatusSelect').value;
+  if (!s) return toast('请选择状态','error');
+  const sel = getSelectedCases();
+  if (!sel.length) return toast('请先选择案件','error');
+  const ids = sel.map(c => c.id);
+  const { error } = await sb.from('cases').update({ status: s, updated_at: new Date().toISOString() }).in('id', ids);
+  if (error) return toast('更新失败：'+error.message,'error');
+  cases = cases.map(c => ids.includes(c.id) ? { ...c, status: s } : c);
+  selectedIds.clear(); renderStats(); renderTable();
+  document.getElementById('batchStatusSelect').value = '';
+  // 如果新状态是结束状态，提示用户案件已转入归档
+  const isArchived = ENDED_STATUSES.includes(s);
+  toast(`已更新 ${sel.length} 件${isArchived ? '，已转入归档' : ''} ✅`,'success');
+}
+
+function sortTable(field){
+  if (currentSort.field === field) currentSort.asc = !currentSort.asc;
+  else { currentSort.field = field; currentSort.asc = false; }
+  renderTable();
+}
+
+function setTypeFilter(type){
+  currentTypeFilter = type;
+  document.querySelectorAll('#filterGroup .filter-btn').forEach(b => b.classList.toggle('active', b.dataset.type === type));
+  renderTable();
+}
+
+// ===== 状态提示：编辑时提醒会归档 =====
+function updateStatusHint(){
+  const s = document.getElementById('f_status').value;
+  const hint = document.getElementById('statusHint');
+  if (!hint) return;
+  if (ENDED_STATUSES.includes(s)){
+    hint.textContent = '（保存后将自动归档，不在活跃列表显示）';
+    hint.style.color = '#b45309';
+  } else {
+    hint.textContent = '';
+  }
+}
+
+function openAddModal(){
+  document.getElementById('modalTitle').textContent = '新建案件';
+  document.getElementById('modalSubmitBtn').innerHTML = '<i class="fas fa-plus"></i> 新建';
+  document.getElementById('editId').value = '';
+  document.getElementById('editVersion').value = '';
+  document.getElementById('caseForm').reset();
+  document.getElementById('f_receiveDate').value = new Date().toISOString().slice(0,10);
+  document.getElementById('f_status').value = '收案';
+  document.getElementById('f_priority').value = '中';
+  document.getElementById('f_importance').value = '3';
+  updateStatusHint();
+  generateCaseNumber();
+  updateHistoryLists();
+  document.getElementById('modalOverlay').classList.remove('hidden');
+}
+
+function openEditModal(id){
+  const c = cases.find(x => x.id === id);
+  if (!c) return;
+  document.getElementById('modalTitle').textContent = '编辑案件';
+  document.getElementById('modalSubmitBtn').innerHTML = '<i class="fas fa-save"></i> 更新';
+  document.getElementById('editId').value = id;
+  document.getElementById('editVersion').value = c.version || 1;
+  document.getElementById('f_caseNumber').value = c.caseNumber||'';
+  document.getElementById('f_caseName').value = c.caseName||'';
+  document.getElementById('f_clientName').value = c.clientName||'';
+  document.getElementById('f_caseType').value = c.caseType||'专利代理';
+  document.getElementById('f_contactPerson').value = c.contactPerson||'';
+  document.getElementById('f_contactPhone').value = c.contactPhone||'';
+  document.getElementById('f_receiveDate').value = c.receiveDate||'';
+  document.getElementById('f_submitDate').value = c.submitDate||'';
+  document.getElementById('f_paymentDate').value = c.paymentDate||'';
+  document.getElementById('f_transferDate').value = c.transferDate||'';
+  document.getElementById('f_status').value = c.status||'收案';
+  document.getElementById('f_priority').value = c.priority||'中';
+  document.getElementById('f_importance').value = c.importance||'3';
+  document.getElementById('f_tags').value = c.tags||'';
+  document.getElementById('f_notes').value = c.notes||'';
+  updateStatusHint();
+  updateHistoryLists();
+  document.getElementById('modalOverlay').classList.remove('hidden');
+}
+
+function closeModal(){ document.getElementById('modalOverlay').classList.add('hidden'); }
+
+async function saveCase(e){
+  e.preventDefault();
+  const editId = document.getElementById('editId').value;
+  const editVersion = parseInt(document.getElementById('editVersion').value) || 1;
+  const formData = {
+    caseNumber: document.getElementById('f_caseNumber').value.trim(),
+    caseName: document.getElementById('f_caseName').value.trim(),
+    clientName: document.getElementById('f_clientName').value.trim(),
+    caseType: document.getElementById('f_caseType').value,
+    contactPerson: document.getElementById('f_contactPerson').value.trim(),
+    contactPhone: document.getElementById('f_contactPhone').value.trim(),
+    receiveDate: document.getElementById('f_receiveDate').value,
+    submitDate: document.getElementById('f_submitDate').value||'',
+    paymentDate: document.getElementById('f_paymentDate').value||'',
+    transferDate: document.getElementById('f_transferDate').value||'',
+    status: document.getElementById('f_status').value,
+    priority: document.getElementById('f_priority').value,
+    importance: document.getElementById('f_importance').value,
+    tags: document.getElementById('f_tags').value.trim(),
+    notes: document.getElementById('f_notes').value.trim()
+  };
+  if (!formData.caseNumber || !formData.caseName || !formData.clientName || !formData.contactPerson || !formData.receiveDate){
+    return toast('请填写所有必填项','error');
+  }
+  const payload = toDB(formData);
+  const isArchived = ENDED_STATUSES.includes(formData.status);
+
+  try {
+    if (editId){
+      const { data, error } = await sb.from('cases')
+        .update({ ...payload, version: editVersion+1, updated_at: new Date().toISOString() })
+        .eq('id', editId).eq('version', editVersion).select();
+      if (error) throw error;
+      if (!data || !data.length) return toast('案件已被其他设备修改，请刷新','error');
+      const idx = cases.findIndex(c => c.id === editId);
+      if (idx > -1) cases[idx] = fromDB(data[0]);
+      toast(isArchived ? '已更新，该案件已归档' : '已更新','success');
+    } else {
+      const { data: { user } } = await sb.auth.getUser();
+      if (!user) return toast('请先登录','error');
+      const { data, error } = await sb.from('cases').insert({ ...payload, user_id: user.id }).select();
+      if (error){
+        if (error.code === '23505') return toast('编号已存在','error');
+        throw error;
+      }
+      cases.unshift(fromDB(data[0]));
+      toast(isArchived ? '已创建（已归档）' : '已创建','success');
+    }
+    closeModal();
+    updateHistoryLists(); renderStats(); renderTable();
+  } catch(err){
+    toast('保存失败：'+err.message,'error');
+  }
+}
+
+async function deleteCase(id){
+  if (!confirm('确定删除？')) return;
+  const { error } = await sb.from('cases').update({ deleted_at: new Date().toISOString() }).eq('id', id);
+  if (error) return toast('删除失败：'+error.message,'error');
+  cases = cases.filter(c => c.id !== id);
+  if (selectedIds.has(id)) selectedIds.delete(id);
+  renderStats(); renderTable();
+  toast('已删除','success');
+}
+
+function viewDetail(id){
+  const c = cases.find(x => x.id === id);
+  if (!c) return;
+  const isEnded = ENDED_STATUSES.includes(c.status);
+  const fields = [
+    ['案件编号',c.caseNumber],['案件名称',c.caseName],['客户名称',c.clientName],
+    ['业务类型',c.caseType],['联系人',c.contactPerson],['联系方式',c.contactPhone||'-'],
+    ['收案日期',fmtDate(c.receiveDate)],['提交受理日期',fmtDate(c.submitDate)],
+    ['缴费日期',fmtDate(c.paymentDate)],['移交专人日期',fmtDate(c.transferDate)],
+    ['状态',c.status + (isEnded ? '（已归档）' : '')],['优先级',c.priority],['重要性',renderStars(c.importance)],
+    ['标签',c.tags||'-'],['备注',c.notes||'-']
+  ];
+  let html = '';
+  fields.forEach(([label,value]) => {
+    const full = (label==='备注'||label==='标签');
+    html += `<div class="detail-item ${full?'full-width':''}"><span class="label">${label}</span><span class="value">${value}</span></div>`;
+  });
+  document.getElementById('detailContent').innerHTML = html;
+  document.getElementById('detailModalOverlay').classList.remove('hidden');
+}
+function closeDetailModal(){ document.getElementById('detailModalOverlay').classList.add('hidden'); }
+
+// ============================================================
+//  批量新建
+// ============================================================
+let batchRowCount = 0;
+
+function openBatchModal(){
+  document.getElementById('batchModalOverlay').classList.remove('hidden');
+  document.getElementById('batch_receiveDate').value = new Date().toISOString().slice(0,10);
+  document.getElementById('batch_clientName').value = '';
+  document.getElementById('batch_contactPerson').value = '';
+  document.getElementById('batch_contactPhone').value = '';
+  document.getElementById('batch_priority').value = '中';
+  document.getElementById('batch_importance').value = '3';
+  document.getElementById('batch_tags').value = '';
+  document.getElementById('batch_status').value = '收案';
+  document.getElementById('batch_caseType').value = '专利代理';
+  const tbody = document.getElementById('batchTableBody');
+  tbody.innerHTML = '';
+  batchRowCount = 0;
+  addBatchRow();
+  updateHistoryLists();
+}
+
+function closeBatchModal(){
+  document.getElementById('batchModalOverlay').classList.add('hidden');
+}
+
+function addBatchRow(){
+  const tbody = document.getElementById('batchTableBody');
+  const tr = document.createElement('tr');
+  tr.dataset.index = batchRowCount++;
+  tr.innerHTML = `
+    <td><input type="text" class="batch-case-number" placeholder="自动生成" /></td>
+    <td><input type="text" class="batch-case-name" placeholder="案件名称" /></td>
+    <td><input type="text" class="batch-case-notes" placeholder="备注" /></td>
+    <td style="text-align:center;"><button type="button" class="remove-row-btn" onclick="removeBatchRow(this)"><i class="fas fa-minus-circle"></i></button></td>
+  `;
+  tbody.appendChild(tr);
+}
+
+function removeBatchRow(btn){
+  const tbody = document.getElementById('batchTableBody');
+  if (tbody.children.length <= 1){
+    toast('至少保留一行','error');
+    return;
+  }
+  btn.closest('tr').remove();
+}
+
+function autoFillBatchNumbers(){
+  const type = document.getElementById('batch_caseType').value;
+  const date = document.getElementById('batch_receiveDate').value;
+  if (!date) return toast('请先选择收案日期','error');
+  const inputs = document.querySelectorAll('#batchTableBody .batch-case-number');
+  const generated = [];
+  inputs.forEach(inp => {
+    const num = generateBatchNumber(type, date, generated);
+    inp.value = num;
+    generated.push(num);
+  });
+  toast('编号已自动填充','info');
+}
+
+async function submitBatch(){
+  const clientName = document.getElementById('batch_clientName').value.trim();
+  const caseType = document.getElementById('batch_caseType').value;
+  const contactPerson = document.getElementById('batch_contactPerson').value.trim();
+  const contactPhone = document.getElementById('batch_contactPhone').value.trim();
+  const receiveDate = document.getElementById('batch_receiveDate').value;
+  const priority = document.getElementById('batch_priority').value;
+  const importance = document.getElementById('batch_importance').value;
+  const baseTags = document.getElementById('batch_tags').value.trim();
+  const status = document.getElementById('batch_status').value;
+
+  if (!clientName || !contactPerson || !receiveDate){
+    return toast('请填写完整的通用信息（客户、联系人、收案日期）','error');
+  }
+
+  const rows = document.querySelectorAll('#batchTableBody tr');
+  const details = [];
+  for (const tr of rows){
+    const name = tr.querySelector('.batch-case-name').value.trim();
+    let number = tr.querySelector('.batch-case-number').value.trim();
+    const notes = tr.querySelector('.batch-case-notes').value.trim();
+    if (!name) return toast('每行必须填写案件名称','error');
+    if (!number) number = generateBatchNumber(caseType, receiveDate, details.map(d => d.caseNumber));
+    if (cases.some(c => c.caseNumber === number) || details.some(d => d.caseNumber === number)){
+      return toast(`编号 ${number} 已存在，请修改`,'error');
+    }
+    details.push({ caseNumber: number, caseName: name, notes });
+  }
+  if (!details.length) return toast('请至少添加一行','error');
+
+  const { data: { user } } = await sb.auth.getUser();
+  if (!user) return toast('请先登录','error');
+
+  const payload = details.map(d => ({
+    user_id: user.id,
+    case_number: d.caseNumber,
+    case_name: d.caseName,
+    client_name: clientName,
+    case_type: caseType,
+    contact_person: contactPerson,
+    contact_phone: contactPhone || null,
+    receive_date: receiveDate,
+    submit_date: null,
+    payment_date: null,
+    transfer_date: null,
+    status: status,
+    priority: priority,
+    importance: parseInt(importance) || 3,
+    tags: baseTags || null,
+    notes: d.notes || null
+  }));
+
+  const btn = document.getElementById('batchSubmitBtn');
+  btn.disabled = true;
+  btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> 提交中...';
+
+  try {
+    const { data, error } = await sb.from('cases').insert(payload).select();
+    if (error){
+      if (error.code === '23505') return toast('存在重复的案件编号，请检查后重试','error');
+      throw error;
+    }
+    cases.unshift(...data.map(fromDB));
+    closeBatchModal();
+    updateHistoryLists(); renderStats(); renderTable();
+    const isArchived = ENDED_STATUSES.includes(status);
+    toast(`成功批量创建 ${data.length} 件${isArchived ? '（已归档）' : ''} ✅`,'success');
+  } catch(err){
+    toast('批量创建失败：'+err.message,'error');
+  } finally {
+    btn.disabled = false;
+    btn.innerHTML = '<i class="fas fa-save"></i> 批量提交';
+  }
+}
+
+// ============================================================
+//  导出 / 导入
+// ============================================================
+function downloadCSV(list, filename){
+  const headers = ['案件编号','案件名称','客户名称','业务类型','联系人','联系方式','收案日期','提交受理日期','缴费日期','移交日期','状态','优先级','重要性','标签','备注'];
+  const rows = list.map(c => [c.caseNumber||'',c.caseName||'',c.clientName||'',c.caseType||'',c.contactPerson||'',c.contactPhone||'',c.receiveDate||'',c.submitDate||'',c.paymentDate||'',c.transferDate||'',c.status||'',c.priority||'中',c.importance||'3',(c.tags||'').replace(/,/g,';'),(c.notes||'').replace(/,/g,';')]);
+  const csv = [headers.join(','), ...rows.map(r=>r.join(','))].join('\n');
+  const blob = new Blob(['\uFEFF'+csv], {type:'text/csv;charset=utf-8;'});
+  const link = document.createElement('a');
+  link.href = URL.createObjectURL(blob);
+  link.download = filename;
+  link.click();
+  URL.revokeObjectURL(link.href);
+}
+
+function exportCSV(){
+  if (!cases.length) return toast('没有案件','error');
+  // 导出当前视图下的案件（活跃/归档/全部），让导出更符合当前上下文
+  const list = getFiltered();
+  if (!list.length) return toast('当前视图没有案件可导出','info');
+  const viewLabel = currentView === 'active' ? '活跃' : (currentView === 'archived' ? '归档' : '全部');
+  downloadCSV(list, `IP案件_${viewLabel}_${new Date().toISOString().slice(0,10)}.csv`);
+  toast(`已导出 ${list.length} 件（${viewLabel}）`,'success');
+}
+
+async function importCSV(event){
+  const file = event.target.files[0];
+  if (!file) return;
+  const reader = new FileReader();
+  reader.onload = async e => {
+    try {
+      const lines = e.target.result.split('\n').filter(l => l.trim());
+      if (lines.length < 2) return toast('CSV 无效','error');
+      const headers = lines[0].split(',').map(h=>h.trim());
+      const expected = ['案件编号','案件名称','客户名称','业务类型','联系人','联系方式','收案日期','提交受理日期','缴费日期','移交日期','状态','优先级','重要性','标签','备注'];
+      const idxMap = {};
+      expected.forEach((h,i) => { const idx = headers.findIndex(x => x.includes(h)); idxMap[h] = idx!==-1?idx:i; });
+      const validStatus = ['收案','处理中','待提交','已提交受理','协助缴费','已移交专人'];
+      const { data: { user } } = await sb.auth.getUser();
+      if (!user) return toast('请先登录','error');
+      const toInsert = [];
+      for (let i=1; i<lines.length; i++){
+        const cols = lines[i].split(',').map(s=>s.trim());
+        const get = k => cols[idxMap[k]] || '';
+        let st = get('状态'); if (!validStatus.includes(st)) st = '收案';
+        const num = get('案件编号') || `IMP-${String(i).padStart(4,'0')}`;
+        if (cases.some(c => c.caseNumber === num)) continue;
+        toInsert.push({
+          user_id: user.id,
+          case_number: num,
+          case_name: get('案件名称') || '未命名',
+          client_name: get('客户名称') || '未知',
+          case_type: get('业务类型') || '专利代理',
+          contact_person: get('联系人') || '',
+          contact_phone: get('联系方式') || '',
+          receive_date: get('收案日期') || null,
+          submit_date: get('提交受理日期') || null,
+          payment_date: get('缴费日期') || null,
+          transfer_date: get('移交日期') || null,
+          status: st,
+          priority: get('优先级') || '中',
+          importance: parseInt(get('重要性')) || 3,
+          tags: get('标签') || '',
+          notes: get('备注') || ''
+        });
+      }
+      if (!toInsert.length) return toast('没有新数据','info');
+      const { data, error } = await sb.from('cases').insert(toInsert).select();
+      if (error) return toast('导入失败：'+error.message,'error');
+      cases.unshift(...data.map(fromDB));
+      updateHistoryLists(); renderStats(); renderTable();
+      const archivedCount = data.filter(r => ENDED_STATUSES.includes(r.status)).length;
+      toast(`导入 ${data.length} 件${archivedCount ? `（其中 ${archivedCount} 件已归档）` : ''}`,'success');
+    } catch(err){ toast('导入失败：'+err.message,'error'); }
+    event.target.value = '';
+  };
+  reader.readAsText(file,'UTF-8');
+}
+
+function toast(msg, type='info'){
+  const c = document.getElementById('toastContainer');
+  const icons = { success:'fa-check-circle', error:'fa-exclamation-circle', info:'fa-info-circle' };
+  const el = document.createElement('div');
+  el.className = `toast ${type}`;
+  el.innerHTML = `<span class="toast-icon"><i class="fas ${icons[type]}"></i></span><span class="toast-msg">${msg}</span><button class="toast-close" onclick="this.parentElement.remove()"><i class="fas fa-times"></i></button>`;
+  c.appendChild(el);
+  setTimeout(() => { if (el.parentElement) el.remove(); }, 3500);
+}
+
+// 快捷键
+document.addEventListener('keydown', e => {
+  if (e.key === 'Escape'){
+    if (!document.getElementById('modalOverlay').classList.contains('hidden')) closeModal();
+    if (!document.getElementById('batchModalOverlay').classList.contains('hidden')) closeBatchModal();
+    if (!document.getElementById('detailModalOverlay').classList.contains('hidden')) closeDetailModal();
+  }
+});
+
+(async function boot(){
+  const { data: { session } } = await sb.auth.getSession();
+  if (session){
+    document.getElementById('loginOverlay').classList.add('hidden');
+    document.getElementById('mainApp').style.display = 'block';
+    initApp();
+  }
 })();
 </script>
 </body>
